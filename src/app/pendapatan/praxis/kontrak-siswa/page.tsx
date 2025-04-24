@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation'
 interface Siswa {
   no: number
   nama_siswa: string
-  nisn: string
+  id_siswa: string
   nisn: string
   level: string
   akademik: string
@@ -18,22 +18,25 @@ interface Siswa {
 
 export default function KontrakSiswa() {
   const searchParams = useSearchParams()
-  const nisn = searchParams.get('nisn') || ''
+  const id_siswa = searchParams.get('id_siswa') || ''
 
   const [siswaDetail, setSiswaDetail] = useState<Siswa | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [file, setFile] = useState<File | null>(null)
 
+  // State untuk menangani perubahan input
+  const [updatedSiswaDetail, setUpdatedSiswaDetail] = useState<Siswa | null>(null)
+
   useEffect(() => {
     const fetchSiswaDetail = async () => {
-      if (!nisn) return
+      if (!id_siswa) return
 
       setLoading(true)
       setError('')
 
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/monitoring?nisn=${nisn}`, {
+        const response = await fetch(`http://127.0.0.1:8000/api/monitoring?id_siswa=${id_siswa}`, {
           method: 'GET',
           headers: {
             Authorization: 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada'
@@ -42,10 +45,11 @@ export default function KontrakSiswa() {
 
         const result = await response.json()
 
-        if (!response.ok || result.status === 'error') {
+        if (!response.ok) {
           setError('Data tidak ditemukan.')
         } else {
-          setSiswaDetail(result.data)
+          setSiswaDetail(result)
+          setUpdatedSiswaDetail(result) // Menyimpan salinan data untuk editing
         }
       } catch (err) {
         setError('Terjadi kesalahan saat mengambil data.')
@@ -55,11 +59,60 @@ export default function KontrakSiswa() {
     }
 
     fetchSiswaDetail()
-  }, [nisn])
+  }, [id_siswa])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0] || null
-    setFile(selectedFile)
+     const selectedFile = e.target.files?.[0]
+     if (selectedFile && selectedFile.type !== 'application/pdf') {
+       alert('Hanya file PDF yang diperbolehkan.')
+       setFile(null)
+     } else {
+       setFile(selectedFile)
+     }
+   }
+   
+
+  // Fungsi untuk menangani perubahan input
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof Siswa) => {
+    if (updatedSiswaDetail) {
+      setUpdatedSiswaDetail({
+        ...updatedSiswaDetail,
+        [field]: e.target.value ? parseInt(e.target.value) : null
+      })
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!updatedSiswaDetail || !file) return
+
+    const formData = new FormData()
+    formData.append('id_siswa', updatedSiswaDetail.id_siswa)
+    formData.append('uang_kbm', String(updatedSiswaDetail.tagihan_uang_kbm ?? 0))
+    formData.append('uang_spp', String(updatedSiswaDetail.tagihan_uang_spp ?? 0))
+    formData.append('uang_pemeliharaan', String(updatedSiswaDetail.tagihan_uang_pemeliharaan ?? 0))
+    formData.append('uang_sumbangan', String(updatedSiswaDetail.tagihan_uang_sumbangan ?? 0))
+    formData.append('catatan', '')
+    formData.append('file_kontrak', file)
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/kontrak', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada',
+        },
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        setError(result.message || 'Gagal membuat kontrak siswa.')
+      } else {
+        alert('Kontrak berhasil disimpan!')
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan saat menyimpan data.')
+    }
   }
 
   return (
@@ -71,63 +124,71 @@ export default function KontrakSiswa() {
           {loading && <p>Loading...</p>}
           {error && <p className="text-red-600 mb-4">{error}</p>}
 
-          {siswaDetail && (
+          {updatedSiswaDetail && (
             <div className="space-y-4">
-              {/* Header info */}
               <div className="grid grid-cols-3 gap-4">
                 <input
-                  value={siswaDetail.nama_siswa}
+                  value={updatedSiswaDetail.nama_siswa}
                   readOnly
-                  className="border px-3 py-2 rounded bg-gray-100"
+                  className="w-70 border px-3 py-2 rounded bg-gray-100 text-center"
                 />
                 <input
-                  value={`Level ${siswaDetail.level}`}
+                  value={`Level ${updatedSiswaDetail.level}`}
                   readOnly
-                  className="border px-3 py-2 rounded bg-gray-100"
+                  className="ml-20 w-30 border px-3 py-2 rounded bg-gray-100 text-center"
                 />
                 <input
-                  value={siswaDetail.akademik}
+                  value={updatedSiswaDetail.akademik}
                   readOnly
-                  className="border px-3 py-2 rounded bg-gray-100"
+                  className="w-30 border px-3 py-2 rounded bg-gray-100 text-center"
                 />
               </div>
 
-              {/* NISN */}
               <input
-                value={`NISN: ${siswaDetail.nisn}`}
+                value={`NISN: ${updatedSiswaDetail.nisn}`}
                 readOnly
-                className="w-full border px-3 py-2 rounded bg-gray-100"
+                className="text-center w-100 border px-3 py-2 rounded bg-gray-100"
               />
 
-              {/* Tagihan */}
               <div className="grid grid-cols-2 gap-4">
-                <input
-                  placeholder="KBM"
-                  value={siswaDetail.tagihan_uang_kbm ?? ''}
-                  readOnly
-                  className="border px-3 py-2 rounded"
-                />
-                <input
-                  placeholder="SPP"
-                  value={siswaDetail.tagihan_uang_spp ?? ''}
-                  readOnly
-                  className="border px-3 py-2 rounded"
-                />
-                <input
-                  placeholder="Pemeliharaan"
-                  value={siswaDetail.tagihan_uang_pemeliharaan ?? ''}
-                  readOnly
-                  className="border px-3 py-2 rounded"
-                />
-                <input
-                  placeholder="Sumbangan"
-                  value={siswaDetail.tagihan_uang_sumbangan ?? ''}
-                  readOnly
-                  className="border px-3 py-2 rounded"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-black font-bold mb-1">KBM</label>
+                  <input
+                    type="number"
+                    value={updatedSiswaDetail.tagihan_uang_kbm ?? ''}
+                    onChange={(e) => handleInputChange(e, 'tagihan_uang_kbm')}
+                    className="border px-3 py-2 rounded w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black font-bold mb-1">SPP</label>
+                  <input
+                    type="number"
+                    value={updatedSiswaDetail.tagihan_uang_spp ?? ''}
+                    onChange={(e) => handleInputChange(e, 'tagihan_uang_spp')}
+                    className="border px-3 py-2 rounded w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black font-bold mb-1">Pemeliharaan</label>
+                  <input
+                    type="number"
+                    value={updatedSiswaDetail.tagihan_uang_pemeliharaan ?? ''}
+                    onChange={(e) => handleInputChange(e, 'tagihan_uang_pemeliharaan')}
+                    className="border px-3 py-2 rounded w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black font-bold mb-1">Sumbangan</label>
+                  <input
+                    type="number"
+                    value={updatedSiswaDetail.tagihan_uang_sumbangan ?? ''}
+                    onChange={(e) => handleInputChange(e, 'tagihan_uang_sumbangan')}
+                    className="border px-3 py-2 rounded w-full"
+                  />
+                </div>
               </div>
 
-              {/* Total dan File */}
               <div className="grid grid-cols-2 gap-4 items-start">
                 <input placeholder="Total" className="border px-3 py-2 rounded" />
                 <div>
@@ -143,8 +204,10 @@ export default function KontrakSiswa() {
                 </div>
               </div>
 
-              {/* Button */}
-              <button className="mt-6 w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 transition font-semibold">
+              <button
+                onClick={handleSubmit}
+                className="mt-6 w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 transition font-semibold"
+              >
                 Simpan
               </button>
             </div>

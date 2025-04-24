@@ -3,24 +3,41 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 
+interface Siswa {
+  no: number
+  nama_siswa: string
+  id_siswa: string
+  nisn: string
+  level: string
+  akademik: string
+  tagihan_uang_kbm: number | null
+  tagihan_uang_spp: number | null
+  tagihan_uang_pemeliharaan: number | null
+  tagihan_uang_sumbangan: number | null
+}
+
 export default function PembayaranSiswa() {
   const searchParams = useSearchParams()
-  const nisn = searchParams.get('nisn') || ''
+  const id_siswa = searchParams.get('id_siswa') || ''
 
-  const [siswaDetail, setSiswaDetail] = useState<any>(null)
+  const [siswaDetail, setSiswaDetail] = useState<Siswa | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [file, setFile] = useState<File | null>(null)
+  const [kbm, setKbm] = useState<number | string>('') // Gunakan state untuk input nominal
+  const [spp, setSpp] = useState<number | string>('') 
+  const [pemeliharaan, setPemeliharaan] = useState<number | string>('') 
+  const [sumbangan, setSumbangan] = useState<number | string>('') 
+  const [catatan, setCatatan] = useState<string>('')
 
   useEffect(() => {
     const fetchSiswaDetail = async () => {
-      if (!nisn) return
+      if (!id_siswa) return
 
       setLoading(true)
       setError('')
 
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/monitoring?nisn=${nisn}`, {
+        const response = await fetch(`http://127.0.0.1:8000/api/monitoring?id_siswa=${id_siswa}`, {
           method: 'GET',
           headers: {
             Authorization: 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada'
@@ -28,10 +45,11 @@ export default function PembayaranSiswa() {
         })
 
         const result = await response.json()
-        if (!response.ok || result.status === 'error') {
+
+        if (!response.ok) {
           setError('Data tidak ditemukan.')
         } else {
-          setSiswaDetail(result.data)
+          setSiswaDetail(result)
         }
       } catch (err) {
         setError('Terjadi kesalahan saat mengambil data.')
@@ -41,11 +59,34 @@ export default function PembayaranSiswa() {
     }
 
     fetchSiswaDetail()
-  }, [nisn])
+  }, [id_siswa])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0] || null
-    setFile(selectedFile)
+  const handleSubmit = async () => {
+    const payload = {
+      id_siswa: siswaDetail?.id_siswa,
+      tanggal_pembayaran: new Date().toISOString().split('T')[0],
+      uang_kbm: kbm !== '' ? Number(kbm) : null,
+      uang_spp: spp !== '' ? Number(spp) : null,
+      uang_pemeliharaan: pemeliharaan !== '' ? Number(pemeliharaan) : null,
+      uang_sumbangan: sumbangan !== '' ? Number(sumbangan) : null,
+      catatan,
+    }
+
+    const response = await fetch('http://127.0.0.1:8000/api/pembayaran', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada'
+      },
+      body: JSON.stringify(payload),
+    })
+
+    const result = await response.json()
+    if (response.ok) {
+      alert(result.message || 'Pembayaran berhasil.')
+    } else {
+      alert(result.message || 'Gagal menyimpan pembayaran.')
+    }
   }
 
   return (
@@ -59,15 +100,14 @@ export default function PembayaranSiswa() {
 
           {siswaDetail && (
             <div className="space-y-4">
-              {/* Baris atas: NISN - Nama - Level - Akademik */}
               <div className="grid grid-cols-3 gap-4">
                 <input
-                  value={`NISN: ${siswaDetail.nisn}`}
+                  value={siswaDetail.nama_siswa}
                   readOnly
                   className="border px-3 py-2 rounded bg-gray-100"
                 />
                 <input
-                  value={siswaDetail.nama_siswa}
+                  value={`Level ${siswaDetail.level}`}
                   readOnly
                   className="border px-3 py-2 rounded bg-gray-100"
                 />
@@ -78,43 +118,52 @@ export default function PembayaranSiswa() {
                 />
               </div>
 
+              <input
+                value={`NISN: ${siswaDetail.nisn}`}
+                readOnly
+                className="w-full border px-3 py-2 rounded bg-gray-100"
+              />
+
               <div className="grid grid-cols-2 gap-4">
                 <input
-                  value={`Level ${siswaDetail.level}`}
-                  readOnly
-                  className="border px-3 py-2 rounded bg-gray-100"
+                  placeholder="KBM"
+                  value={kbm}
+                  onChange={(e) => setKbm(e.target.value)}
+                  className="border px-3 py-2 rounded"
+                />
+                <input
+                  placeholder="SPP"
+                  value={spp}
+                  onChange={(e) => setSpp(e.target.value)}
+                  className="border px-3 py-2 rounded"
+                />
+                <input
+                  placeholder="Pemeliharaan"
+                  value={pemeliharaan}
+                  onChange={(e) => setPemeliharaan(e.target.value)}
+                  className="border px-3 py-2 rounded"
+                />
+                <input
+                  placeholder="Sumbangan"
+                  value={sumbangan}
+                  onChange={(e) => setSumbangan(e.target.value)}
+                  className="border px-3 py-2 rounded"
                 />
               </div>
 
-              {/* Judul bagian */}
-              <h3 className="text-center font-semibold text-lg mt-4 mb-2">Tagihan Semester</h3>
-
-              {/* Kontrak Siswa (File) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Kontrak Siswa</label>
-                <p className="text-xs text-gray-500">* Maksimal ukuran 10 MB, hanya format PDF</p>
-                <input
-                  type="file"
-                  accept="application/pdf"
-                  onChange={handleFileChange}
-                  className="w-full text-sm border rounded px-3 py-2 cursor-pointer file:py-1 file:px-3 file:bg-blue-50 file:text-blue-700 file:rounded file:border-0 hover:file:bg-blue-100"
+                <label className="block text-sm font-medium text-gray-700">Catatan</label>
+                <textarea
+                  value={catatan}
+                  onChange={(e) => setCatatan(e.target.value)}
+                  className="w-full border px-3 py-2 rounded"
                 />
-                {file && <p className="text-sm mt-1 text-gray-600">{file.name}</p>}
               </div>
 
-              {/* Input tagihan: KBM, SPP, Pemeliharaan, Sumbangan */}
-              <div className="grid grid-cols-2 gap-4">
-                <input placeholder="KBM" className="border px-3 py-2 rounded" />
-                <input placeholder="SPP" className="border px-3 py-2 rounded" />
-                <input placeholder="Pemeliharaan" className="border px-3 py-2 rounded" />
-                <input placeholder="Sumbangan" className="border px-3 py-2 rounded" />
-              </div>
-
-              {/* Total */}
-              <input placeholder="Total" className="w-full border px-3 py-2 rounded" />
-
-              {/* Tombol Simpan */}
-              <button className="mt-6 w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 transition font-semibold">
+              <button
+                onClick={handleSubmit}
+                className="mt-6 w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 transition font-semibold"
+              >
                 Simpan
               </button>
             </div>

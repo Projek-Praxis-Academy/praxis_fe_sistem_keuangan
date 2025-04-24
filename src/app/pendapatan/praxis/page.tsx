@@ -56,6 +56,7 @@ export default function PendapatanPraxis() {
     () => [
       { accessorKey: 'no', header: 'No' },
       { accessorKey: 'nama_siswa', header: 'Nama Siswa' },
+      { accessorKey: 'nisn', header: 'NISN' },
       { accessorKey: 'tagihan_uang_kbm', header: 'KBM' },
       { accessorKey: 'tagihan_uang_spp', header: 'SPP' },
       { accessorKey: 'tagihan_uang_pemeliharaan', header: 'Pemeliharaan' },
@@ -84,11 +85,11 @@ export default function PendapatanPraxis() {
         accessorKey: 'kontrak',
         header: 'Kontrak',
         cell: ({ row }: any) => {
-          const nisn = row.original.nisn
+          const id_siswa = row.original.id_siswa
           return (
             <CreditCard
               className="text-gray-600 cursor-pointer"
-              onClick={() => router.push(`/pendapatan/praxis/kontrak-siswa?nisn=${nisn}`)}
+              onClick={() => router.push(`/pendapatan/praxis/kontrak-siswa?id_siswa=${id_siswa}`)}
             />
           )
         }
@@ -97,11 +98,11 @@ export default function PendapatanPraxis() {
         accessorKey: 'bayar',
         header: 'Bayar',
         cell: ({ row }: any) => {
-          const nisn = row.original.nisn
+          const id_siswa = row.original.id_siswa
           return (
             <FileSignature
               className="text-gray-600 cursor-pointer"
-              onClick={() => router.push(`/pendapatan/praxis/pembayaran-siswa?nisn=${nisn}`)}
+              onClick={() => router.push(`/pendapatan/praxis/pembayaran-siswa?id_siswa=${id_siswa}`)}
             />
           )
         }

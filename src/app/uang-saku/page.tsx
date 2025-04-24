@@ -8,6 +8,7 @@ export default function UangSaku() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLevel, setSelectedLevel] = useState('1')
   const [darkMode] = useState(false)
+  
 
   // Data Dummy berdasarkan Level
   const allData = useMemo(() => {
@@ -45,7 +46,7 @@ export default function UangSaku() {
         cell: () => (
           <FileText
             className="text-gray-600 cursor-pointer"
-            onClick={() => alert('Fitur akan segera hadir')}
+            onClick={() => router.push('/uang-saku/detail')}
           />
         )
       }
