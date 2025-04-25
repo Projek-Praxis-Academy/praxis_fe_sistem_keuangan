@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
+import axios from 'axios'
 
 interface Siswa {
-  no: number
   nama_siswa: string
   id_siswa: string
   nisn: string
@@ -19,101 +19,45 @@ interface Siswa {
 export default function KontrakSiswa() {
   const searchParams = useSearchParams()
   const id_siswa = searchParams.get('id_siswa') || ''
+  const router = useRouter()
 
   const [siswaDetail, setSiswaDetail] = useState<Siswa | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [file, setFile] = useState<File | null>(null)
-
-  // State untuk menangani perubahan input
-  const [updatedSiswaDetail, setUpdatedSiswaDetail] = useState<Siswa | null>(null)
 
   useEffect(() => {
-    const fetchSiswaDetail = async () => {
-      if (!id_siswa) return
+    if (!id_siswa) return;
 
-      setLoading(true)
-      setError('')
-
-      try {
-        const response = await fetch(`http://127.0.0.1:8000/api/monitoring?id_siswa=${id_siswa}`, {
-          method: 'GET',
-          headers: {
-            Authorization: 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada'
-          }
-        })
-
-        const result = await response.json()
-
-        if (!response.ok) {
-          setError('Data tidak ditemukan.')
-        } else {
-          setSiswaDetail(result)
-          setUpdatedSiswaDetail(result) // Menyimpan salinan data untuk editing
-        }
-      } catch (err) {
-        setError('Terjadi kesalahan saat mengambil data.')
-      } finally {
-        setLoading(false)
+    axios.get(`http://127.0.0.1:8000/api/monitoring/detail-kontrak/${id_siswa}`, {
+      headers: {
+        Authorization: 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada',
       }
-    }
+    })
+    .then(res => {
+      const siswa = res.data
+      const kontrak = siswa.kontrak || {}
 
-    fetchSiswaDetail()
+      const siswaData: Siswa = {
+        id_siswa: siswa.id_siswa,
+        nama_siswa: siswa.nama_siswa,
+        nisn: siswa.nisn,
+        level: siswa.level,
+        akademik: siswa.akademik,
+        tagihan_uang_kbm: Number(kontrak.uang_kbm ?? 0),
+        tagihan_uang_spp: Number(kontrak.uang_spp ?? 0),
+        tagihan_uang_pemeliharaan: Number(kontrak.uang_pemeliharaan ?? 0),
+        tagihan_uang_sumbangan: Number(kontrak.uang_sumbangan ?? 0),
+      }
+
+      setSiswaDetail(siswaData)
+      setLoading(false)
+    })
+    .catch(err => {
+      console.error('Gagal ambil data:', err)
+      setError('Gagal mengambil data siswa.')
+      setLoading(false)
+    })
   }, [id_siswa])
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-     const selectedFile = e.target.files?.[0]
-     if (selectedFile && selectedFile.type !== 'application/pdf') {
-       alert('Hanya file PDF yang diperbolehkan.')
-       setFile(null)
-     } else {
-       setFile(selectedFile)
-     }
-   }
-   
-
-  // Fungsi untuk menangani perubahan input
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof Siswa) => {
-    if (updatedSiswaDetail) {
-      setUpdatedSiswaDetail({
-        ...updatedSiswaDetail,
-        [field]: e.target.value ? parseInt(e.target.value) : null
-      })
-    }
-  }
-
-  const handleSubmit = async () => {
-    if (!updatedSiswaDetail || !file) return
-
-    const formData = new FormData()
-    formData.append('id_siswa', updatedSiswaDetail.id_siswa)
-    formData.append('uang_kbm', String(updatedSiswaDetail.tagihan_uang_kbm ?? 0))
-    formData.append('uang_spp', String(updatedSiswaDetail.tagihan_uang_spp ?? 0))
-    formData.append('uang_pemeliharaan', String(updatedSiswaDetail.tagihan_uang_pemeliharaan ?? 0))
-    formData.append('uang_sumbangan', String(updatedSiswaDetail.tagihan_uang_sumbangan ?? 0))
-    formData.append('catatan', '')
-    formData.append('file_kontrak', file)
-
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/kontrak', {
-        method: 'POST',
-        headers: {
-          Authorization: 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada',
-        },
-        body: formData,
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        setError(result.message || 'Gagal membuat kontrak siswa.')
-      } else {
-        alert('Kontrak berhasil disimpan!')
-      }
-    } catch (err) {
-      setError('Terjadi kesalahan saat menyimpan data.')
-    }
-  }
 
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
@@ -124,91 +68,76 @@ export default function KontrakSiswa() {
           {loading && <p>Loading...</p>}
           {error && <p className="text-red-600 mb-4">{error}</p>}
 
-          {updatedSiswaDetail && (
+          {siswaDetail && (
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <input
-                  value={updatedSiswaDetail.nama_siswa}
+                  value={siswaDetail.nama_siswa}
                   readOnly
                   className="w-70 border px-3 py-2 rounded bg-gray-100 text-center"
                 />
                 <input
-                  value={`Level ${updatedSiswaDetail.level}`}
+                  value={`Level ${siswaDetail.level}`}
                   readOnly
                   className="ml-20 w-30 border px-3 py-2 rounded bg-gray-100 text-center"
                 />
                 <input
-                  value={updatedSiswaDetail.akademik}
+                  value={siswaDetail.akademik}
                   readOnly
                   className="w-30 border px-3 py-2 rounded bg-gray-100 text-center"
                 />
               </div>
 
               <input
-                value={`NISN: ${updatedSiswaDetail.nisn}`}
+                value={`NISN: ${siswaDetail.nisn}`}
                 readOnly
                 className="text-center w-100 border px-3 py-2 rounded bg-gray-100"
               />
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-black font-bold mb-1">KBM</label>
+                  <label className="block text-sm font-medium font-bold mb-1">KBM</label>
                   <input
                     type="number"
-                    value={updatedSiswaDetail.tagihan_uang_kbm ?? ''}
-                    onChange={(e) => handleInputChange(e, 'tagihan_uang_kbm')}
-                    className="border px-3 py-2 rounded w-full"
+                    value={siswaDetail.tagihan_uang_kbm ?? ''}
+                    readOnly
+                    className="border px-3 py-2 rounded w-full bg-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-black font-bold mb-1">SPP</label>
+                  <label className="block text-sm font-medium font-bold mb-1">SPP</label>
                   <input
                     type="number"
-                    value={updatedSiswaDetail.tagihan_uang_spp ?? ''}
-                    onChange={(e) => handleInputChange(e, 'tagihan_uang_spp')}
-                    className="border px-3 py-2 rounded w-full"
+                    value={siswaDetail.tagihan_uang_spp ?? ''}
+                    readOnly
+                    className="border px-3 py-2 rounded w-full bg-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-black font-bold mb-1">Pemeliharaan</label>
+                  <label className="block text-sm font-medium font-bold mb-1">Pemeliharaan</label>
                   <input
                     type="number"
-                    value={updatedSiswaDetail.tagihan_uang_pemeliharaan ?? ''}
-                    onChange={(e) => handleInputChange(e, 'tagihan_uang_pemeliharaan')}
-                    className="border px-3 py-2 rounded w-full"
+                    value={siswaDetail.tagihan_uang_pemeliharaan ?? ''}
+                    readOnly
+                    className="border px-3 py-2 rounded w-full bg-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-black font-bold mb-1">Sumbangan</label>
+                  <label className="block text-sm font-medium font-bold mb-1">Sumbangan</label>
                   <input
                     type="number"
-                    value={updatedSiswaDetail.tagihan_uang_sumbangan ?? ''}
-                    onChange={(e) => handleInputChange(e, 'tagihan_uang_sumbangan')}
-                    className="border px-3 py-2 rounded w-full"
+                    value={siswaDetail.tagihan_uang_sumbangan ?? ''}
+                    readOnly
+                    className="border px-3 py-2 rounded w-full bg-gray-100"
                   />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 items-start">
-                <input placeholder="Total" className="border px-3 py-2 rounded" />
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">File PDF Kontrak</label>
-                  <p className="text-xs text-gray-500">* Maksimal ukuran 10 MB, hanya format PDF</p>
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleFileChange}
-                    className="w-full text-sm border rounded px-3 py-2 cursor-pointer file:py-1 file:px-3 file:bg-blue-50 file:text-blue-700 file:rounded file:border-0 hover:file:bg-blue-100"
-                  />
-                  {file && <p className="text-sm mt-1 text-gray-600">{file.name}</p>}
                 </div>
               </div>
 
               <button
-                onClick={handleSubmit}
-                className="mt-6 w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 transition font-semibold"
+                onClick={() => router.push('/pendapatan/praxis')}
+                className="mt-6 w-full bg-gray-600 text-white py-2 rounded hover:bg-gray-500 transition font-semibold"
               >
-                Simpan
+                Kembali
               </button>
             </div>
           )}
