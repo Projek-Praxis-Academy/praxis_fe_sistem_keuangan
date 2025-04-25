@@ -49,6 +49,13 @@ const SidebarContent = () => {
                     <span>Techno Nature</span>
                   </Link>
                 </li>
+
+                {/* Boarding & Konsumsi */}
+                <li className="mb-2">
+                  <Link href="/pendapatan/boarding-konsumsi" className="block p-2 text-left text-black bg-white hover:bg-gray-200 hover:text-black rounded">
+                    Boarding & Konsumsi
+                  </Link>
+                </li>
               </ul>
             )}
           </li>        
@@ -77,6 +84,7 @@ const SidebarContent = () => {
               Tunggakan
             </Link>
           </li>
+
         </ul>
       </div>
 

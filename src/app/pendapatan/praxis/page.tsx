@@ -12,10 +12,12 @@ interface Siswa {
   nisn: string
   level: string
   akademik: string
-  tagihan_uang_kbm: number | null
-  tagihan_uang_spp: number | null
-  tagihan_uang_pemeliharaan: number | null
+  id_siswa: number
+  tagihan_uang_kbm: number
+  tagihan_uang_spp: number
+  tagihan_uang_pemeliharaan: number
   tagihan_uang_sumbangan: string | null
+  total: number
 }
 
 export default function PendapatanPraxis() {
@@ -24,6 +26,12 @@ export default function PendapatanPraxis() {
   const [data, setData] = useState<Siswa[]>([])
   const router = useRouter()
 
+  // Konversi "1.000.000" ke 1000000
+  const parseFormattedNumber = (value: string | null | undefined): number => {
+    if (!value || value === 'Lunas') return 0
+    return Number(value.replace(/\./g, ''))
+  }
+
   useEffect(() => {
     axios.get('http://127.0.0.1:8000/api/monitoring', {
       headers: {
@@ -31,10 +39,28 @@ export default function PendapatanPraxis() {
       }
     })
     .then(res => {
-      const fetchedData = res.data.data.map((item: any, index: number) => ({
-        no: index + 1,
-        ...item
-      }))
+      const fetchedData = res.data.data.map((item: any, index: number) => {
+        const tagihan = item.tagihan || {}
+
+        const kbm = parseFormattedNumber(tagihan.tagihan_uang_kbm)
+        const spp = parseFormattedNumber(tagihan.tagihan_uang_spp)
+        const pemeliharaan = parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan)
+        const sumbanganVal = parseFormattedNumber(tagihan.tagihan_uang_sumbangan)
+
+        return {
+          no: index + 1,
+          nama_siswa: item.nama_siswa,
+          nisn: item.nisn,
+          level: item.level,
+          akademik: item.akademik,
+          id_siswa: item.id_siswa,
+          tagihan_uang_kbm: kbm,
+          tagihan_uang_spp: spp,
+          tagihan_uang_pemeliharaan: pemeliharaan,
+          tagihan_uang_sumbangan: tagihan.tagihan_uang_sumbangan === '0' ? 'Lunas' : tagihan.tagihan_uang_sumbangan,
+          total: kbm + spp + pemeliharaan + sumbanganVal
+        }
+      })
       setData(fetchedData)
     })
     .catch(error => {
@@ -57,9 +83,21 @@ export default function PendapatanPraxis() {
       { accessorKey: 'no', header: 'No' },
       { accessorKey: 'nama_siswa', header: 'Nama Siswa' },
       { accessorKey: 'nisn', header: 'NISN' },
-      { accessorKey: 'tagihan_uang_kbm', header: 'KBM' },
-      { accessorKey: 'tagihan_uang_spp', header: 'SPP' },
-      { accessorKey: 'tagihan_uang_pemeliharaan', header: 'Pemeliharaan' },
+      {
+        accessorKey: 'tagihan_uang_kbm',
+        header: 'KBM',
+        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+      },
+      {
+        accessorKey: 'tagihan_uang_spp',
+        header: 'SPP',
+        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+      },
+      {
+        accessorKey: 'tagihan_uang_pemeliharaan',
+        header: 'Pemeliharaan',
+        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+      },
       {
         accessorKey: 'tagihan_uang_sumbangan',
         header: 'Sumbangan',
@@ -70,16 +108,7 @@ export default function PendapatanPraxis() {
       {
         accessorKey: 'total',
         header: 'Total',
-        cell: ({ row }: any) => {
-          const { tagihan_uang_kbm, tagihan_uang_spp, tagihan_uang_pemeliharaan, tagihan_uang_sumbangan } = row.original
-          const sumbanganValue = isNaN(Number(tagihan_uang_sumbangan)) ? 0 : Number(tagihan_uang_sumbangan)
-          const total =
-            (tagihan_uang_kbm || 0) +
-            (tagihan_uang_spp || 0) +
-            (tagihan_uang_pemeliharaan || 0) +
-            sumbanganValue
-          return <span>{total.toLocaleString('id-ID')}</span>
-        }
+        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
       },
       {
         accessorKey: 'kontrak',
@@ -140,7 +169,7 @@ export default function PendapatanPraxis() {
             />
             <Search size={14} className="absolute left-2 top-2 text-gray-700" />
           </div>
-          <button className="px-2 py-1 bg-gray-300 rounded-md text-sm text-black" onClick={() => router.push('/pendapatan/praxis/tambah-kontrak')}>Tambah Kontrak</button>
+          <button className="px-2 py-1 bg-gray-300 rounded-md text-sm text-black" onClick={() => router.push('http://127.0.0.1:3000/pendapatan/praxis/tambah-kontrak')}>Tambah Kontrak</button>
         </div>
         <button className="px-2 py-1 bg-gray-300 rounded-md text-sm text-black" onClick={() => alert('Fitur segera hadir')}>Cetak Tagihan</button>
       </div>

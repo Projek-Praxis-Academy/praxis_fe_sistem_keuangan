@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import { Search, FileText, StickyNote } from 'lucide-react'
 
 export default function PendapatanTechno() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLevel, setSelectedLevel] = useState('10')
+  const router = useRouter()
 
   // Data Dummy berdasarkan Level
   const allData = useMemo(() => {
@@ -100,7 +102,7 @@ export default function PendapatanTechno() {
             />
             <Search size={14} className="absolute left-2 top-2 text-gray-700" />
           </div>
-          <button className="px-2 py-1  bg-gray-300 rounded-md text-sm text-black" onClick={() => alert('Fitur segera hadir')}>Tambah Kontrak</button>
+          <button className="px-2 py-1 bg-gray-300 rounded-md text-sm text-black" onClick={() => router.push('http://127.0.0.1:3000/pendapatan/techno/tambah-kontrak')}>Tambah Kontrak</button>
         </div>
         <button className="px-2 py-1 bg-gray-300 rounded-md text-sm text-black" onClick={() => alert('Fitur segera hadir')}>Cetak Tagihan</button>
       </div>

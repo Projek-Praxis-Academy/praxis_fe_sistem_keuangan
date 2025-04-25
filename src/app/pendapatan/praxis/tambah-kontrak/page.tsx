@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FilePlus2 } from 'lucide-react'
+import axios from 'axios'
 
 export default function TambahKontrak() {
   const router = useRouter()
@@ -20,6 +21,7 @@ export default function TambahKontrak() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Validasi input
     if (!nisn || !uangKBM || !uangSPP || !uangPemeliharaan || !uangSumbangan || !fileKontrak) {
       setError('Semua field wajib diisi dan file kontrak harus diunggah!')
       return
@@ -48,27 +50,23 @@ export default function TambahKontrak() {
       formData.append('catatan', catatan)
       formData.append('file_kontrak', fileKontrak)
 
-      const response = await fetch('http://127.0.0.1:8000/api/kontrak', {
-        method: 'POST',
+      const config = {
+        method: 'post',
+        url: 'http://127.0.0.1:8000/api/kontrak',
         headers: {
-          Authorization: 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada'
-          // ❗ Jangan set Content-Type secara manual untuk FormData
+          'Authorization': 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada',
         },
-        body: formData
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        const msg = data.errors ? Object.values(data.errors).join(', ') : data.message || 'Terjadi kesalahan.'
-        setError(msg)
-      } else {
-        alert('Kontrak berhasil ditambahkan!')
-        router.push('/pendapatan/praxis')
+        data: formData
       }
-    } catch (err) {
+
+      const response = await axios.request(config)
+
+      alert('Kontrak berhasil ditambahkan!')
+      router.push('/pendapatan/praxis')
+    } catch (err: any) {
       console.error(err)
-      setError('Terjadi kesalahan saat mengirim data. Silakan coba lagi.')
+      const msg = err.response?.data?.message || 'Terjadi kesalahan saat mengirim data. Silakan coba lagi.'
+      setError(msg)
     } finally {
       setLoading(false)
     }
