@@ -15,7 +15,7 @@ interface Siswa {
   no_hp_wali: string
 }
 
-export default function PembayaranSiswa() {
+export default function PembayaranBk() {
   const searchParams = useSearchParams()
   const id_siswa_query = searchParams.get('id_siswa') || ''
 
@@ -24,10 +24,8 @@ export default function PembayaranSiswa() {
   const [error, setError] = useState('')
 
   const [tanggalPembayaran, setTanggalPembayaran] = useState('')
-  const [kbm, setKbm] = useState('')
-  const [spp, setSpp] = useState('')
-  const [pemeliharaan, setPemeliharaan] = useState('')
-  const [sumbangan, setSumbangan] = useState('')
+  const [boarding, setBoarding] = useState('')
+  const [konsumsi, setKonsumsi] = useState('')
   const [catatan, setCatatan] = useState('')
   const [totalPembayaran, setTotalPembayaran] = useState(0)
 
@@ -39,12 +37,14 @@ export default function PembayaranSiswa() {
       setError('')
 
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/monitoring/pembayaran-siswa/${id_siswa_query}`, {
+        const response = await fetch(`http://127.0.0.1:8000/api/monitoring/bk/pembayaran-siswa/${id_siswa_query}`, {
+          method: 'GET',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
         })
-        setSiswaDetail(response.data)
+        const data = await response.json()
+        setSiswaDetail(data)
       } catch (err) {
         setError('Terjadi kesalahan saat mengambil data siswa.')
       } finally {
@@ -55,25 +55,20 @@ export default function PembayaranSiswa() {
     fetchSiswaDetail()
   }, [id_siswa_query])
 
-  // Update total pembayaran setiap field berubah
   useEffect(() => {
     const total =
-      (parseInt(kbm || '0') || 0) +
-      (parseInt(spp || '0') || 0) +
-      (parseInt(pemeliharaan || '0') || 0) +
-      (parseInt(sumbangan || '0') || 0)
+      (parseInt(boarding || '0') || 0) +
+      (parseInt(konsumsi || '0') || 0)
     setTotalPembayaran(total)
-  }, [kbm, spp, pemeliharaan, sumbangan])
+  }, [boarding, konsumsi])
 
   const handleSubmit = async () => {
     if (!siswaDetail) return
 
-    const uang_kbm = kbm.trim() !== '' ? parseInt(kbm) : null
-    const uang_spp = spp.trim() !== '' ? parseInt(spp) : null
-    const uang_pemeliharaan = pemeliharaan.trim() !== '' ? parseInt(pemeliharaan) : null
-    const uang_sumbangan = sumbangan.trim() !== '' ? parseInt(sumbangan) : null
+    const uang_boarding = boarding.trim() !== '' ? parseInt(boarding) : null
+    const uang_konsumsi = konsumsi.trim() !== '' ? parseInt(konsumsi) : null
 
-    if (uang_kbm === null && uang_spp === null && uang_pemeliharaan === null && uang_sumbangan === null) {
+    if (uang_boarding === null && uang_konsumsi === null) {
       alert('Minimal satu jenis pembayaran harus diisi.')
       return
     }
@@ -86,39 +81,35 @@ export default function PembayaranSiswa() {
     const data = {
       id_siswa: siswaDetail.id_siswa.toString(),
       tanggal_pembayaran: tanggalPembayaran,
-      uang_kbm,
-      uang_pemeliharaan,
-      uang_spp,
-      uang_sumbangan,
+      uang_boarding,
+      uang_konsumsi,
       catatan: catatan.trim() !== '' ? catatan : null
     }
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/pembayaran', data, {
+      const response = await fetch('http://127.0.0.1:8000/api/pembayaran/bk', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
+        },
+        body: JSON.stringify(data)
       })
 
-      if (response.data.status === 'success') {
-        alert(response.data.message || 'Pembayaran berhasil.')
+      const result = await response.json()
+
+      if (result.status === 'success') {
+        alert(result.message || 'Pembayaran berhasil.')
         setTanggalPembayaran('')
-        setKbm('')
-        setSpp('')
-        setPemeliharaan('')
-        setSumbangan('')
+        setBoarding('')
+        setKonsumsi('')
         setCatatan('')
-        window.location.href = 'http://127.0.0.1:3000/pendapatan/praxis'
+        window.location.href = 'http://127.0.0.1:3000/pendapatan/boarding-konsumsi'
       } else {
-        alert(response.data.message || 'Gagal menyimpan pembayaran.')
+        alert(result.message || 'Gagal menyimpan pembayaran.')
       }
-    } catch (error: any) {
-      if (error.response && error.response.data) {
-        alert(error.response.data.message || 'Gagal menyimpan pembayaran.')
-      } else {
-        alert('Terjadi kesalahan saat mengirim data.')
-      }
+    } catch (error) {
+      alert('Terjadi kesalahan saat mengirim data.')
     }
   }
 
@@ -126,7 +117,7 @@ export default function PembayaranSiswa() {
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="overflow-x-auto">
         <div className="bg-white rounded-lg shadow-md p-10 min-w-[700px] w-full max-w-2xl border mx-auto">
-          <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">PEMBAYARAN</h2>
+          <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">PEMBAYARAN BOARDING & KONSUMSI</h2>
 
           {loading && <p>Loading...</p>}
           {error && <p className="text-red-600 mb-4">{error}</p>}
@@ -177,27 +168,15 @@ export default function PembayaranSiswa() {
 
               <div className="grid grid-cols-2 gap-4">
                 <input
-                  placeholder="KBM"
-                  value={kbm}
-                  onChange={(e) => setKbm(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Boarding"
+                  value={boarding}
+                  onChange={(e) => setBoarding(e.target.value.replace(/\D/g, ''))}
                   className="border px-3 py-2 rounded"
                 />
                 <input
-                  placeholder="SPP"
-                  value={spp}
-                  onChange={(e) => setSpp(e.target.value.replace(/\D/g, ''))}
-                  className="border px-3 py-2 rounded"
-                />
-                <input
-                  placeholder="Pemeliharaan"
-                  value={pemeliharaan}
-                  onChange={(e) => setPemeliharaan(e.target.value.replace(/\D/g, ''))}
-                  className="border px-3 py-2 rounded"
-                />
-                <input
-                  placeholder="Sumbangan"
-                  value={sumbangan}
-                  onChange={(e) => setSumbangan(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Konsumsi"
+                  value={konsumsi}
+                  onChange={(e) => setKonsumsi(e.target.value.replace(/\D/g, ''))}
                   className="border px-3 py-2 rounded"
                 />
               </div>
@@ -219,7 +198,7 @@ export default function PembayaranSiswa() {
                   value={catatan}
                   onChange={(e) => setCatatan(e.target.value)}
                   className="w-full border px-3 py-2 rounded"
-                  placeholder="Contoh: Pembayaran sebagian untuk KBM dan Pemeliharaan."
+                  placeholder="Contoh: Pembayaran sebagian untuk boarding."
                 />
               </div>
 

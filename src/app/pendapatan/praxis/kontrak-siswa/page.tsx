@@ -26,11 +26,20 @@ export default function KontrakSiswa() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!id_siswa) return;
+    if (!id_siswa) return
 
+    // Ambil token dari localStorage
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setError('Token tidak ditemukan. Anda perlu login ulang.')
+      setLoading(false)
+      return
+    }
+
+    // Request API untuk mengambil data siswa
     axios.get(`http://127.0.0.1:8000/api/monitoring/detail-kontrak/${id_siswa}`, {
       headers: {
-        Authorization: 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada',
+        Authorization: `Bearer ${token}`,
       }
     })
     .then(res => {
@@ -65,7 +74,13 @@ export default function KontrakSiswa() {
         <div className="bg-white rounded-lg shadow-md p-10 min-w-[700px] w-full max-w-2xl border mx-auto">
           <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">KONTRAK SISWA</h2>
 
-          {loading && <p>Loading...</p>}
+          {loading && (
+            <div className="flex justify-center items-center">
+              <div className="spinner"></div>
+              <span className="ml-2">Loading...</span>
+            </div>
+          )}
+
           {error && <p className="text-red-600 mb-4">{error}</p>}
 
           {siswaDetail && (

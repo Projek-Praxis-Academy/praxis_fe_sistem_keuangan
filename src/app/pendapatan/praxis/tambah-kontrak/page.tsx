@@ -50,11 +50,20 @@ export default function TambahKontrak() {
       formData.append('catatan', catatan)
       formData.append('file_kontrak', fileKontrak)
 
+      // Ambil token dari localStorage
+      const token = localStorage.getItem('token')
+
+      if (!token) {
+        setError('Token tidak ditemukan, harap login terlebih dahulu.')
+        setLoading(false)
+        return
+      }
+
       const config = {
         method: 'post',
         url: 'http://127.0.0.1:8000/api/kontrak',
         headers: {
-          'Authorization': 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada',
+          'Authorization': `Bearer ${token}`, // Gunakan token dari localStorage
         },
         data: formData
       }

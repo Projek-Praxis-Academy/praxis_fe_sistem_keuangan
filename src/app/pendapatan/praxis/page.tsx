@@ -33,40 +33,53 @@ export default function PendapatanPraxis() {
   }
 
   useEffect(() => {
-    axios.get('http://127.0.0.1:8000/api/monitoring', {
-      headers: {
-        Authorization: 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada'
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('token') || '';
+        console.log('Token:', token);
+  
+        const response = await axios.get('http://127.0.0.1:8000/api/monitoring', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+  
+        console.log('API Response:', response.data);
+  
+        const fetchedData = response.data.data.map((item: any, index: number) => {
+          console.log('Item:', item); // Cek setiap item
+          const tagihan = item.tagihan || {};
+  
+          const kbm = parseFormattedNumber(tagihan.tagihan_uang_kbm);
+          const spp = parseFormattedNumber(tagihan.tagihan_uang_spp);
+          const pemeliharaan = parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan);
+          const sumbanganVal = parseFormattedNumber(tagihan.tagihan_uang_sumbangan);
+  
+          return {
+            no: index + 1,
+            nama_siswa: item.nama_siswa,
+            nisn: item.nisn,
+            level: item.level,
+            akademik: item.akademik,
+            id_siswa: item.id_siswa,
+            tagihan_uang_kbm: kbm,
+            tagihan_uang_spp: spp,
+            tagihan_uang_pemeliharaan: pemeliharaan,
+            tagihan_uang_sumbangan: tagihan.tagihan_uang_sumbangan === '0' ? 'Lunas' : tagihan.tagihan_uang_sumbangan,
+            total: kbm + spp + pemeliharaan + sumbanganVal,
+          };
+        });
+  
+        setData(fetchedData);
+      } catch (error: any) {
+        console.error('Failed to fetch data:', error);
+        console.error('Error response:', error.response?.data);
       }
-    })
-    .then(res => {
-      const fetchedData = res.data.data.map((item: any, index: number) => {
-        const tagihan = item.tagihan || {}
-
-        const kbm = parseFormattedNumber(tagihan.tagihan_uang_kbm)
-        const spp = parseFormattedNumber(tagihan.tagihan_uang_spp)
-        const pemeliharaan = parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan)
-        const sumbanganVal = parseFormattedNumber(tagihan.tagihan_uang_sumbangan)
-
-        return {
-          no: index + 1,
-          nama_siswa: item.nama_siswa,
-          nisn: item.nisn,
-          level: item.level,
-          akademik: item.akademik,
-          id_siswa: item.id_siswa,
-          tagihan_uang_kbm: kbm,
-          tagihan_uang_spp: spp,
-          tagihan_uang_pemeliharaan: pemeliharaan,
-          tagihan_uang_sumbangan: tagihan.tagihan_uang_sumbangan === '0' ? 'Lunas' : tagihan.tagihan_uang_sumbangan,
-          total: kbm + spp + pemeliharaan + sumbanganVal
-        }
-      })
-      setData(fetchedData)
-    })
-    .catch(error => {
-      console.error('Failed to fetch data:', error)
-    })
-  }, [])
+    };
+  
+    fetchData();
+  }, []);
+  
 
   const filteredData = useMemo(() => {
     return data

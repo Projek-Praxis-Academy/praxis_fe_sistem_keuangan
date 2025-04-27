@@ -21,17 +21,17 @@ export default function BoardingKonsumsi() {
   const router = useRouter();
 
   useEffect(() => {
-    const config = {
-      method: 'get',
-      maxBodyLength: Infinity,
-      url: 'http://127.0.0.1:8000/api/monitoring/bk',
-      headers: {
-        'Authorization': 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada'
-      }
-    };
+    const fetchData = async () => {
+      const token = localStorage.getItem('token') || '';
+      console.log('Token:', token);
 
-    axios.request(config)
-      .then((response) => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/monitoring/bk', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
         if (response.data && response.data.data && Array.isArray(response.data.data.data)) {
           const fetchedData = response.data.data.data.map((item: any, index: number) => ({
             no: index + 1,
@@ -45,11 +45,13 @@ export default function BoardingKonsumsi() {
           console.error('Data tidak dalam format yang diharapkan atau hilang:', response.data.data);
           setData([]);
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error('Gagal mengambil data:', error);
         setData([]);
-      });
+      }
+    };
+
+    fetchData();
   }, []);
 
   const columns = useMemo(
@@ -86,7 +88,7 @@ export default function BoardingKonsumsi() {
           return (
             <CreditCard
               className="text-green-500 cursor-pointer"
-              onClick={() => router.push(`/pendapatan/boarding-konsumsi/pembayaran-siswa?id_siswa=${id_siswa}`)}
+              onClick={() => router.push(`/pendapatan/boarding-konsumsi/pembayaran-bk?id_siswa=${id_siswa}`)}
             />
           );
         }

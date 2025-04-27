@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { EyeIcon, EyeOffIcon } from "lucide-react"; // Import ikon mata
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 export default function HomePage() {
   const router = useRouter();
@@ -10,28 +10,48 @@ export default function HomePage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Simulasi autentikasi sederhana
-    if (email === "user@example.com" && password === "password123") {
-      localStorage.setItem("isAuthenticated", "true"); // Simpan status login
-      router.push("/dashboard"); // Arahkan ke dashboard
-    } else {
-      alert("Email atau password salah!");
+  
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+  
+    const raw = JSON.stringify({
+      email: email,
+      password: password,
+    });
+  
+    const requestOptions: RequestInit = {
+      method: "POST",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow",
+    };
+  
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/login", requestOptions);
+      const data = await response.json(); // Ini ambil body JSON
+  
+      if (response.ok) {
+        const token = data.access_token; // ambil dari data.access_token (bukan data.token)
+        localStorage.setItem("token", token); // Simpan ke localStorage
+        router.push("/dashboard"); // Ganti ke path, jangan ke URL full
+      } else {
+        alert(data.message || "Login gagal. Cek email dan password!");
+      }
+    } catch (error) {
+      console.error("Error login:", error);
+      alert("Terjadi kesalahan. Coba lagi nanti.");
     }
   };
+  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-blue-900 p-8 rounded-xl shadow-lg border-4 w-[400px] text-center">
-        {/* Logo */}
         <img src="/logo.png" alt="Praxis Academy" className="mx-auto w-20 mb-4" />
-
-        {/* Judul */}
         <h2 className="text-xl font-semibold text-white mb-4">Masuk</h2>
 
-        {/* Form Login */}
         <form className="flex flex-col gap-4" onSubmit={handleLogin}>
           <input
             type="email"
@@ -49,7 +69,6 @@ export default function HomePage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            {/* Ikon Mata */}
             <button
               type="button"
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800"

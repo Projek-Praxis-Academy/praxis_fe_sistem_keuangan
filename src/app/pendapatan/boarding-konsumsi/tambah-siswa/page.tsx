@@ -12,61 +12,62 @@ export default function TambahSiswa() {
   const [tanggalMulai, setTanggalMulai] = useState('')
   const [tanggalSelesai, setTanggalSelesai] = useState('')
   const [nominal, setNominal] = useState('')
-  const [tagihan, setTagihan] = useState('')
   const [catatan, setCatatan] = useState('')
   const [jenisTagihan, setJenisTagihan] = useState('boarding') // default to boarding
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-     e.preventDefault()
-   
-     // Validasi input
-     if (!nisn || !tanggalMulai || !tanggalSelesai || !nominal || !catatan) {
-       setError('Semua field wajib diisi!')
-       return
-     }
-   
-     const nominalInt = parseInt(nominal)
-     if (isNaN(nominalInt)) {
-       setError('Nominal harus berupa angka!')
-       return
-     }
-   
-     setLoading(true)
-     setError('')
-   
-     try {
-       const url =
-         jenisTagihan === 'boarding'
-           ? 'http://127.0.0.1:8000/api/create/siswa/boarding'
-           : 'http://127.0.0.1:8000/api/create/siswa/konsumsi'
-   
-       const data = {
-         nisn,
-         tanggal_mulai: tanggalMulai,
-         tanggal_selesai: tanggalSelesai,
-         tagihan: nominalInt,
-         catatan,
-       }
-   
-       const response = await axios.post(url, data, {
-         headers: {
-           'Content-Type': 'application/json',
-           Authorization: 'Bearer 4|osACJZuD070U2LqNSkRqP7GhgIwv0OumsOqcXmQl35a58ada',
-         },
-       })
-   
-       alert('Data Siswa berhasil ditambahkan!')
-       router.push('/pendapatan/boarding-konsumsi')
-     } catch (err: any) {
-       console.error(err)
-       const msg = err.response?.data?.message || 'Terjadi kesalahan saat mengirim data. Silakan coba lagi.'
-       setError(msg)
-     } finally {
-       setLoading(false)
-     }
-   }
+    e.preventDefault()
+
+    // Validasi input
+    if (!nisn || !tanggalMulai || !tanggalSelesai || !nominal || !catatan) {
+      setError('Semua field wajib diisi!')
+      return
+    }
+
+    const nominalInt = parseInt(nominal)
+    if (isNaN(nominalInt)) {
+      setError('Nominal harus berupa angka!')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const url =
+        jenisTagihan === 'boarding'
+          ? 'http://127.0.0.1:8000/api/create/siswa/boarding'
+          : 'http://127.0.0.1:8000/api/create/siswa/konsumsi'
+
+      const token = localStorage.getItem('token') || ''
+
+      const data = {
+        nisn,
+        tanggal_mulai: tanggalMulai,
+        tanggal_selesai: tanggalSelesai,
+        tagihan: nominalInt,
+        catatan,
+      }
+
+      const response = await axios.post(url, data, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      alert('Data Siswa berhasil ditambahkan!')
+      router.push('/pendapatan/boarding-konsumsi')
+    } catch (err: any) {
+      console.error(err)
+      const msg = err.response?.data?.message || 'Terjadi kesalahan saat mengirim data. Silakan coba lagi.'
+      setError(msg)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
