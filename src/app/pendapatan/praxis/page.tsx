@@ -38,7 +38,7 @@ export default function PendapatanPraxis() {
         const token = localStorage.getItem('token') || '';
         console.log('Token:', token);
   
-        const response = await axios.get('http://127.0.0.1:8000/api/monitoring', {
+        const response = await axios.get('http://127.0.0.1:8000/api/monitoring-praxis', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -131,7 +131,7 @@ export default function PendapatanPraxis() {
           return (
             <CreditCard
               className="text-gray-600 cursor-pointer"
-              onClick={() => router.push(`/pendapatan/praxis/kontrak-siswa?id_siswa=${id_siswa}`)}
+              onClick={() => router.push(`/pendapatan/praxis/detail-praxis?id_siswa=${id_siswa}`)}
             />
           )
         }

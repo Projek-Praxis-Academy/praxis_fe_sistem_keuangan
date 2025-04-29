@@ -15,7 +15,7 @@ interface Siswa {
   no_hp_wali: string
 }
 
-export default function PembayaranSiswa() {
+export default function PembayaranTechno() {
   const searchParams = useSearchParams()
   const id_siswa_query = searchParams.get('id_siswa') || ''
 
@@ -39,7 +39,7 @@ export default function PembayaranSiswa() {
       setError('')
 
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/monitoring-praxis/pembayaran-siswa/${id_siswa_query}`, {
+        const response = await axios.get(`http://127.0.0.1:8000/api/monitoring-techno/pembayaran-siswa/${id_siswa_query}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -109,7 +109,7 @@ export default function PembayaranSiswa() {
         setPemeliharaan('')
         setSumbangan('')
         setCatatan('')
-        window.location.href = 'http://127.0.0.1:3000/pendapatan/praxis'
+        window.location.href = 'http://127.0.0.1:3000/pendapatan/techno'
       } else {
         alert(response.data.message || 'Gagal menyimpan pembayaran.')
       }

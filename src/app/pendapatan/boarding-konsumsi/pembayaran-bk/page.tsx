@@ -15,7 +15,7 @@ interface Siswa {
   no_hp_wali: string
 }
 
-export default function PembayaranBk() {
+export default function PembayaranBoardingKonsumsi() {
   const searchParams = useSearchParams()
   const id_siswa_query = searchParams.get('id_siswa') || ''
 
@@ -32,19 +32,16 @@ export default function PembayaranBk() {
   useEffect(() => {
     const fetchSiswaDetail = async () => {
       if (!id_siswa_query) return
-
       setLoading(true)
       setError('')
 
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/monitoring/bk/pembayaran-siswa/${id_siswa_query}`, {
-          method: 'GET',
+        const response = await axios.get(`http://127.0.0.1:8000/api/monitoring/bk/pembayaran-siswa/${id_siswa_query}`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
         })
-        const data = await response.json()
-        setSiswaDetail(data)
+        setSiswaDetail(response.data)
       } catch (err) {
         setError('Terjadi kesalahan saat mengambil data siswa.')
       } finally {
@@ -69,12 +66,12 @@ export default function PembayaranBk() {
     const uang_konsumsi = konsumsi.trim() !== '' ? parseInt(konsumsi) : null
 
     if (uang_boarding === null && uang_konsumsi === null) {
-      alert('Minimal satu jenis pembayaran harus diisi.')
+      alert('Minimal isi salah satu pembayaran (boarding/konsumsi).')
       return
     }
 
     if (!tanggalPembayaran) {
-      alert('Tanggal pembayaran harus diisi.')
+      alert('Tanggal pembayaran wajib diisi.')
       return
     }
 
@@ -87,29 +84,29 @@ export default function PembayaranBk() {
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/pembayaran/bk', {
-        method: 'POST',
+      const response = await axios.post('http://127.0.0.1:8000/api/pembayaran/bk', data, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(data)
+        }
       })
 
-      const result = await response.json()
-
-      if (result.status === 'success') {
-        alert(result.message || 'Pembayaran berhasil.')
+      if (response.data.status === 'success') {
+        alert(response.data.message || 'Pembayaran berhasil.')
         setTanggalPembayaran('')
         setBoarding('')
         setKonsumsi('')
         setCatatan('')
-        window.location.href = 'http://127.0.0.1:3000/pendapatan/boarding-konsumsi'
+        window.location.href = '/pendapatan/boarding-konsumsi'
       } else {
-        alert(result.message || 'Gagal menyimpan pembayaran.')
+        alert(response.data.message || 'Gagal menyimpan pembayaran.')
       }
-    } catch (error) {
-      alert('Terjadi kesalahan saat mengirim data.')
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        alert(error.response.data.message || 'Gagal menyimpan pembayaran.')
+      } else {
+        alert('Terjadi kesalahan saat mengirim data.')
+      }
     }
   }
 
@@ -148,12 +145,12 @@ export default function PembayaranBk() {
                 className="w-full border px-3 py-2 rounded bg-gray-100"
               />
 
-              {/* ID Siswa Hidden */}
+              {/* Hidden ID Siswa */}
               <input
                 type="hidden"
                 value={siswaDetail.id_siswa}
-                readOnly
                 name="id_siswa"
+                readOnly
               />
 
               <div>
@@ -181,7 +178,6 @@ export default function PembayaranBk() {
                 />
               </div>
 
-              {/* Total pembayaran */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Total Pembayaran</label>
                 <input
@@ -198,7 +194,7 @@ export default function PembayaranBk() {
                   value={catatan}
                   onChange={(e) => setCatatan(e.target.value)}
                   className="w-full border px-3 py-2 rounded"
-                  placeholder="Contoh: Pembayaran sebagian untuk boarding."
+                  placeholder="Contoh: Bayar konsumsi bulan April."
                 />
               </div>
 

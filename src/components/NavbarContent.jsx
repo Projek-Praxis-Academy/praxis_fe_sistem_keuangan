@@ -24,6 +24,11 @@ const SidebarContent = () => {
         </div>
 
         <ul>
+        <li className="mb-2">
+            <Link href="/dashboard" className="block p-2 text-left text-black bg-white hover:bg-gray-200 hover:text-black rounded">
+              Dashboard
+            </Link>
+          </li>
           {/* Tagihin */}
           <li className="mb-2">
             <button

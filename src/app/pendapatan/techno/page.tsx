@@ -1,84 +1,159 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
-import { Search, FileText, StickyNote } from 'lucide-react'
+import { Search, FileSignature, CreditCard } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import axios from 'axios'
+
+interface Siswa {
+  no: number
+  nama_siswa: string
+  nisn: string
+  level: string
+  akademik: string
+  id_siswa: number
+  tagihan_uang_kbm: number
+  tagihan_uang_spp: number
+  tagihan_uang_pemeliharaan: number
+  tagihan_uang_sumbangan: string | null
+  total: number
+}
 
 export default function PendapatanTechno() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLevel, setSelectedLevel] = useState('1')
+  const [data, setData] = useState<Siswa[]>([])
+  const router = useRouter()
 
-  // Data Dummy berdasarkan Level
-  const allData = useMemo(() => {
-    const levels = {
-      '1': Array.from({ length: 10 }, (_, i) => ({ no: i + 1, nama: `Siswa L1-${i + 1}`, KBM: 2500000, SPP: 1000000, Pemeliharaan: 500000, Sumbangan: 'Lunas', Total: 6700000, Notes: '-' })),
-      '2': Array.from({ length: 12 }, (_, i) => ({ no: i + 1, nama: `Siswa L2-${i + 1}`, KBM: 2600000, SPP: 1100000, Pemeliharaan: 520000, Sumbangan: 'Lunas', Total: 6990000, Notes: '-' })),
-      '3': Array.from({ length: 15 }, (_, i) => ({ no: i + 1, nama: `Siswa L3-${i + 1}`, KBM: 2700000, SPP: 1200000, Pemeliharaan: 530000, Sumbangan: 'Lunas', Total: 7160000, Notes: '-' })),
-      '4': Array.from({ length: 10 }, (_, i) => ({ no: i + 1, nama: `Siswa L4-${i + 1}`, KBM: 2500000, SPP: 1000000, Pemeliharaan: 500000, Sumbangan: 'Lunas', Total: 6700000, Notes: '-' })),
-      '5': Array.from({ length: 12 }, (_, i) => ({ no: i + 1, nama: `Siswa L5-${i + 1}`, KBM: 2600000, SPP: 1100000, Pemeliharaan: 520000, Sumbangan: 'Lunas', Total: 6990000, Notes: '-' })),
-      '6': Array.from({ length: 15 }, (_, i) => ({ no: i + 1, nama: `Siswa L6-${i + 1}`, KBM: 2700000, SPP: 1200000, Pemeliharaan: 530000, Sumbangan: 'Lunas', Total: 7160000, Notes: '-' })),
-      '7': Array.from({ length: 10 }, (_, i) => ({ no: i + 1, nama: `Siswa L7-${i + 1}`, KBM: 2500000, SPP: 1000000, Pemeliharaan: 500000, Sumbangan: 'Lunas', Total: 6700000, Notes: '-' })),
-      '8': Array.from({ length: 12 }, (_, i) => ({ no: i + 1, nama: `Siswa L8-${i + 1}`, KBM: 2600000, SPP: 1100000, Pemeliharaan: 520000, Sumbangan: 'Lunas', Total: 6990000, Notes: '-' })),
-      '9': Array.from({ length: 15 }, (_, i) => ({ no: i + 1, nama: `Siswa L9-${i + 1}`, KBM: 2700000, SPP: 1200000, Pemeliharaan: 530000, Sumbangan: 'Lunas', Total: 7160000, Notes: '-' }))
+  const parseFormattedNumber = (value: string | null | undefined): number => {
+    if (!value || value === 'Lunas') return 0
+    return Number(value.replace(/\./g, ''))
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('token') || ''
+
+        const response = await axios.get('http://127.0.0.1:8000/api/monitoring-techno', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        const fetchedData = response.data.data.map((item: any, index: number) => {
+          const tagihan = item.tagihan || {}
+
+          const kbm = parseFormattedNumber(tagihan.tagihan_uang_kbm)
+          const spp = parseFormattedNumber(tagihan.tagihan_uang_spp)
+          const pemeliharaan = parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan)
+          const sumbanganVal = parseFormattedNumber(tagihan.tagihan_uang_sumbangan)
+
+          return {
+            no: index + 1,
+            nama_siswa: item.nama_siswa,
+            nisn: item.nisn,
+            level: item.level,
+            akademik: item.akademik,
+            id_siswa: item.id_siswa,
+            tagihan_uang_kbm: kbm,
+            tagihan_uang_spp: spp,
+            tagihan_uang_pemeliharaan: pemeliharaan,
+            tagihan_uang_sumbangan: tagihan.tagihan_uang_sumbangan === '0' ? 'Lunas' : tagihan.tagihan_uang_sumbangan,
+            total: kbm + spp + pemeliharaan + sumbanganVal,
+          }
+        })
+
+        setData(fetchedData)
+      } catch (error: any) {
+        console.error('Gagal mengambil data:', error)
+      }
     }
-    return levels[selectedLevel] || []
-  }, [selectedLevel])
 
-  // Filter data berdasarkan pencarian
+    fetchData()
+  }, [])
+
   const filteredData = useMemo(() => {
-    return allData.filter((row) => row.nama.toLowerCase().includes(searchTerm.toLowerCase()))
-  }, [searchTerm, allData])
+    return data
+      .filter((item) => item.level === selectedLevel)
+      .filter((item) =>
+        item.nama_siswa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.nisn.includes(searchTerm) ||
+        item.akademik.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+  }, [searchTerm, selectedLevel, data])
 
-  // Definisi Kolom
   const columns = useMemo(
     () => [
       { accessorKey: 'no', header: 'No' },
-      { accessorKey: 'nama', header: 'Nama Siswa' },
-      { accessorKey: 'KBM', header: 'KBM' },
-      { accessorKey: 'SPP', header: 'SPP' },
-      { accessorKey: 'Pemeliharaan', header: 'Pemeliharaan' },
+      { accessorKey: 'nama_siswa', header: 'Nama Siswa' },
+      { accessorKey: 'nisn', header: 'NISN' },
       {
-        accessorKey: 'Sumbangan',
+        accessorKey: 'tagihan_uang_kbm',
+        header: 'KBM',
+        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+      },
+      {
+        accessorKey: 'tagihan_uang_spp',
+        header: 'SPP',
+        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+      },
+      {
+        accessorKey: 'tagihan_uang_pemeliharaan',
+        header: 'Pemeliharaan',
+        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+      },
+      {
+        accessorKey: 'tagihan_uang_sumbangan',
         header: 'Sumbangan',
-        cell: ({ getValue }) => (
+        cell: ({ getValue }: any) => (
           <span className={getValue() === 'Lunas' ? 'text-green-600 font-bold' : ''}>{getValue()}</span>
         )
       },
-      { accessorKey: 'Total', header: 'Total' },
       {
-        accessorKey: 'Notes',
-        header: 'Notes',
-        cell: () => (
-          <StickyNote
-            className="text-blue-600 cursor-pointer"
-            onClick={() => alert('Fitur akan segera hadir')}
-          />
-        )
+        accessorKey: 'total',
+        header: 'Total',
+        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
       },
       {
-        accessorKey: 'Detail',
-        header: 'Detail',
-        cell: () => (
-          <FileText
-            className="text-gray-600 cursor-pointer"
-            onClick={() => alert('Fitur akan segera hadir')}
-          />
-        )
+        accessorKey: 'kontrak',
+        header: 'Kontrak',
+        cell: ({ row }: any) => {
+          const id_siswa = row.original.id_siswa
+          return (
+            <CreditCard
+              className="text-gray-600 cursor-pointer"
+              onClick={() => router.push(`/pendapatan/techno/detail-techno?id_siswa=${id_siswa}`)}
+            />
+          )
+        }
+      },
+      {
+        accessorKey: 'bayar',
+        header: 'Bayar',
+        cell: ({ row }: any) => {
+          const id_siswa = row.original.id_siswa
+          return (
+            <FileSignature
+              className="text-gray-600 cursor-pointer"
+              onClick={() => router.push(`/pendapatan/techno/pembayaran-techno?id_siswa=${id_siswa}`)}
+            />
+          )
+        }
       }
     ],
-    []
+    [router]
   )
 
   const table = useReactTable({ data: filteredData, columns, getCoreRowModel: getCoreRowModel() })
 
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
-      {/* Header */}
       <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold">Techno Nature</h2>
+        <h2 className="text-3xl font-bold">Techno Academy</h2>
       </div>
-
-      {/* Filter & Search */}
+  
       <div className="flex justify-between items-center mb-2">
         <div className="flex justify-start gap-2 items-center">
           <select
@@ -86,9 +161,15 @@ export default function PendapatanTechno() {
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
           >
-            {Array.from({ length: 9 }, (_, i) => (
-              <option key={i + 1} value={i + 1}>Level {i + 1}</option>
-            ))}
+            <option value="I">Level I</option>
+            <option value="II">Level II</option>
+            <option value="III">Level III</option>
+            <option value="IV">Level IV</option>
+            <option value="V">Level V</option>
+            <option value="VI">Level VI</option>
+            <option value="VII">Level VII</option>
+            <option value="VIII">Level VIII</option>
+            <option value="IX">Level IX</option>
           </select>
           <div className="relative">
             <input
@@ -100,24 +181,33 @@ export default function PendapatanTechno() {
             />
             <Search size={14} className="absolute left-2 top-2 text-gray-700" />
           </div>
-          <button className="px-2 py-1  bg-gray-300 rounded-md text-sm text-black" onClick={() => alert('Fitur segera hadir')}>Tambah Kontrak</button>
+          <button
+            className="px-2 py-1 bg-gray-300 rounded-md text-sm text-black"
+            onClick={() => router.push('http://127.0.0.1:3000/pendapatan/techno/tambah-kontrak')}
+          >
+            Tambah Kontrak
+          </button>
         </div>
-        <button className="px-2 py-1 bg-gray-300 rounded-md text-sm text-black" onClick={() => alert('Fitur segera hadir')}>Cetak Tagihan</button>
+        <button
+          className="px-2 py-1 bg-gray-300 rounded-md text-sm text-black"
+          onClick={() => alert('Fitur segera hadir')}
+        >
+          Cetak Tagihan
+        </button>
       </div>
-
-      {/* Table Pendapatan */}
+  
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300 text-left text-sm text-black">
           <thead>
-            <tr className="bg-blue-900 text-white">
-              {table.getHeaderGroups().map(headerGroup => (
-                headerGroup.headers.map(header => (
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id} className="bg-blue-900 text-white">
+                {headerGroup.headers.map(header => (
                   <th key={header.id} className="p-2 border">
                     {flexRender(header.column.columnDef.header, header.getContext())}
                   </th>
-                ))
-              ))}
-            </tr>
+                ))}
+              </tr>
+            ))}
           </thead>
           <tbody>
             {table.getRowModel().rows.map(row => (
@@ -134,4 +224,5 @@ export default function PendapatanTechno() {
       </div>
     </div>
   )
+  
 }

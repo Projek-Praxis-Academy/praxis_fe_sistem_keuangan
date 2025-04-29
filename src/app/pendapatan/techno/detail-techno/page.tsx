@@ -16,7 +16,7 @@ interface Siswa {
   tagihan_uang_sumbangan: number | null
 }
 
-export default function KontrakSiswa() {
+export default function DetailTechno() {
   const searchParams = useSearchParams()
   const id_siswa = searchParams.get('id_siswa') || ''
   const router = useRouter()
@@ -37,7 +37,7 @@ export default function KontrakSiswa() {
     }
 
     // Request API untuk mengambil data siswa
-    axios.get(`http://127.0.0.1:8000/api/monitoring/detail-kontrak/${id_siswa}`, {
+    axios.get(`http://127.0.0.1:8000/api/monitoring-techno/detail-kontrak/${id_siswa}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       }

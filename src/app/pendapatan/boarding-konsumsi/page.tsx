@@ -74,7 +74,7 @@ export default function BoardingKonsumsi() {
         cell: ({ row }: any) => {
           const id_siswa = row.original.id_siswa;
           return (
-            <a href={`/pendapatan/boarding-konsumsi/detail?id_siswa=${id_siswa}`}>
+            <a href={`/pendapatan/boarding-konsumsi/detail-bk?id_siswa=${id_siswa}`}>
               <FileSignature className="text-blue-500 cursor-pointer" />
             </a>
           );
