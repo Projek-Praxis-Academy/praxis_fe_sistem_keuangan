@@ -75,7 +75,7 @@ export default function BoardingKonsumsi() {
           const id_siswa = row.original.id_siswa;
           return (
             <a href={`/pendapatan/boarding-konsumsi/detail-bk?id_siswa=${id_siswa}`}>
-              <FileSignature className="text-blue-500 cursor-pointer" />
+              <CreditCard className="text-gray-600 cursor-pointer" />
             </a>
           );
         }
@@ -86,8 +86,8 @@ export default function BoardingKonsumsi() {
         cell: ({ row }: any) => {
           const id_siswa = row.original.id_siswa;
           return (
-            <CreditCard
-              className="text-green-500 cursor-pointer"
+            <FileSignature
+              className="text-gray-600 cursor-pointer"
               onClick={() => router.push(`/pendapatan/boarding-konsumsi/pembayaran-bk?id_siswa=${id_siswa}`)}
             />
           );

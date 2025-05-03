@@ -183,7 +183,7 @@ export default function PendapatanTechno() {
           </div>
           <button
             className="px-2 py-1 bg-gray-300 rounded-md text-sm text-black"
-            onClick={() => router.push('http://127.0.0.1:3000/pendapatan/techno/tambah-kontrak')}
+            onClick={() => router.push('http://127.0.0.1:3000/pendapatan/techno/add-kontrak-techno')}
           >
             Tambah Kontrak
           </button>

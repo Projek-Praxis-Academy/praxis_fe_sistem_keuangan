@@ -17,8 +17,8 @@ export default function HomePage() {
     myHeaders.append("Content-Type", "application/json");
   
     const raw = JSON.stringify({
-      email: email,
-      password: password,
+      email: email.trim(),
+      password: password.trim(),
     });
   
     const requestOptions: RequestInit = {
@@ -56,6 +56,9 @@ export default function HomePage() {
           <input
             type="email"
             placeholder="example@mail.com"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck="false"
             className="border bg-white p-2 rounded-md w-full text-blue-900"
             value={email}
             onChange={(e) => setEmail(e.target.value)}

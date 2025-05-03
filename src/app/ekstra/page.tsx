@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
-import { Search, FileText } from 'lucide-react'
+import { Search, FileText, FileSignature, CreditCard } from 'lucide-react'
 
 export default function Ekstra() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -36,24 +37,17 @@ export default function Ekstra() {
       { accessorKey: 'ekstra', header: 'Ekstra' },
       { accessorKey: 'tagihan', header: 'Tagihan' },
       {
-        accessorKey: 'catatan',
-        header: 'Catatan',
+        accessorKey: 'bayar',
+        header: 'Bayar',
         cell: () => (
-          <FileText className="text-gray-600 cursor-pointer" onClick={() => alert('Catatan akan segera hadir')} />
+          <FileSignature className="text-gray-600 cursor-pointer" onClick={() => alert('Bayar akan segera hadir')} />
         )
       },
       {
-        accessorKey: 'tagihan_icon',
-        header: 'Tagihan',
+        accessorKey: 'detail',
+        header: 'Detail',
         cell: () => (
-          <FileText className="text-gray-600 cursor-pointer" onClick={() => alert('Tagihan akan segera hadir')} />
-        )
-      },
-      {
-        accessorKey: 'kontrak',
-        header: 'Kontrak',
-        cell: () => (
-          <FileText className="text-gray-600 cursor-pointer" onClick={() => alert('Kontrak akan segera hadir')} />
+          <CreditCard className="text-gray-600 cursor-pointer" onClick={() => alert('Kontrak akan segera hadir')} />
         )
       }
     ],
@@ -68,6 +62,7 @@ export default function Ekstra() {
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold">Monitoring Ekstrakurikuler</h2>
       </div>
+
       {/* Filter & Search */}
       <div className="flex justify-start gap-2 items-center mb-4">
         <select
@@ -80,6 +75,7 @@ export default function Ekstra() {
           ))}
           <option value="10">Level 10-12</option>
         </select>
+
         <div className="relative">
           <input
             type="text"
@@ -90,10 +86,23 @@ export default function Ekstra() {
           />
           <Search size={14} className="absolute left-2 top-2 text-gray-700" />
         </div>
-        <div className="flex-1 flex justify-end">
-          <button className="px-3 py-1 bg-gray-300 text-black rounded-md text-sm" onClick={() => alert('Fitur akan segera hadir')}>Kontrak</button>
+
+        <div className="flex-1 flex justify-end gap-2">
+          <Link
+            href="/ekstra/tambah-siswa"
+            className="px-3 py-1 bg-gray-300 text-black rounded-md text-sm hover:bg-gray-400"
+          >
+            Tambah Kontrak
+          </Link>
+          <Link
+            href="/ekstra/daftar-ekstra"
+            className="px-3 py-1 bg-gray-300 text-black rounded-md text-sm hover:bg-gray-400"
+          >
+            Harga Ekstra
+          </Link>
         </div>
       </div>
+
       {/* Table Ekstrakurikuler */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300 text-left">

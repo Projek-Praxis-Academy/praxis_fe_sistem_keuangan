@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import { useRouter } from "next/link";
 interface DashboardData {
   saldoPraxis: number;
   saldoTechno: number;

@@ -1,77 +1,138 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import axios from 'axios'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import { Search, FileText } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
-export default function UangSaku() {
+interface SiswaUangSaku {
+  no: number
+  id_siswa: number
+  nama_siswa: string
+  saldo: string // Perubahan: saldo disimpan sebagai string yang sudah diformat
+  level: string
+}
+
+const levelOptions = [
+  "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"
+]
+
+export default function MonitoringUangSaku() {
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedLevel, setSelectedLevel] = useState('1')
-  const [darkMode] = useState(false)
-  
+  const [selectedLevel, setSelectedLevel] = useState('I')
+  const [data, setData] = useState<SiswaUangSaku[]>([])
 
-  // Data Dummy berdasarkan Level
-  const allData = useMemo(() => {
-    const levels = {}
-    for (let i = 1; i <= 12; i++) {
-      levels[i] = Array.from({ length: i + 5 }, (_, j) => ({ no: j + 1, nama: `Siswa L${i}-${j + 1}`, saldo: 500000 }))
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('token') || ''
+        const response = await axios.get('http://127.0.0.1:8000/api/monitoring-uang-saku', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+
+        const siswaList = response.data.data || []
+
+        const formattedData = siswaList.map((item: any, index: number) => {
+          return {
+            no: index + 1,
+            id_siswa: item.id_siswa,
+            nama_siswa: item.nama_siswa,
+            saldo: item.uang_saku?.saldo || "0",  // Menyimpan saldo sebagai string yang sudah diformat
+            level: item.level
+          }
+        })
+
+        setData(formattedData)
+      } catch (error) {
+        console.error('Gagal mengambil data:', error)
+      }
     }
-    return levels[selectedLevel] || []
-  }, [selectedLevel])
 
-  // Filter data berdasarkan pencarian
+    fetchData()
+  }, [])
+
   const filteredData = useMemo(() => {
-    return allData.filter((row) => row.nama.toLowerCase().includes(searchTerm.toLowerCase()))
-  }, [searchTerm, allData])
+    return data
+      .filter(item => item.level === selectedLevel)
+      .filter(item =>
+        item.nama_siswa.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+  }, [searchTerm, selectedLevel, data])
 
-  // Definisi Kolom
   const columns = useMemo(
     () => [
-      { accessorKey: 'no', header: 'No' },
-      { accessorKey: 'nama', header: 'Nama Siswa' },
-      { accessorKey: 'saldo', header: 'Saldo' },
-      {
-        accessorKey: 'aksi',
-        header: 'Aksi',
-        cell: () => (
-          <div className="flex gap-2">
-            <button className="bg-green-500 text-white px-2 py-1 rounded text-sm">TopUp</button>
-            <button className="bg-red-500 text-white px-2 py-1 rounded text-sm">Pengeluaran</button>
-          </div>
-        )
+      { accessorKey: 'nama_siswa', header: 'Nama Siswa' },
+      { accessorKey: 'saldo', header: 'Saldo',
+        cell: ({ getValue }: any) => <span>Rp {getValue()}</span>  // Menampilkan saldo tanpa perubahan format
       },
       {
-        accessorKey: 'Detail',
+        accessorKey: 'topup',
+        header: 'TopUp',
+        cell: ({ row }: any) => {
+          const id_siswa = row.original.id_siswa
+          return (
+            <button
+              className="bg-green-500 text-white px-2 py-1 rounded text-sm hover:bg-green-700"
+              onClick={() => router.push(`/uang-saku/topUp?id_siswa=${id_siswa}`)}
+            >
+              TopUp
+            </button>
+          )
+        },
+      },
+      {
+        accessorKey: 'pengeluaran',
+        header: 'Pengeluaran',
+        cell: ({ row }: any) => {
+          const id_siswa = row.original.id_siswa
+          return (
+            <button
+              className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-700"
+              onClick={() => router.push(`/uang-saku/pengeluaran?id_siswa=${id_siswa}`)}
+            >
+              Pengeluaran
+            </button>
+          )
+        },
+      },
+      {
+        accessorKey: 'detail',
         header: 'Detail',
-        cell: () => (
-          <FileText
-            className="text-gray-600 cursor-pointer"
-            onClick={() => router.push('/uang-saku/detail')}
-          />
-        )
-      }
+        cell: ({ row }: any) => {
+          const id_siswa = row.original.id_siswa
+          return (
+            <FileText
+              className="text-gray-600 cursor-pointer"
+              onClick={() => router.push(`/uang-saku/detail?id_siswa=${id_siswa}`)}
+            />
+          )
+        },
+      },
     ],
-    []
+    [router]
   )
 
   const table = useReactTable({ data: filteredData, columns, getCoreRowModel: getCoreRowModel() })
 
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
-      {/* Header */}
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold">Monitoring Uang Saku</h2>
       </div>
-      {/* Filter & Search */}
+
       <div className="flex justify-between items-center mb-4">
-        <div className="flex justify-start gap-2 items-center">
+        <div className="flex gap-2 items-center">
           <select
             className="px-2 py-1 bg-gray-300 text-black rounded-md text-sm"
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
           >
-            {Array.from({ length: 12 }, (_, i) => (
-              <option key={i + 1} value={i + 1}>Level {i + 1}</option>
+            {levelOptions.map(level => (
+              <option key={level} value={level}>
+                Level {level}
+              </option>
             ))}
           </select>
           <div className="relative">
@@ -85,21 +146,20 @@ export default function UangSaku() {
             <Search size={14} className="absolute left-2 top-2 text-gray-700" />
           </div>
         </div>
-        <button className="px-3 py-1 bg-gray-300 text-black rounded-md text-sm" onClick={() => alert('Fitur akan segera hadir')}>Kontrak</button>
       </div>
-      {/* Table Uang Saku */}
+
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300 text-left">
+        <table className="w-full border-collapse border border-gray-300 text-left text-sm text-black">
           <thead>
-            <tr className="bg-blue-900 text-white">
-              {table.getHeaderGroups().map(headerGroup => (
-                headerGroup.headers.map(header => (
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id} className="bg-blue-900 text-white">
+                {headerGroup.headers.map(header => (
                   <th key={header.id} className="p-2 border">
                     {flexRender(header.column.columnDef.header, header.getContext())}
                   </th>
-                ))
-              ))}
-            </tr>
+                ))}
+              </tr>
+            ))}
           </thead>
           <tbody>
             {table.getRowModel().rows.map(row => (

@@ -1,96 +1,165 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { StickyNote } from 'lucide-react'
-import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import axios from 'axios'
+
+interface Transaksi {
+  id: string
+  tanggal: string
+  nominal: number
+  catatan: string
+  jenis: 'TOPUP' | 'PENGELUARAN'
+}
+
+interface SiswaDetail {
+  id_siswa: number
+  nama_siswa: string
+  nisn: string
+  level: string
+  kategori: string
+  akademik: string
+  nama_wali: string
+  no_hp_wali: string
+  pembayaran_uang_saku: {
+    id_pembayaran_uang_saku: string
+    nominal: number
+    tanggal_pembayaran: string
+    catatan: string
+  }[]
+  pengeluaran_uang_saku: {
+    id_pengeluaran_uang_saku: string
+    nominal: number
+    tanggal_pengeluaran: string
+    catatan: string
+  }[]
+}
 
 export default function DetailUangSaku() {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedLevel, setSelectedLevel] = useState('1')
+  const searchParams = useSearchParams()
+  const id_siswa_query = searchParams.get('id_siswa') || ''
 
-  // Data Dummy berdasarkan Level
-  const allData = useMemo(() => {
-    const levels = {}
-    for (let i = 1; i <= 12; i++) {
-      levels[i] = Array.from({ length: i + 5 }, (_, j) => ({
-        no: j + 1,
-        tanggal: `2025-04-${(j + 10).toString().padStart(2, '0')}`,
-        pengeluaran: 500000 + j * 10000,
-        topup: 600000 + j * 15000,
-        catatan: `Top up bulanan ${j + 1}`
-      }))
+  const [siswaDetail, setSiswaDetail] = useState<SiswaDetail | null>(null)
+  const [transaksi, setTransaksi] = useState<Transaksi[]>([])
+  const [saldo, setSaldo] = useState<string>('Rp 0')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const fetchDetail = async () => {
+      try {
+        const token = localStorage.getItem('token') || ''
+
+        // Ambil data detail transaksi
+        const detailRes = await axios.get(
+          `http://127.0.0.1:8000/api/monitoring-uang-saku/detail/${id_siswa_query}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        const data = detailRes.data
+
+        // Gabungkan transaksi topup dan pengeluaran
+        const topup = data.pembayaran_uang_saku.map((item: any) => ({
+          id: item.id_pembayaran_uang_saku,
+          tanggal: item.tanggal_pembayaran,
+          nominal: item.nominal,
+          catatan: item.catatan,
+          jenis: 'TOPUP' as const,
+        }))
+
+        const pengeluaran = data.pengeluaran_uang_saku.map((item: any) => ({
+          id: item.id_pengeluaran_uang_saku,
+          tanggal: item.tanggal_pengeluaran,
+          nominal: item.nominal,
+          catatan: item.catatan,
+          jenis: 'PENGELUARAN' as const,
+        }))
+
+        setSiswaDetail(data)
+        setTransaksi([...topup, ...pengeluaran])
+
+        // Ambil saldo dari endpoint monitoring uang saku
+        const listRes = await axios.get(
+          'http://127.0.0.1:8000/api/monitoring-uang-saku',
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+
+        const siswaMonitoring = listRes.data.data.find(
+          (item: any) => item.id_siswa === Number(id_siswa_query)
+        )
+
+        if (siswaMonitoring && siswaMonitoring.uang_saku?.saldo !== undefined) {
+          setSaldo(`Rp ${siswaMonitoring.uang_saku.saldo.toLocaleString('id-ID')}`)
+        }
+
+      } catch (err) {
+        console.error(err)
+        setError('Gagal mengambil data detail.')
+      } finally {
+        setLoading(false)
+      }
     }
-    return levels[selectedLevel] || []
-  }, [selectedLevel])
 
-  // Filter data berdasarkan pencarian
-  const filteredData = useMemo(() => {
-    return allData.filter((row) => row.tanggal.toLowerCase().includes(searchTerm.toLowerCase()))
-  }, [searchTerm, allData])
+    if (id_siswa_query) fetchDetail()
 
-  // Definisi Kolom
-  const columns = useMemo(
-     () => [
-       { accessorKey: 'no', header: 'No' },
-       { accessorKey: 'tanggal', header: 'Tanggal' },
-       { accessorKey: 'pengeluaran', header: 'Pengeluaran' },
-       { accessorKey: 'topup', header: 'TopUp' },
-       {
-         accessorKey: 'catatan',
-         header: 'Catatan',
-         cell: () => <StickyNote className="text-blue-600 w-5 h-5 mx-auto" />
-       },
-     ],
-    []
-  )
+  }, [id_siswa_query])
 
-  const table = useReactTable({ data: filteredData, columns, getCoreRowModel: getCoreRowModel() })
+  const formatRupiah = (num: number) =>
+    `Rp ${num.toLocaleString('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).slice(3)}` // Menghapus 'Rp' yang sudah ditambahkan di atas
 
   return (
-    <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold">Detail Uang Saku</h2>
-      </div>
+    <div className="ml-64 p-8 text-black min-h-screen">
+      <h1 className="text-2xl font-bold text-blue-900 mb-4 text-center">Transaksi Uang Saku Siswa</h1>
 
-      {/* Informasi Siswa */}
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <div className="text-lg font-semibold">Nama: John Doe</div>
-          <div className="text-sm text-gray-600">Level: {selectedLevel}</div>
-        </div>
-        <div className="text-lg font-semibold text-right">
-          Saldo: <span className="text-green-600">Rp 5.000.000</span>
-        </div>
-      </div>
+      {loading && <p>Loading...</p>}
+      {error && <p className="text-red-600">{error}</p>}
 
-      {/* Table Uang Saku */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300 text-left">
-          <thead>
-            <tr className="bg-blue-900 text-white">
-              {table.getHeaderGroups().map(headerGroup => (
-                headerGroup.headers.map(header => (
-                  <th key={header.id} className="p-2 border">
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="border">
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="p-2 border">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
+      {!loading && siswaDetail && (
+        <>
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <p className="text-lg font-semibold">Nama: <span className="font-normal">{siswaDetail.nama_siswa}</span></p>
+              <p className="text-lg font-semibold">Level: <span className="font-normal">{siswaDetail.level}</span></p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-semibold">Saldo Total</p>
+              <p className="text-xl font-bold text-green-700">{saldo}</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="table-fixed w-full border border-blue-900 text-sm">
+              <thead className="bg-blue-900 text-white">
+                <tr>
+                  <th className="w-1/5 border px-4 py-2">Tanggal</th>
+                  <th className="w-1/5 border px-4 py-2">Aksi</th>
+                  <th className="w-1/5 border px-4 py-2">Nominal</th>
+                  <th className="w-2/5 border px-4 py-2">Catatan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transaksi.map((item, index) => (
+                  <tr key={index} className="text-center border-b">
+                    <td className="border px-4 py-2">{item.tanggal}</td>
+                    <td className="border px-4 py-2">
+                      <span className={`text-white px-2 py-1 rounded text-xs font-semibold ${
+                        item.jenis === 'TOPUP' ? 'bg-green-500' : 'bg-red-500'
+                      }`}>
+                        {item.jenis}
+                      </span>
+                    </td>
+                    <td className="border px-4 py-2">{formatRupiah(item.nominal)}</td>
+                    <td className="border px-4 py-2 text-left">{item.catatan}</td>
+                  </tr>
                 ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   )
 }
