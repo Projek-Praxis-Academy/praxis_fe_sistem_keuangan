@@ -1,71 +1,67 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, FilePlus2 } from 'lucide-react'
+import { FilePlus2 } from 'lucide-react'
 import axios from 'axios'
 
 export default function TambahSiswaEkstra() {
   const router = useRouter()
 
-  const siswa = {
-    nama: 'Aditya Wibowo',
-    level: 'Level 7',
-    sekolah: 'Praxis Academy',
-    nisn: '097643243567',
-  }
-
-  const dummyEkstra = [
-    { id: 1, nama: 'Basket' },
-    { id: 2, nama: 'Futsal' },
-    { id: 3, nama: 'English Club' },
-    { id: 4, nama: 'Tahfidz' },
-    { id: 5, nama: 'Panahan' },
-  ]
-
-  const [ekstraList, setEkstraList] = useState<string[]>([''])
-  const [periode, setPeriode] = useState('')
+  const [ekstraList, setEkstraList] = useState<any[]>([])
+  const [selectedEkstra, setSelectedEkstra] = useState<any[]>([])
+  const [nisn, setNisn] = useState('')
+  const [tanggalMulai, setTanggalMulai] = useState('')
+  const [tanggalSelesai, setTanggalSelesai] = useState('')
+  const [catatan, setCatatan] = useState('')
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleAddField = () => {
-    setEkstraList([...ekstraList, ''])
-  }
+  useEffect(() => {
+    const fetchEkstraList = async () => {
+      try {
+        const token = localStorage.getItem('token') || ''
+        const response = await axios.get('http://127.0.0.1:8000/api/ekstra/list', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        setEkstraList(response.data.data)
+      } catch (err) {
+        console.error('Error fetching ekstra list', err)
+        setError('Terjadi kesalahan saat memuat data ekstra.')
+      }
+    }
+    fetchEkstraList()
+  }, [])
 
-  const handleRemoveField = (index: number) => {
-    const newList = [...ekstraList]
-    newList.splice(index, 1)
-    setEkstraList(newList)
-  }
-
-  const handleChangeEkstra = (index: number, value: string) => {
-    const newList = [...ekstraList]
-    newList[index] = value
-    setEkstraList(newList)
+  const handleAddEkstra = () => {
+    setSelectedEkstra((prev) => [...prev, ''])
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const filledEkstra = ekstraList.filter((ekstra) => ekstra.trim() !== '')
-
-    if (filledEkstra.length === 0 || !periode) {
+    if (!nisn || selectedEkstra.length === 0 || !tanggalMulai || !tanggalSelesai) {
       setError('Harap lengkapi semua field.')
       return
     }
 
     setError('')
+    setSuccessMessage('')
     setLoading(true)
 
     try {
       const token = localStorage.getItem('token') || ''
-
-      await axios.post(
-        'http://127.0.0.1:8000/api/siswa/ekstra',
+      const response = await axios.post(
+        'http://127.0.0.1:8000/api/monitoring-ekstra/create-siswa',
         {
-          nisn: siswa.nisn,
-          ekstra: filledEkstra,
-          periode,
+          nisn,
+          id_ekstra: selectedEkstra,
+          tanggal_mulai: tanggalMulai,
+          tanggal_selesai: tanggalSelesai,
+          catatan,
         },
         {
           headers: {
@@ -75,11 +71,16 @@ export default function TambahSiswaEkstra() {
         }
       )
 
-      alert('Data ekstrakurikuler siswa berhasil disimpan!')
-      router.push('/ekstra')
+      if (response.data.status === 'success') {
+        setSuccessMessage('Data ekstra siswa berhasil disimpan!')
+        setTimeout(() => {
+          router.push('/ekstra')
+          router.refresh()
+        }, 1500)
+      }
     } catch (err: any) {
       console.error(err)
-      setError(err.response?.data?.message || 'Terjadi kesalahan saat menyimpan.')
+      setError(err.response?.data?.message || 'Terjadi kesalahan saat menyimpan data.')
     } finally {
       setLoading(false)
     }
@@ -90,78 +91,93 @@ export default function TambahSiswaEkstra() {
       <div className="bg-white border rounded-md shadow-md p-6 max-w-3xl mx-auto">
         <h2 className="text-2xl font-bold text-center text-blue-900 mb-6">TAMBAH SISWA EKSTRAKURIKULER</h2>
 
-        {/* Identitas Siswa */}
-        <div className="flex flex-wrap justify-between gap-2 mb-4 text-sm">
-          <span className="bg-gray-200 px-3 py-1 rounded">{siswa.nama}</span>
-          <span className="bg-gray-200 px-3 py-1 rounded">{siswa.level}</span>
-          <span className="bg-gray-200 px-3 py-1 rounded">{siswa.sekolah}</span>
-        </div>
+        {/* Alert Error */}
+        {error && (
+          <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+            <p className="font-medium">{error}</p>
+          </div>
+        )}
 
-        <div className="mb-4">
-          <input
-            type="text"
-            value={`NISN: ${siswa.nisn}`}
-            readOnly
-            className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100"
-          />
-        </div>
-
-        <hr className="border-t-2 border-blue-800 mb-6" />
-
-        {error && <div className="text-red-600 mb-4 font-medium">{error}</div>}
+        {/* Alert Success */}
+        {successMessage && (
+          <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+            <p className="font-medium">{successMessage}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
-          {/* Dropdown Ekstra */}
+          {/* NISN Input */}
+          <div className="mb-4">
+            <input
+              type="text"
+              value={nisn}
+              onChange={(e) => setNisn(e.target.value)}
+              placeholder="Masukkan NISN"
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            />
+          </div>
+
+          <hr className="border-t-2 border-blue-800 mb-6" />
+
+          {/* Ekstra Selection */}
           <label className="block mb-2 font-semibold">Ekstra yang Diikuti</label>
           <div className="space-y-3 mb-6">
-            {ekstraList.map((ekstra, index) => (
+            {selectedEkstra.map((item, index) => (
               <div key={index} className="flex gap-2 items-center">
                 <select
-                  value={ekstra}
-                  onChange={(e) => handleChangeEkstra(index, e.target.value)}
-                  className="flex-1 border border-gray-300 rounded px-3 py-2"
+                  value={item}
+                  onChange={(e) => {
+                    const newSelectedEkstra = [...selectedEkstra]
+                    newSelectedEkstra[index] = e.target.value
+                    setSelectedEkstra(newSelectedEkstra)
+                  }}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
                 >
                   <option value="">Pilih Ekstra</option>
-                  {dummyEkstra.map((item) => (
-                    <option key={item.id} value={item.nama}>
-                      {item.nama}
+                  {ekstraList.map((ekstra) => (
+                    <option key={ekstra.id_ekstra} value={ekstra.id_ekstra}>
+                      {ekstra.nama_ekstra}
                     </option>
                   ))}
                 </select>
-                {ekstraList.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveField(index)}
-                    className="text-red-600 hover:text-red-800"
-                    title="Hapus field"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                )}
               </div>
             ))}
           </div>
 
           <button
             type="button"
-            onClick={handleAddField}
-            className="mb-6 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded flex items-center gap-2 text-sm"
+            onClick={handleAddEkstra}
+            className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium mb-6"
           >
-            <Plus size={16} /> Tambah Ekstra
+            + Tambah Ekstra
           </button>
 
-          {/* Periode */}
-          <label className="block mb-2 font-semibold">Periode</label>
-          <select
-            value={periode}
-            onChange={(e) => setPeriode(e.target.value)}
+          {/* Tanggal Mulai */}
+          <label className="block mb-2 font-semibold">Tanggal Mulai</label>
+          <input
+            type="date"
+            value={tanggalMulai}
+            onChange={(e) => setTanggalMulai(e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 mb-6"
-          >
-            <option value="">Pilih Periode</option>
-            <option value="2025/2026">2025/2026</option>
-            <option value="2024/2025">2024/2025</option>
-            <option value="2023/2024">2023/2024</option>
-          </select>
+          />
+
+          {/* Tanggal Selesai */}
+          <label className="block mb-2 font-semibold">Tanggal Selesai</label>
+          <input
+            type="date"
+            value={tanggalSelesai}
+            onChange={(e) => setTanggalSelesai(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 mb-6"
+          />
+
+          {/* Catatan */}
+          <label className="block mb-2 font-semibold">Catatan</label>
+          <textarea
+            value={catatan}
+            onChange={(e) => setCatatan(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 mb-6"
+            placeholder="Masukkan catatan (opsional)"
+          />
 
           {/* Submit */}
           <button

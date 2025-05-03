@@ -1,57 +1,80 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import { Search } from 'lucide-react'
+import axios from 'axios'
+import { useRouter } from 'next/navigation'
+
+interface Ekstra {
+  id_ekstra: string
+  nama_ekstra: string
+  harga_ekstra: string
+  created_at: string
+  updated_at: string
+}
 
 export default function DaftarEkstra() {
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
+  const [data, setData] = useState<Ekstra[]>([])
 
-  // Data Dummy Ekstrakurikuler
-  const allData = useMemo(() => [
-    { nama: 'Basket', harga: '300.000' },
-    { nama: 'Futsal', harga: '250.000' },
-    { nama: 'Pramuka', harga: '200.000' },
-    { nama: 'Paskibra', harga: '220.000' },
-    { nama: 'English Club', harga: '280.000' },
-    { nama: 'Musik', harga: '350.000' },
-    { nama: 'Robotik', harga: '400.000' },
-    { nama: 'Jurnalistik', harga: '230.000' },
-    { nama: 'Tari Tradisional', harga: '270.000' },
-  ], [])
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('token') || ''
+        const res = await axios.get('http://127.0.0.1:8000/api/monitoring-ekstra/ekstra', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        setData(res.data.data)
+      } catch (error) {
+        console.error('Gagal mengambil data ekstra:', error)
+      }
+    }
 
-  // Filter data berdasarkan pencarian
+    fetchData()
+  }, [])
+
   const filteredData = useMemo(() => {
-    return allData.filter((row) =>
-      row.nama.toLowerCase().includes(searchTerm.toLowerCase())
+    return data.filter((item) =>
+      item.nama_ekstra?.toLowerCase().includes(searchTerm.toLowerCase())
     )
-  }, [searchTerm, allData])
+  }, [data, searchTerm])
 
-  // Definisi Kolom
   const columns = useMemo(
-     () => [
-       { accessorKey: 'nama', header: 'Nama Ekstra' },
-       {
-         accessorKey: 'harga',
-         header: 'Harga Ekstra',
-         cell: ({ getValue }) => `Rp ${getValue()}`
-       },
-     ],
-     []
-   )
-   
+    () => [
+      {
+        accessorKey: 'nama_ekstra',
+        header: 'Nama Ekstra',
+      },
+      {
+        accessorKey: 'harga_ekstra',
+        header: 'Harga Ekstra',
+        cell: ({ getValue }: { getValue: () => string }) => {
+          const rawValue = getValue()
+          const numericValue = Number(rawValue.replace(/\./g, '').replace(',', '.'))
+          return `Rp ${numericValue.toLocaleString('id-ID')}`
+        },
+      },
+    ],
+    []
+  )
 
-  const table = useReactTable({ data: filteredData, columns, getCoreRowModel: getCoreRowModel() })
+  const table = useReactTable({
+    data: filteredData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  })
 
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
-      {/* Header */}
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold">Daftar Ekstrakurikuler</h2>
       </div>
 
-      {/* Search */}
-      <div className="flex justify-start gap-2 items-center mb-4">
+      <div className="flex justify-between gap-2 items-center mb-4">
         <div className="relative">
           <input
             type="text"
@@ -62,9 +85,14 @@ export default function DaftarEkstra() {
           />
           <Search size={14} className="absolute left-2 top-2 text-gray-700" />
         </div>
+        <button
+          onClick={() => router.push('/ekstra/daftar-ekstra/tambah-ekstra')}
+          className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+        >
+          + Tambah Ekstra
+        </button>
       </div>
 
-      {/* Tabel Ekstra */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300 text-left">
           <thead>

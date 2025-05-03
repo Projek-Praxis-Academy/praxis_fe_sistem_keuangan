@@ -1,55 +1,173 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
-import { Search, FileText, FileSignature, CreditCard } from 'lucide-react'
+import { Search, FileSignature, CreditCard } from 'lucide-react'
+import axios from 'axios'
+import { useRouter } from 'next/navigation'
 
 export default function Ekstra() {
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedLevel, setSelectedLevel] = useState('1')
-  const [darkMode] = useState(false)
+  const [selectedLevel, setSelectedLevel] = useState('I') // Default level ke "I"
+  const [data, setData] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [levelOptions, setLevelOptions] = useState<string[]>([])
+  const router = useRouter()
 
-  // Data Dummy berdasarkan Level
-  const allData = useMemo(() => {
-    const levels = {}
-    for (let i = 1; i <= 12; i++) {
-      levels[i] = Array.from({ length: i + 5 }, (_, j) => ({
-        no: j + 1,
-        nama: `Siswa L${i}-${j + 1}`,
-        ekstra: 'Basket',
-        tagihan: '300.000'
-      }))
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true)
+      try {
+        const token = localStorage.getItem('token') || ''
+        const response = await axios.get('http://127.0.0.1:8000/api/monitoring-ekstra', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+  
+        if (response.data.status === 'success') {
+          const siswaList = response.data.data.data
+  
+          const formattedData = siswaList.map((item: any, index: number) => ({
+            no: index + 1,
+            id_siswa: item.id_siswa,
+            nama_siswa: item.nama_siswa,
+            level: item.level ?? '',
+            ekstra: item.ekstra || []
+          }))
+  
+          // Tetapkan level I hingga XII secara manual
+          const levels = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
+          setLevelOptions(levels)
+  
+          // Cari level pertama yang ada dalam data, fallback ke "I"
+          const firstAvailableLevel = levels.find(level =>
+            formattedData.some(item => item.level === level)
+          ) || "I"
+          setSelectedLevel(firstAvailableLevel) // Setel level pertama
+  
+          setData(formattedData)
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
-    return levels[selectedLevel] || []
-  }, [selectedLevel])
+  
+    fetchData()
+  }, [])
 
-  // Filter data berdasarkan pencarian
   const filteredData = useMemo(() => {
-    return allData.filter((row) => row.nama.toLowerCase().includes(searchTerm.toLowerCase()))
-  }, [searchTerm, allData])
+    return data
+      .filter(row => row.level === selectedLevel)
+      .filter(row =>
+        row.nama_siswa.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+  }, [searchTerm, selectedLevel, data])
 
-  // Definisi Kolom
   const columns = useMemo(
     () => [
-      { accessorKey: 'no', header: 'No' },
-      { accessorKey: 'nama', header: 'Nama Siswa' },
-      { accessorKey: 'ekstra', header: 'Ekstra' },
-      { accessorKey: 'tagihan', header: 'Tagihan' },
+      { accessorKey: 'nama_siswa', header: 'Nama Siswa' }, // Hanya tampilkan Nama Siswa
+      {
+        accessorKey: 'ekstra',
+        header: 'Ekstra',
+        cell: ({ row }: any) => {
+          const ekstraList = row.original.ekstra || []
+          return (
+            <div className="flex flex-col pl-2">
+              {ekstraList.length > 0 ? (
+                ekstraList.map((e: any, index: number) => (
+                  <div key={index} className="border-b last:border-b-0 py-1">
+                    {e.nama_ekstra}
+                  </div>
+                ))
+              ) : (
+                <span className="text-gray-500 italic">Tidak ada ekstra</span>
+              )}
+            </div>
+          )
+        }
+      },
+      {
+        accessorKey: 'tagihan',
+        header: 'Tagihan',
+        cell: ({ row }: any) => {
+          const ekstraList = row.original.ekstra || []
+          return (
+            <div className="flex flex-col pl-2">
+              {ekstraList.length > 0 ? (
+                ekstraList.map((e: any, index: number) => (
+                  <div key={index} className="border-b last:border-b-0 py-1">
+                  <span key={index}>
+                    Rp{parseInt((e.tagihan_ekstra || '0').replace(/\D/g, '')).toLocaleString('id-ID')}
+                  </span>
+                  </div>
+                ))
+              ) : (
+                <span className="text-gray-500 italic">-</span>
+              )}
+            </div>
+          )
+        }
+      },
       {
         accessorKey: 'bayar',
         header: 'Bayar',
-        cell: () => (
-          <FileSignature className="text-gray-600 cursor-pointer" onClick={() => alert('Bayar akan segera hadir')} />
-        )
+        cell: ({ row }: any) => {
+          const id_siswa = row.original.id_siswa
+          const ekstraList = row.original.ekstra || []
+      
+          return (
+            <div className="flex flex-col pl-2">
+              {ekstraList.length > 0 ? (
+                ekstraList.map((e: any, index: number) => (
+                  <div key={index} className="border-b last:border-b-0 py-1">
+                    <FileSignature
+                      className="text-gray-600 cursor-pointer"
+                      title={`Bayar ${e.nama_ekstra}`}
+                      onClick={() =>
+                        router.push(`/ekstra/pembayaran-ekstra?id_siswa=${id_siswa}&id_ekstra_siswa=${e.id_ekstra_siswa}`)
+                      }
+                    />
+                  </div>
+                ))
+              ) : (
+                <span className="text-gray-400 italic">-</span>
+              )}
+            </div>
+          )
+        }
       },
       {
         accessorKey: 'detail',
         header: 'Detail',
-        cell: () => (
-          <CreditCard className="text-gray-600 cursor-pointer" onClick={() => alert('Kontrak akan segera hadir')} />
-        )
-      }
+        cell: ({ row }: any) => {
+          const id_siswa = row.original.id_siswa
+          const ekstraList = row.original.ekstra || []
+      
+          return (
+            <div className="flex flex-col pl-2">
+              {ekstraList.length > 0 ? (
+                ekstraList.map((e: any, index: number) => (
+                  <div key={index} className="border-b last:border-b-0 py-1">
+                    <CreditCard
+                      className="text-gray-600 cursor-pointer"
+                      title={`Detail ${e.nama_ekstra}`}
+                      onClick={() =>
+                        router.push(`/ekstra/detail-siswa-ekstra?id_siswa=${id_siswa}&id_ekstra_siswa=${e.id_ekstra_siswa}`)
+                      }
+                    />
+                  </div>
+                ))
+              ) : (
+                <span className="text-gray-400 italic">-</span>
+              )}
+            </div>
+          )
+        }
+      }            
     ],
     []
   )
@@ -58,22 +176,19 @@ export default function Ekstra() {
 
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
-      {/* Header */}
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold">Monitoring Ekstrakurikuler</h2>
       </div>
 
-      {/* Filter & Search */}
       <div className="flex justify-start gap-2 items-center mb-4">
         <select
           className="px-2 py-1 bg-gray-300 text-black rounded-md text-sm"
           value={selectedLevel}
           onChange={(e) => setSelectedLevel(e.target.value)}
         >
-          {[...Array(9)].map((_, i) => (
-            <option key={i + 1} value={i + 1}>Level {i + 1}</option>
+          {levelOptions.map(level => (
+            <option key={level} value={level}>Level {level}</option>
           ))}
-          <option value="10">Level 10-12</option>
         </select>
 
         <div className="relative">
@@ -103,30 +218,35 @@ export default function Ekstra() {
         </div>
       </div>
 
-      {/* Table Ekstrakurikuler */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300 text-left">
           <thead>
             <tr className="bg-blue-900 text-white">
-              {table.getHeaderGroups().map(headerGroup => (
+              {table.getHeaderGroups().map(headerGroup =>
                 headerGroup.headers.map(header => (
                   <th key={header.id} className="p-2 border">
                     {flexRender(header.column.columnDef.header, header.getContext())}
                   </th>
                 ))
-              ))}
+              )}
             </tr>
           </thead>
           <tbody>
-            {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="border">
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="p-2 border">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+            {isLoading ? (
+              <tr>
+                <td colSpan={6} className="text-center p-4">Loading...</td>
               </tr>
-            ))}
+            ) : (
+              table.getRowModel().rows.map(row => (
+                <tr key={row.id} className="border">
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id} className="p-2 border">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
