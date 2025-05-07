@@ -104,7 +104,8 @@ export default function TopUpUangSaku() {
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="overflow-x-auto">
         <div className="bg-white rounded-lg shadow-md p-10 min-w-[700px] w-full max-w-2xl border mx-auto">
-          <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">TOP UP UANG SAKU</h2>
+          <h2 className="text-2xl font-bold text-center text-blue-900 mb-3">TOP UP UANG SAKU</h2>
+          <hr className="border-t-3 border-blue-900 mb-8" />
 
           {loading && <p>Loading...</p>}
           {error && <p className="text-red-600 mb-4">{error}</p>}

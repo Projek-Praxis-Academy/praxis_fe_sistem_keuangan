@@ -205,13 +205,13 @@ export default function Ekstra() {
         <div className="flex-1 flex justify-end gap-2">
           <Link
             href="/ekstra/tambah-siswa"
-            className="px-3 py-1 bg-gray-300 text-black rounded-md text-sm hover:bg-gray-400"
+            className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
           >
-            Tambah Kontrak
+           + Tambah Kontrak
           </Link>
           <Link
             href="/ekstra/daftar-ekstra"
-            className="px-3 py-1 bg-gray-300 text-black rounded-md text-sm hover:bg-gray-400"
+            className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
           >
             Harga Ekstra
           </Link>

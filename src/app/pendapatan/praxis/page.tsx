@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation'
 import axios from 'axios'
 
 interface Siswa {
-  no: number
   nama_siswa: string
   nisn: string
   level: string
@@ -56,7 +55,6 @@ export default function PendapatanPraxis() {
           const sumbanganVal = parseFormattedNumber(tagihan.tagihan_uang_sumbangan);
   
           return {
-            no: index + 1,
             nama_siswa: item.nama_siswa,
             nisn: item.nisn,
             level: item.level,
@@ -93,7 +91,6 @@ export default function PendapatanPraxis() {
 
   const columns = useMemo(
     () => [
-      { accessorKey: 'no', header: 'No' },
       { accessorKey: 'nama_siswa', header: 'Nama Siswa' },
       { accessorKey: 'nisn', header: 'NISN' },
       {
@@ -130,7 +127,7 @@ export default function PendapatanPraxis() {
           const id_siswa = row.original.id_siswa
           return (
             <CreditCard
-              className="text-gray-600 cursor-pointer"
+              className="text-gray-600 cursor-pointer hover:text-blue-600"
               onClick={() => router.push(`/pendapatan/praxis/detail-praxis?id_siswa=${id_siswa}`)}
             />
           )
@@ -143,7 +140,7 @@ export default function PendapatanPraxis() {
           const id_siswa = row.original.id_siswa
           return (
             <FileSignature
-              className="text-gray-600 cursor-pointer"
+              className="text-gray-600 cursor-pointer hover:text-blue-600"
               onClick={() => router.push(`/pendapatan/praxis/pembayaran-siswa?id_siswa=${id_siswa}`)}
             />
           )
@@ -182,9 +179,8 @@ export default function PendapatanPraxis() {
             />
             <Search size={14} className="absolute left-2 top-2 text-gray-700" />
           </div>
-          <button className="px-2 py-1 bg-gray-300 rounded-md text-sm text-black" onClick={() => router.push('http://127.0.0.1:3000/pendapatan/praxis/tambah-kontrak')}>Tambah Kontrak</button>
+          <button className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm" onClick={() => router.push('http://127.0.0.1:3000/pendapatan/praxis/tambah-kontrak')}> + Tambah Kontrak</button>
         </div>
-        <button className="px-2 py-1 bg-gray-300 rounded-md text-sm text-black" onClick={() => alert('Fitur segera hadir')}>Cetak Tagihan</button>
       </div>
 
       <div className="overflow-x-auto">

@@ -73,7 +73,7 @@ export default function TambahSiswa() {
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="overflow-x-auto">
         <div className="bg-white rounded-lg shadow-md p-10 w-full max-w-2xl mx-auto border">
-          <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">TAMBAH SISWA</h2>
+          <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">TAMBAH SISWA BOARDING / KONSUMSI</h2>
           <p className="text-sm text-gray-500 mb-4">Lengkapi data siswa untuk tagihan boarding atau konsumsi berikut ini.</p>
 
           {error && <div className="text-red-600 mb-4 font-medium">{error}</div>}

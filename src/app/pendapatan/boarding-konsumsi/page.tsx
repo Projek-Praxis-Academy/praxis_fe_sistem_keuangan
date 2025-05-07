@@ -7,12 +7,16 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
 interface Siswa {
-  no: number;
   nama_siswa: string;
   tagihan_boarding: string;
   tagihan_konsumsi: string;
   id_siswa: string;
+  // level: string;
 }
+
+// const levelOptions = [
+//   "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"
+// ];
 
 export default function BoardingKonsumsi() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,26 +27,27 @@ export default function BoardingKonsumsi() {
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem('token') || '';
-      console.log('Token:', token);
-
       try {
         const response = await axios.get('http://127.0.0.1:8000/api/monitoring/bk', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          params: {
+            level: selectedLevel,  // Kirim level sebagai parameter
+          },
         });
-
+  
         if (response.data && response.data.data && Array.isArray(response.data.data.data)) {
-          const fetchedData = response.data.data.data.map((item: any, index: number) => ({
-            no: index + 1,
+          const fetchedData = response.data.data.data.map((item: any) => ({
             nama_siswa: item.nama_siswa,
             tagihan_boarding: item.tagihan_boarding || '0',
             tagihan_konsumsi: item.tagihan_konsumsi || '0',
             id_siswa: item.id_siswa,
+            // level: item.level || '',
           }));
           setData(fetchedData);
         } else {
-          console.error('Data tidak dalam format yang diharapkan atau hilang:', response.data.data);
+          console.error('Data tidak dalam format yang diharapkan:', response.data.data);
           setData([]);
         }
       } catch (error) {
@@ -50,13 +55,21 @@ export default function BoardingKonsumsi() {
         setData([]);
       }
     };
-
+  
     fetchData();
-  }, []);
+  });  // Pastikan efek ini berjalan ulang ketika level berubah
+  
+
+  const filteredData = useMemo(() => {
+    return data
+      // .filter(item => item.level === selectedLevel)
+      .filter(item =>
+        item.nama_siswa.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+  }, [searchTerm, selectedLevel, data]);
 
   const columns = useMemo(
     () => [
-      { accessorKey: 'no', header: 'No' },
       { accessorKey: 'nama_siswa', header: 'Nama Siswa' },
       {
         accessorKey: 'tagihan_boarding',
@@ -75,7 +88,7 @@ export default function BoardingKonsumsi() {
           const id_siswa = row.original.id_siswa;
           return (
             <a href={`/pendapatan/boarding-konsumsi/detail-bk?id_siswa=${id_siswa}`}>
-              <CreditCard className="text-gray-600 cursor-pointer" />
+              <CreditCard className="text-gray-600 cursor-pointer hover:text-blue-600" />
             </a>
           );
         }
@@ -87,7 +100,7 @@ export default function BoardingKonsumsi() {
           const id_siswa = row.original.id_siswa;
           return (
             <FileSignature
-              className="text-gray-600 cursor-pointer"
+              className="text-gray-600 cursor-pointer hover:text-blue-600"
               onClick={() => router.push(`/pendapatan/boarding-konsumsi/pembayaran-bk?id_siswa=${id_siswa}`)}
             />
           );
@@ -97,7 +110,7 @@ export default function BoardingKonsumsi() {
     [router]
   );
 
-  const table = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel() });
+  const table = useReactTable({ data: filteredData, columns, getCoreRowModel: getCoreRowModel() });
 
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
@@ -105,43 +118,47 @@ export default function BoardingKonsumsi() {
         <h2 className="text-3xl font-bold">Monitoring Boarding & Konsumsi</h2>
       </div>
 
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex gap-2 items-center">
-          <select
-            className="px-2 py-1 bg-gray-300 text-black rounded-md text-sm"
-            value={selectedLevel}
-            onChange={(e) => setSelectedLevel(e.target.value)}
-          >
-            <option value="X">Level X</option>
-            <option value="XI">Level XI</option>
-            <option value="XII">Level XII</option>
-          </select>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="px-2 py-1 pl-8 bg-gray-300 text-black rounded-md text-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Search size={14} className="absolute left-2 top-2 text-gray-700" />
-          </div>
+      {/* FILTER DAN TOMBOL */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        {/* <select
+          className="px-2 py-1 bg-gray-300 text-black rounded-md text-sm"
+          value={selectedLevel}
+          onChange={(e) => setSelectedLevel(e.target.value)}
+        >
+          {levelOptions.map(level => (
+            <option key={level} value={level}>
+              Level {level}
+            </option>
+          ))}
+        </select> */}
+
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search..."
+            className="px-2 py-1 pl-8 bg-gray-300 text-black rounded-md text-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <Search size={14} className="absolute left-2 top-2 text-gray-700" />
         </div>
+
         <button
-          className="px-3 py-1 bg-gray-300 text-black rounded-md text-sm"
+          className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
           onClick={() => router.push('/pendapatan/boarding-konsumsi/tambah-siswa')}
         >
-          Tambah Siswa
+          + Tambah Siswa
         </button>
       </div>
 
+      {/* TABEL */}
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300 text-left">
+        <table className="w-full border-collapse border border-gray-300 text-left text-sm text-black">
           <thead>
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id} className="bg-blue-900 text-white">
                 {headerGroup.headers.map(header => (
-                  <th key={header.id} className="p-2 border text-sm">
+                  <th key={header.id} className="p-2 border">
                     {flexRender(header.column.columnDef.header, header.getContext())}
                   </th>
                 ))}
@@ -150,7 +167,7 @@ export default function BoardingKonsumsi() {
           </thead>
           <tbody>
             {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="border text-sm">
+              <tr key={row.id} className="border">
                 {row.getVisibleCells().map(cell => (
                   <td key={cell.id} className="p-2 border">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

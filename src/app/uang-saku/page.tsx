@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
-import { Search, FileText } from 'lucide-react'
+import { Search, FileText, CreditCard } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface SiswaUangSaku {
@@ -103,8 +103,8 @@ export default function MonitoringUangSaku() {
         cell: ({ row }: any) => {
           const id_siswa = row.original.id_siswa
           return (
-            <FileText
-              className="text-gray-600 cursor-pointer"
+            <CreditCard
+              className="text-gray-600 cursor-pointer hover:text-blue-600"
               onClick={() => router.push(`/uang-saku/detail?id_siswa=${id_siswa}`)}
             />
           )

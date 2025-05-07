@@ -86,7 +86,6 @@ export default function PendapatanTechno() {
 
   const columns = useMemo(
     () => [
-      { accessorKey: 'no', header: 'No' },
       { accessorKey: 'nama_siswa', header: 'Nama Siswa' },
       { accessorKey: 'nisn', header: 'NISN' },
       {
@@ -123,7 +122,7 @@ export default function PendapatanTechno() {
           const id_siswa = row.original.id_siswa
           return (
             <CreditCard
-              className="text-gray-600 cursor-pointer"
+              className="text-gray-600 cursor-pointer hover:text-blue-600"
               onClick={() => router.push(`/pendapatan/techno/detail-techno?id_siswa=${id_siswa}`)}
             />
           )
@@ -136,7 +135,7 @@ export default function PendapatanTechno() {
           const id_siswa = row.original.id_siswa
           return (
             <FileSignature
-              className="text-gray-600 cursor-pointer"
+              className="text-gray-600 cursor-pointer hover:text-blue-600"
               onClick={() => router.push(`/pendapatan/techno/pembayaran-techno?id_siswa=${id_siswa}`)}
             />
           )
@@ -154,7 +153,7 @@ export default function PendapatanTechno() {
         <h2 className="text-3xl font-bold">Techno Academy</h2>
       </div>
   
-      <div className="flex justify-between items-center mb-2">
+      <div className="flex justify-between items-center mb-4">
         <div className="flex justify-start gap-2 items-center">
           <select
             className="px-2 py-1 bg-gray-300 text-black rounded-md text-sm"
@@ -182,18 +181,12 @@ export default function PendapatanTechno() {
             <Search size={14} className="absolute left-2 top-2 text-gray-700" />
           </div>
           <button
-            className="px-2 py-1 bg-gray-300 rounded-md text-sm text-black"
+            className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
             onClick={() => router.push('http://127.0.0.1:3000/pendapatan/techno/add-kontrak-techno')}
           >
-            Tambah Kontrak
+            + Tambah Kontrak
           </button>
         </div>
-        <button
-          className="px-2 py-1 bg-gray-300 rounded-md text-sm text-black"
-          onClick={() => alert('Fitur segera hadir')}
-        >
-          Cetak Tagihan
-        </button>
       </div>
   
       <div className="overflow-x-auto">
