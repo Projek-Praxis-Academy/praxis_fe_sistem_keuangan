@@ -31,7 +31,18 @@ export default function PengeluaranTable() {
           },
         })
 
-        setData(response.data.data || [])
+        const pengeluaranList = response.data.data || []
+        const formattedData = pengeluaranList.map((item: any) => ({
+          id_pengeluaran: item.id_pengeluaran,
+          nama_pengeluaran: item.nama_pengeluaran,
+          total_pengeluaran: item.total_pengeluaran,
+          updated_at: item.updated_at,
+          jenis_pengeluaran: {
+            nama_jenis_pengeluaran: item.jenis_pengeluaran?.nama_jenis_pengeluaran || '-',
+          },
+        }))
+
+        setData(formattedData)
       } catch (error) {
         console.error('Gagal memuat data pengeluaran:', error)
       }
@@ -82,7 +93,9 @@ export default function PengeluaranTable() {
         cell: ({ row }: any) => (
           <FileText
             className="text-gray-700 hover:text-blue-600 cursor-pointer"
-            onClick={() => router.push(`/pengeluaran/detail/${row.original.id_pengeluaran}`)}
+            onClick={() =>
+              router.push(`/pengeluaran/detail?id_pengeluaran=${row.original.id_pengeluaran}`)
+            }
           />
         ),
       },
@@ -101,7 +114,7 @@ export default function PengeluaranTable() {
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold">Monitoring Pengeluaran</h2>
       </div>
-  
+
       <div className="flex justify-between items-center mb-4">
         <div className="relative flex items-center gap-2">
           <input
@@ -113,7 +126,7 @@ export default function PengeluaranTable() {
           />
           <Search size={14} className="absolute left-2 top-2 text-gray-700" />
         </div>
-  
+
         <div className="flex gap-2">
           <button
             className="px-4 py-2 bg-blue-900 hover:bg-blue-700 text-white rounded-md text-sm"
@@ -123,13 +136,13 @@ export default function PengeluaranTable() {
           </button>
           <button
             className="px-4 py-2 bg-blue-900 hover:bg-blue-700 text-white rounded-md text-sm"
-            onClick={() => router.push('/pengeluaran/kategori')}
+            onClick={() => router.push('/pengeluaran/tambah')}
           >
             + Tambah Pengeluaran
           </button>
         </div>
       </div>
-  
+
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300 text-left text-sm text-black">
           <thead>
@@ -157,5 +170,5 @@ export default function PengeluaranTable() {
         </table>
       </div>
     </div>
-  )  
+  )
 }
