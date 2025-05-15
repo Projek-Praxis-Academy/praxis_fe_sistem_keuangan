@@ -21,6 +21,7 @@ export default function TambahPengeluaran() {
     }
   ])
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
 
   // Fetch kategori based on jenis pengeluaran
@@ -111,7 +112,7 @@ export default function TambahPengeluaran() {
         'Content-Type': 'multipart/form-data'
       }
     })
-      alert('Pengeluaran berhasil ditambahkan!')
+      setSuccess('Pengeluaran berhasil ditambahkan!')
       router.push('/pengeluaran')
     } catch (err: any) {
       console.error(err)
@@ -126,8 +127,22 @@ export default function TambahPengeluaran() {
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="overflow-x-auto">
         <div className="bg-white rounded-lg shadow-md p-10 w-full max-w-3xl mx-auto border">
-          <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">TAMBAH PENGELUARAN</h2>
-          {error && <div className="text-red-600 mb-4 font-medium">{error}</div>}
+          <h2 className="text-2xl font-bold text-center text-blue-900 mb-5">TAMBAH PENGELUARAN</h2>
+          <hr className="border-t-3 border-blue-900 mb-8" />
+
+          {/* Alert Error */}
+          {error && (
+            <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+              <p className="font-medium">{error}</p>
+            </div>
+          )}
+
+          {/* Alert Success */}
+          {success && (
+            <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+              <p className="font-medium">{success}</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
             <div>
@@ -183,32 +198,58 @@ export default function TambahPengeluaran() {
                   value={sub.nominal}
                   onChange={(e) => handleSubChange(index, 'nominal', e.target.value)}
                 />
-                <input
-                  type="number"
-                  placeholder="Jumlah Item"
-                  className="w-full border rounded px-2 py-1"
-                  value={sub.jumlah_item}
-                  onChange={(e) => handleSubChange(index, 'jumlah_item', e.target.value)}
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nominal</label>
+                      <div className="flex items-center border rounded px-2 bg-white">
+                          <span className="text-gray-500 text-sm mr-1">Rp</span>
+                            <input
+                              type="number"
+                              placeholder="Jumlah Item"
+                              className="w-full rounded px-2 py-1"
+                              value={sub.jumlah_item}
+                              onChange={(e) => handleSubChange(index, 'jumlah_item', e.target.value)}
+                            />
+                      </div>
+                    </div>
                 <input
                   type="date"
                   className="w-full border rounded px-2 py-1"
                   value={sub.tanggal_pengeluaran}
                   onChange={(e) => handleSubChange(index, 'tanggal_pengeluaran', e.target.value)}
                 />
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  className="w-full"
-                  onChange={(e) => handleSubChange(index, 'file_nota', e.target.files?.[0] || null)}
-                />
+                <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Upload Bukti Nota
+                    </label>
+                    <p className="text-xs text-gray-500 mb-2">
+                      * Maksimal ukuran 10 MB, hanya format PDF, JPG, JPEG, PNG
+                    </p>
+                        <div className="flex items-center gap-4">
+                          {/* Tombol Upload */}
+                          <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-700">
+                            Pilih File
+                            <input
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              className="hidden"
+                              onChange={(e) => handleSubChange(index, 'file_nota', e.target.files?.[0] || null)}
+                            />
+                          </label>
+                          {/* Nama File */}
+                          {sub.file_nota && (
+                            <span className="text-sm text-gray-700">
+                              {sub.file_nota.name}
+                            </span>
+                          )}
+                        </div>
+                  </div>
               </div>
             ))}
 
             <button
               type="button"
               onClick={handleAddSub}
-              className="flex items-center gap-2 bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-900"
+              className="flex items-center w-60 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
             >
               <Plus size={16} />
               Tambah Sub Pengeluaran

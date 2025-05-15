@@ -51,7 +51,7 @@ const SidebarContent = () => {
                 {/* Techno */}
                 <li className="mb-2">
                   <Link href="/pendapatan/techno" className="flex p-2 w-full text-left text-black bg-white hover:bg-gray-200 hover:text-black rounded">
-                    <span>Techno Nature</span>
+                    <span>TechnoNatura</span>
                   </Link>
                 </li>
 
@@ -79,11 +79,11 @@ const SidebarContent = () => {
               Pengeluaran
             </Link>
           </li>
-          <li className="mb-2">
+          {/* <li className="mb-2">
             <Link href="/tunggakan" className="block p-2 text-left text-black bg-white hover:bg-gray-200 hover:text-black rounded">
               Tunggakan
             </Link>
-          </li>
+          </li> */}
           <li className="mb-2">
             <Link href="/buat-tagihan" className="block p-2 text-left text-black bg-white hover:bg-gray-200 hover:text-black rounded">
               Buat Tagihan

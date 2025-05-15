@@ -22,6 +22,7 @@ export default function PengeluaranUangSaku() {
   const [siswaDetail, setSiswaDetail] = useState<Siswa | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const [tanggalPengeluaran, setTanggalPengeluaran] = useState('')
   const [nominal, setNominal] = useState('')
@@ -58,7 +59,7 @@ export default function PengeluaranUangSaku() {
     if (!siswaDetail) return
 
     if (!tanggalPengeluaran || nominal.trim() === '') {
-      alert('Tanggal dan nominal harus diisi.')
+      setError('Tanggal dan nominal harus diisi.')
       return
     }
 
@@ -83,19 +84,19 @@ export default function PengeluaranUangSaku() {
       )
 
       if (response.data.status === 'success') {
-        alert(response.data.message || 'Pengeluaran berhasil disimpan.')
+        setSuccess(response.data.message || 'Pengeluaran berhasil disimpan.')
         setTanggalPengeluaran('')
         setNominal('')
         setCatatan('')
         window.location.href = 'http://127.0.0.1:3000/uang-saku'
       } else {
-        alert(response.data.message || 'Gagal menyimpan pengeluaran.')
+        setError(response.data.message || 'Gagal menyimpan pengeluaran.')
       }
     } catch (error: any) {
       if (error.response && error.response.data) {
-        alert(error.response.data.message || 'Gagal menyimpan pengeluaran.')
+        setError(error.response.data.message || 'Gagal menyimpan pengeluaran.')
       } else {
-        alert('Terjadi kesalahan saat mengirim data.')
+        setError('Terjadi kesalahan saat mengirim data.')
       }
     }
   }
@@ -108,7 +109,20 @@ export default function PengeluaranUangSaku() {
           <hr className="border-t-3 border-blue-900 mb-8" />
 
           {loading && <p>Loading...</p>}
-          {error && <p className="text-red-600 mb-4">{error}</p>}
+          
+          {/* Alert Error */}
+          {error && (
+            <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+              <p className="font-medium">{error}</p>
+            </div>
+          )}
+
+          {/* Alert Success */}
+          {success && (
+            <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+              <p className="font-medium">{success}</p>
+            </div>
+          )}
 
           {siswaDetail && (
             <div className="space-y-4">
@@ -152,13 +166,16 @@ export default function PengeluaranUangSaku() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nominal</label>
-                <input
-                  type="text"
-                  placeholder="Rp"
-                  value={nominal}
-                  onChange={(e) => setNominal(e.target.value.replace(/\D/g, ''))}
-                  className="w-full border px-3 py-2 rounded"
-                />
+                <div className="flex items-center border rounded px-2 bg-white">
+                    <span className="text-gray-500 text-sm mr-1">Rp</span>
+                      <input
+                        type="text"
+                        placeholder="1000000"
+                        value={nominal}
+                        onChange={(e) => setNominal(e.target.value.replace(/\D/g, ''))}
+                        className="w-full px-3 py-2 rounded"
+                      />
+                </div>
               </div>
 
               <div>

@@ -21,7 +21,13 @@ interface Siswa {
 
 export default function PendapatanPraxis() {
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedLevel, setSelectedLevel] = useState('X')
+  const [selectedLevel, setSelectedLevel] = useState(() => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('selectedLevel') || 'X'
+  }
+  return 'X'
+})
+
   const [data, setData] = useState<Siswa[]>([])
   const router = useRouter()
 
@@ -30,6 +36,11 @@ export default function PendapatanPraxis() {
     if (!value || value === 'Lunas') return 0
     return Number(value.replace(/\./g, ''))
   }
+
+  // Simpan level yang dipilih ke localStorage
+  useEffect(() => {
+    localStorage.setItem('selectedLevel', selectedLevel)
+  }, [selectedLevel])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -155,7 +166,7 @@ export default function PendapatanPraxis() {
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold">Praxis Academy</h2>
+        <h2 className="text-3xl font-bold">Monitoring Praxis Academy</h2>
       </div>
 
       <div className="flex justify-between items-center mb-2">

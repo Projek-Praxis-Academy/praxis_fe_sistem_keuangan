@@ -23,6 +23,7 @@ export default function PembayaranEkstra() {
   const [siswaDetail, setSiswaDetail] = useState<Siswa | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const [tanggalPembayaran, setTanggalPembayaran] = useState('')
   const [nominal, setNominal] = useState('')
@@ -59,13 +60,13 @@ export default function PembayaranEkstra() {
     if (!siswaDetail || !id_ekstra_siswa_query) return
 
     if (!tanggalPembayaran || nominal.trim() === '') {
-      alert('Tanggal dan nominal pembayaran harus diisi.')
+      setError('Tanggal dan nominal pembayaran harus diisi.')
       return
     }
 
     const nominalInt = parseInt(nominal)
     if (isNaN(nominalInt) || nominalInt <= 0) {
-      alert('Nominal pembayaran harus berupa angka positif.')
+      setError('Nominal pembayaran harus berupa angka positif.')
       return
     }
 
@@ -91,7 +92,7 @@ export default function PembayaranEkstra() {
       )
 
       if (response.data.status === 'success') {
-        alert(response.data.message || 'Pembayaran ekstra berhasil disimpan.')
+        setSuccess(response.data.message || 'Pembayaran ekstra berhasil disimpan.')
 
         // Reset form
         setTanggalPembayaran('')
@@ -101,13 +102,13 @@ export default function PembayaranEkstra() {
         // Redirect
         window.location.href = `http://127.0.0.1:3000/ekstra?id_siswa=${id_siswa_query}`
       } else {
-        alert(response.data.message || 'Gagal menyimpan pembayaran.')
+        setError(response.data.message || 'Gagal menyimpan pembayaran.')
       }
     } catch (error: any) {
       if (error.response && error.response.data) {
-        alert(error.response.data.message || 'Gagal menyimpan pembayaran.')
+        setError(error.response.data.message || 'Gagal menyimpan pembayaran.')
       } else {
-        alert('Terjadi kesalahan saat mengirim data.')
+        setError('Terjadi kesalahan saat mengirim data.')
       }
     }
   }
@@ -116,10 +117,24 @@ export default function PembayaranEkstra() {
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="overflow-x-auto">
         <div className="bg-white rounded-lg shadow-md p-10 min-w-[700px] w-full max-w-2xl border mx-auto">
-          <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">PEMBAYARAN EKSTRA</h2>
+          <h2 className="text-2xl font-bold text-center text-blue-900 mb-3">PEMBAYARAN EKSTRAKURIKULER</h2>
+          <hr className="border-t-3 border-blue-900 mb-8" />
 
           {loading && <p>Loading...</p>}
-          {error && <p className="text-red-600 mb-4">{error}</p>}
+
+          {/* Alert Error */}
+          {error && (
+            <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+              <p className="font-medium">{error}</p>
+            </div>
+          )}
+
+          {/* Alert Success */}
+          {success && (
+            <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+              <p className="font-medium">{success}</p>
+            </div>
+          )}
 
           {siswaDetail && (
             <div className="space-y-4">
@@ -145,12 +160,15 @@ export default function PembayaranEkstra() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nominal</label>
-                <input
-                  placeholder="Nominal pembayaran"
-                  value={nominal}
-                  onChange={(e) => setNominal(e.target.value.replace(/\D/g, ''))}
-                  className="w-full border px-3 py-2 rounded"
-                />
+                <div className="flex items-center border rounded px-2 bg-white">
+                    <span className="text-gray-500 text-sm mr-1">Rp</span>
+                    <input
+                      placeholder="Nominal pembayaran"
+                      value={nominal}
+                      onChange={(e) => setNominal(e.target.value.replace(/\D/g, ''))}
+                      className="w-full px-3 py-2 rounded"
+                    />
+                </div>
               </div>
 
               <div>

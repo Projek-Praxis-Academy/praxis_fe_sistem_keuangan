@@ -17,6 +17,7 @@ export default function TambahKontrakTechno() {
   const [fileKontrak, setFileKontrak] = useState<File | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,7 +37,7 @@ export default function TambahKontrakTechno() {
       setError('Ukuran file kontrak maksimal 10MB')
       return
     }
-
+    setSuccess('')
     setLoading(true)
     setError('')
 
@@ -70,7 +71,7 @@ export default function TambahKontrakTechno() {
 
       const response = await axios.request(config)
 
-      alert('Kontrak berhasil ditambahkan!')
+    setSuccess('Kontrak berhasil ditambahkan!')
       router.push('/pendapatan/techno')
     } catch (err: any) {
       console.error(err)
@@ -87,8 +88,21 @@ export default function TambahKontrakTechno() {
         <div className="bg-white rounded-lg shadow-md p-10 w-full max-w-2xl mx-auto border">
           <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">TAMBAH KONTRAK SISWA</h2>
           <p className="text-sm text-gray-500 mb-4">Lengkapi data kontrak pembayaran siswa berikut ini.</p>
+          <hr className="border-t-2 border-blue-900 mb-5" />
 
-          {error && <div className="text-red-600 mb-4 font-medium">{error}</div>}
+          {/* Alert Error */}
+          {error && (
+            <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+              <p className="font-medium">{error}</p>
+            </div>
+          )}
+
+          {/* Alert Success */}
+          {success && (
+            <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+              <p className="font-medium">{success}</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-2">
@@ -103,47 +117,59 @@ export default function TambahKontrakTechno() {
             </div>
 
             <div>
-              <label className="text-sm font-medium">Uang KBM</label>
-              <input
-                type="number"
-                value={uangKBM}
-                onChange={(e) => setUangKBM(e.target.value)}
-                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
-                placeholder="Jumlah KBM"
-              />
+              <label className="text-sm font-medium"> KBM</label>
+              <div className="flex items-center border rounded px-2 bg-white">
+                <span className="text-gray-500 text-sm mr-1">Rp</span>
+                <input
+                  type="number"
+                  value={uangKBM}
+                  onChange={(e) => setUangKBM(e.target.value)}
+                  className="mt-1 w-full rounded-md px-3 py-2"
+                  placeholder="Jumlah KBM"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium">Uang SPP</label>
-              <input
-                type="number"
-                value={uangSPP}
-                onChange={(e) => setUangSPP(e.target.value)}
-                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
-                placeholder="Jumlah SPP"
-              />
+              <label className="text-sm font-medium"> SPP</label>
+              <div className="flex items-center border rounded px-2 bg-white">
+                <span className="text-gray-500 text-sm mr-1">Rp</span>
+                <input
+                  type="number"
+                  value={uangSPP}
+                  onChange={(e) => setUangSPP(e.target.value)}
+                  className="mt-1 w-full rounded-md px-3 py-2"
+                  placeholder="Jumlah SPP"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium">Uang Pemeliharaan</label>
-              <input
-                type="number"
-                value={uangPemeliharaan}
-                onChange={(e) => setUangPemeliharaan(e.target.value)}
-                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
-                placeholder="Jumlah Pemeliharaan"
-              />
+              <label className="text-sm font-medium"> Pemeliharaan</label>
+              <div className="flex items-center border rounded px-2 bg-white">
+                <span className="text-gray-500 text-sm mr-1">Rp</span>
+                <input
+                  type="number"
+                  value={uangPemeliharaan}
+                  onChange={(e) => setUangPemeliharaan(e.target.value)}
+                  className="mt-1 w-full rounded-md px-3 py-2"
+                  placeholder="Jumlah Pemeliharaan"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium">Uang Sumbangan</label>
-              <input
-                type="number"
-                value={uangSumbangan}
-                onChange={(e) => setUangSumbangan(e.target.value)}
-                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
-                placeholder="Jumlah Sumbangan"
-              />
+              <label className="text-sm font-medium"> Sumbangan</label>
+              <div className="flex items-center border rounded px-2 bg-white">
+                <span className="text-gray-500 text-sm mr-1">Rp</span>
+                <input
+                  type="number"
+                  value={uangSumbangan}
+                  onChange={(e) => setUangSumbangan(e.target.value)}
+                  className="mt-1 w-full rounded-md px-3 py-2"
+                  placeholder="Jumlah Sumbangan"
+                />
+              </div>
             </div>
 
             <div className="col-span-2">
@@ -157,15 +183,24 @@ export default function TambahKontrakTechno() {
               />
             </div>
 
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700">Upload Kontrak (PDF)</label>
-              <p className="text-xs text-gray-500 mb-1">* Maksimal ukuran 10 MB, hanya format PDF</p>
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={(e) => setFileKontrak(e.target.files?.[0] || null)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-              />
+            <div className="flex items-center gap-4">
+                {/* Tombol Upload */}
+                <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-700">
+                  Pilih File
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => setFileKontrak(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
+                </label>
+
+                {/* Nama File */}
+                {fileKontrak && (
+                  <span className="text-sm text-gray-700 truncate max-w-xs">
+                    {fileKontrak.name}
+                  </span>
+                )}
             </div>
 
             <div className="col-span-2 mt-4">

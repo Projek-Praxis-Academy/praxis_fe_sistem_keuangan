@@ -72,7 +72,8 @@ export default function KontrakSiswa() {
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="overflow-x-auto">
         <div className="bg-white rounded-lg shadow-md p-10 min-w-[700px] w-full max-w-2xl border mx-auto">
-          <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">KONTRAK SISWA</h2>
+          <h2 className="text-2xl font-bold text-center text-blue-900 mb-3">KONTRAK SISWA PRAXIS ACADEMY</h2>
+          <hr className="border-t-3 border-blue-900 mb-8" />
 
           {loading && (
             <div className="flex justify-center items-center">
@@ -81,7 +82,12 @@ export default function KontrakSiswa() {
             </div>
           )}
 
-          {error && <p className="text-red-600 mb-4">{error}</p>}
+          {/* Alert Error */}
+          {error && (
+            <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+              <p className="font-medium">{error}</p>
+            </div>
+          )}
 
           {siswaDetail && (
             <div className="space-y-4">
@@ -111,46 +117,63 @@ export default function KontrakSiswa() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium font-bold mb-1">KBM</label>
+                  <label className="block text-base font-medium font-bold mb-1">KBM</label>
                   <input
-                    type="number"
-                    value={siswaDetail.tagihan_uang_kbm ?? ''}
+                    type="text" // ubah dari 'number' ke 'text'
+                    value={
+                      siswaDetail.tagihan_uang_kbm != null
+                        ? `Rp${siswaDetail.tagihan_uang_kbm.toLocaleString('id-ID')}`
+                        : '-'
+                    }
+                    readOnly
+                    className="border px-3 py-2 rounded w-full bg-gray-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-base font-medium font-bold mb-1">SPP</label>
+                  <input
+                    type="text" // ubah dari 'number' ke 'text'
+                    value={
+                      siswaDetail.tagihan_uang_spp != null
+                        ? `Rp${siswaDetail.tagihan_uang_spp.toLocaleString('id-ID')}`
+                        : '-'
+                    }
                     readOnly
                     className="border px-3 py-2 rounded w-full bg-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium font-bold mb-1">SPP</label>
+                  <label className="block text-base font-medium font-bold mb-1">Pemeliharaan</label>
                   <input
-                    type="number"
-                    value={siswaDetail.tagihan_uang_spp ?? ''}
+                    type="text" // ubah dari 'number' ke 'text'
+                    value={
+                      siswaDetail.tagihan_uang_pemeliharaan != null
+                        ? `Rp${siswaDetail.tagihan_uang_pemeliharaan.toLocaleString('id-ID')}`
+                        : '-'
+                    }
                     readOnly
                     className="border px-3 py-2 rounded w-full bg-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium font-bold mb-1">Pemeliharaan</label>
-                  <input
-                    type="number"
-                    value={siswaDetail.tagihan_uang_pemeliharaan ?? ''}
-                    readOnly
-                    className="border px-3 py-2 rounded w-full bg-gray-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium font-bold mb-1">Sumbangan</label>
-                  <input
-                    type="number"
-                    value={siswaDetail.tagihan_uang_sumbangan ?? ''}
-                    readOnly
-                    className="border px-3 py-2 rounded w-full bg-gray-100"
-                  />
+                  <label className="block text-base font-medium font-bold mb-1">Sumbangan</label>
+                    <input
+                      type="text" // ubah dari 'number' ke 'text'
+                      value={
+                        siswaDetail.tagihan_uang_sumbangan != null
+                          ? `Rp${siswaDetail.tagihan_uang_sumbangan.toLocaleString('id-ID')}`
+                          : '-'
+                      }
+                      readOnly
+                      className="border px-3 py-2 rounded w-full bg-gray-100"
+                    />
                 </div>
               </div>
 
               <button
                 onClick={() => router.push('/pendapatan/praxis')}
-                className="mt-6 w-full bg-gray-600 text-white py-2 rounded hover:bg-gray-500 transition font-semibold"
+                className=" mt-6 w-full bg-gray-600 text-white py-2 rounded hover:bg-gray-500 transition font-semibold"
               >
                 Kembali
               </button>

@@ -9,12 +9,24 @@ import { useRouter } from 'next/navigation'
 
 export default function Ekstra() {
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedLevel, setSelectedLevel] = useState('I') // Default level ke "I"
   const [data, setData] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [levelOptions, setLevelOptions] = useState<string[]>([])
   const router = useRouter()
+  const [selectedLevel, setSelectedLevel] = useState(() => {
+      if (typeof window !== 'undefined') {
+        return localStorage.getItem('selectedLevel') || 'I'
+      }
+      return 'I'
+    });
+  
 
+  // Simpan level yang dipilih ke localStorage
+  useEffect(() => {
+        localStorage.setItem('selectedLevel', selectedLevel)
+      }, [selectedLevel])
+
+  // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true)
@@ -141,8 +153,8 @@ export default function Ekstra() {
         }
       },
       {
-        accessorKey: 'detail',
-        header: 'Detail',
+        accessorKey: 'riwayat',
+        header: 'Riwayat',
         cell: ({ row }: any) => {
           const id_siswa = row.original.id_siswa
           const ekstraList = row.original.ekstra || []
@@ -154,7 +166,7 @@ export default function Ekstra() {
                   <div key={index} className="border-b last:border-b-0 py-1">
                     <CreditCard
                       className="text-gray-600 cursor-pointer"
-                      title={`Detail ${e.nama_ekstra}`}
+                      title={`Riwayat ${e.nama_ekstra}`}
                       onClick={() =>
                         router.push(`/ekstra/detail-siswa-ekstra?id_siswa=${id_siswa}&id_ekstra_siswa=${e.id_ekstra_siswa}`)
                       }

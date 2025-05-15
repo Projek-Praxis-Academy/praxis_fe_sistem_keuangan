@@ -104,8 +104,8 @@ export default function DetailPembayaranBk() {
 
   return (
     <div className="ml-64 p-8 text-black min-h-screen">
-      <h1 className="text-2xl font-bold text-blue-900 mb-4 text-center">
-        Detail Pembayaran Siswa Boarding & Konsumsi
+      <h1 className="text-2xl font-bold text-black mb-4 text-center">
+        Riwayat Pembayaran Siswa Boarding & Konsumsi
       </h1>
 
       <div className="flex justify-between items-start mb-6">

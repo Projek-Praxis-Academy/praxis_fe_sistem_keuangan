@@ -20,6 +20,7 @@ export default function BuatTagihan() {
   const [tunggakan, setTunggakan] = useState('')
   const [catatan, setCatatan] = useState('')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const [inputTagihan, setInputTagihan] = useState({
     kbm: '',
@@ -69,26 +70,12 @@ export default function BuatTagihan() {
     }
   }
 
-  const formatRupiah = (val: number | string) => 'Rp ' + (parseInt(val as string) || 0).toLocaleString('id-ID')
+    const formatRupiah = (val: number | string) => 'Rp ' + (parseInt(val as string) || 0).toLocaleString('id-ID')
+    
 
-//   const handlePrintPDF = () => {
-//     const el = document.getElementById('preview-area')
-//     if (!el) return
 
-//     setTimeout(() => {
-//   html2pdf()
-//     .set({
-//       margin: 0.5,
-//       filename: `tagihan_${nisn}.pdf`,
-//       html2canvas: { scale: 2 },
-//       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-//     })
-//     .from(el)
-//     .save()
-// }, 500)
-// }
-     const handlePrintPDF = async () => {
-     const blob = await pdf(
+    const handlePrintPDF = async () => {
+    const blob = await pdf(
      <PDFTagihan
           data={{
           namaSiswa,
@@ -110,7 +97,7 @@ export default function BuatTagihan() {
      const url = URL.createObjectURL(blob)
      const a = document.createElement('a')
      a.href = url
-     a.download = `tagihan_${nisn}.pdf`
+     a.download = `tagihan_${namaSiswa}.pdf`
      a.click()
      }
 
@@ -154,7 +141,9 @@ export default function BuatTagihan() {
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="overflow-x-auto">
         <div className="bg-white rounded-lg shadow-md p-10 w-full max-w-3xl mx-auto border">
-          <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">BUAT TAGIHAN SISWA</h2>
+          <h2 className="text-2xl font-bold text-center text-blue-900 mb-3">BUAT TAGIHAN SISWA</h2>
+          <p className="text-sm text-gray-500 mb-4">Lengkapi form tagihan siswa berikut ini.</p>
+          <hr className="border-t-3 border-blue-900 mb-5" />
 
           {error && <div className="text-red-600 mb-4 font-medium">{error}</div>}
 

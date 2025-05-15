@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   headerText: {
-    fontSize: 16,
+    fontSize: 25,
     fontWeight: 'bold',
   },
   line: {

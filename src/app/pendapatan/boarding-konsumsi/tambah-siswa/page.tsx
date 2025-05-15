@@ -15,6 +15,7 @@ export default function TambahSiswa() {
   const [catatan, setCatatan] = useState('')
   const [jenisTagihan, setJenisTagihan] = useState('boarding') // default to boarding
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,7 +59,7 @@ export default function TambahSiswa() {
         },
       })
 
-      alert('Data Siswa berhasil ditambahkan!')
+      setSuccess('Data Siswa berhasil ditambahkan!')
       router.push('/pendapatan/boarding-konsumsi')
     } catch (err: any) {
       console.error(err)
@@ -74,9 +75,22 @@ export default function TambahSiswa() {
       <div className="overflow-x-auto">
         <div className="bg-white rounded-lg shadow-md p-10 w-full max-w-2xl mx-auto border">
           <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">TAMBAH SISWA BOARDING / KONSUMSI</h2>
-          <p className="text-sm text-gray-500 mb-4">Lengkapi data siswa untuk tagihan boarding atau konsumsi berikut ini.</p>
+          <p className="text-sm text-gray-500 mb-5">Lengkapi data siswa untuk tagihan boarding atau konsumsi berikut ini.</p>
+          <hr className="border-t-2 border-blue-900 mb-5" />
 
-          {error && <div className="text-red-600 mb-4 font-medium">{error}</div>}
+          {/* Alert Error */}
+          {error && (
+            <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+              <p className="font-medium">{error}</p>
+            </div>
+          )}
+
+          {/* Alert Success */}
+          {success && (
+            <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+              <p className="font-medium">{success}</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-2">
@@ -112,13 +126,16 @@ export default function TambahSiswa() {
 
             <div>
               <label className="text-sm font-medium">Nominal</label>
-              <input
-                type="number"
-                value={nominal}
-                onChange={(e) => setNominal(e.target.value)}
-                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
-                placeholder="Nominal Tagihan"
-              />
+              <div className="flex items-center border rounded px-2 bg-white">
+                <span className="text-gray-500 text-sm mr-1">Rp</span>
+                  <input
+                    type="number"
+                    value={nominal}
+                    onChange={(e) => setNominal(e.target.value)}
+                    className="mt-1 w-full rounded-md px-3 py-2"
+                    placeholder="Nominal Tagihan"
+                  />
+              </div>
             </div>
 
             <div>

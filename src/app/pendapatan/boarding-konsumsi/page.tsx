@@ -11,18 +11,26 @@ interface Siswa {
   tagihan_boarding: string;
   tagihan_konsumsi: string;
   id_siswa: string;
-  // level: string;
+  level: string;
 }
-
-// const levelOptions = [
-//   "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"
-// ];
+const levelOptions = [
+"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"
+ ];
 
 export default function BoardingKonsumsi() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState('X');
+  const [selectedLevel, setSelectedLevel] = useState(() => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('selectedLevel') || 'I'
+  }
+  return 'I'
+});
   const [data, setData] = useState<Siswa[]>([]);
   const router = useRouter();
+
+  useEffect(() => {
+        localStorage.setItem('selectedLevel', selectedLevel)
+      }, [selectedLevel])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,7 +51,7 @@ export default function BoardingKonsumsi() {
             tagihan_boarding: item.tagihan_boarding || '0',
             tagihan_konsumsi: item.tagihan_konsumsi || '0',
             id_siswa: item.id_siswa,
-            // level: item.level || '',
+            level: item.level || '',
           }));
           setData(fetchedData);
         } else {
@@ -57,12 +65,12 @@ export default function BoardingKonsumsi() {
     };
   
     fetchData();
-  });  // Pastikan efek ini berjalan ulang ketika level berubah
+  }, []);  
   
 
   const filteredData = useMemo(() => {
     return data
-      // .filter(item => item.level === selectedLevel)
+      .filter(item => item.level === selectedLevel)
       .filter(item =>
         item.nama_siswa.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -82,18 +90,6 @@ export default function BoardingKonsumsi() {
         cell: ({ getValue }: any) => <span>{getValue()}</span>
       },
       {
-        accessorKey: 'detail',
-        header: 'Detail',
-        cell: ({ row }: any) => {
-          const id_siswa = row.original.id_siswa;
-          return (
-            <a href={`/pendapatan/boarding-konsumsi/detail-bk?id_siswa=${id_siswa}`}>
-              <CreditCard className="text-gray-600 cursor-pointer hover:text-blue-600" />
-            </a>
-          );
-        }
-      },
-      {
         accessorKey: 'bayar',
         header: 'Bayar',
         cell: ({ row }: any) => {
@@ -103,6 +99,18 @@ export default function BoardingKonsumsi() {
               className="text-gray-600 cursor-pointer hover:text-blue-600"
               onClick={() => router.push(`/pendapatan/boarding-konsumsi/pembayaran-bk?id_siswa=${id_siswa}`)}
             />
+          );
+        }
+      },
+      {
+        accessorKey: 'riwayat',
+        header: 'Riwayat',
+        cell: ({ row }: any) => {
+          const id_siswa = row.original.id_siswa;
+          return (
+            <a href={`/pendapatan/boarding-konsumsi/detail-bk?id_siswa=${id_siswa}`}>
+              <CreditCard className="text-gray-600 cursor-pointer hover:text-blue-600" />
+            </a>
           );
         }
       }
@@ -120,7 +128,7 @@ export default function BoardingKonsumsi() {
 
       {/* FILTER DAN TOMBOL */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        {/* <select
+       <select
           className="px-2 py-1 bg-gray-300 text-black rounded-md text-sm"
           value={selectedLevel}
           onChange={(e) => setSelectedLevel(e.target.value)}
@@ -130,7 +138,7 @@ export default function BoardingKonsumsi() {
               Level {level}
             </option>
           ))}
-        </select> */}
+        </select>
 
         <div className="relative">
           <input

@@ -21,8 +21,18 @@ const levelOptions = [
 export default function MonitoringUangSaku() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedLevel, setSelectedLevel] = useState('I')
   const [data, setData] = useState<SiswaUangSaku[]>([])
+  const [selectedLevel, setSelectedLevel] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('selectedLevel') || 'I'
+    }
+    return 'I'
+  });
+
+  useEffect(() => {
+        localStorage.setItem('selectedLevel', selectedLevel)
+      }, [selectedLevel])
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,8 +108,8 @@ export default function MonitoringUangSaku() {
         },
       },
       {
-        accessorKey: 'detail',
-        header: 'Detail',
+        accessorKey: 'riwayat',
+        header: 'Riwayat',
         cell: ({ row }: any) => {
           const id_siswa = row.original.id_siswa
           return (

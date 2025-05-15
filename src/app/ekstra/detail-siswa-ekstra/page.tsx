@@ -68,11 +68,17 @@ export default function DetailSiswaEkstra() {
     }).slice(3)}`
 
   return (
-    <div className="ml-64 p-8 text-black min-h-screen">
-      <h1 className="text-2xl font-bold text-blue-900 mb-6 text-center">Detail Pembayaran Ekstrakurikuler</h1>
+    <div className="ml-64 p-8 text-black min-h-screen ">
+      <h1 className="text-2xl font-bold text-black mb-6 text-center">Riwayat Pembayaran Ekstrakurikuler</h1>
 
       {loading && <p>Loading...</p>}
-      {error && <p className="text-red-600">{error}</p>}
+      {/* Alert Error */}
+          {error && (
+            <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+              <p className="font-medium">{error}</p>
+            </div>
+          )}
+
 
       {!loading && detailSiswa && (
         <>

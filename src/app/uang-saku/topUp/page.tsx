@@ -22,6 +22,7 @@ export default function TopUpUangSaku() {
   const [siswaDetail, setSiswaDetail] = useState<Siswa | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const [tanggalPembayaran, setTanggalPembayaran] = useState('')
   const [nominal, setNominal] = useState('')
@@ -58,7 +59,7 @@ export default function TopUpUangSaku() {
     if (!siswaDetail) return
 
     if (!tanggalPembayaran || nominal.trim() === '') {
-      alert('Tanggal dan nominal harus diisi.')
+      setError('Tanggal dan nominal harus diisi.')
       return
     }
 
@@ -83,19 +84,19 @@ export default function TopUpUangSaku() {
       )
 
       if (response.data.status === 'success') {
-        alert(response.data.message || 'Top up berhasil disimpan.')
+        setSuccess(response.data.message || 'Top up berhasil disimpan.')
         setTanggalPembayaran('')
         setNominal('')
         setCatatan('')
         window.location.href = 'http://127.0.0.1:3000/uang-saku'
       } else {
-        alert(response.data.message || 'Gagal menyimpan top up.')
+        setError(response.data.message || 'Gagal menyimpan top up.')
       }
     } catch (error: any) {
       if (error.response && error.response.data) {
-        alert(error.response.data.message || 'Gagal menyimpan top up.')
+        setError(error.response.data.message || 'Gagal menyimpan top up.')
       } else {
-        alert('Terjadi kesalahan saat mengirim data.')
+        setError('Terjadi kesalahan saat mengirim data.')
       }
     }
   }
@@ -108,7 +109,19 @@ export default function TopUpUangSaku() {
           <hr className="border-t-3 border-blue-900 mb-8" />
 
           {loading && <p>Loading...</p>}
-          {error && <p className="text-red-600 mb-4">{error}</p>}
+          {/* Alert Error */}
+          {error && (
+            <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+              <p className="font-medium">{error}</p>
+            </div>
+          )}
+
+          {/* Alert Success */}
+          {success && (
+            <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+              <p className="font-medium">{success}</p>
+            </div>
+          )}
 
           {siswaDetail && (
             <div className="space-y-4">

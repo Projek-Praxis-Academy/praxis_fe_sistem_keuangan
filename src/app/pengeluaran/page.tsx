@@ -12,7 +12,7 @@ interface Pengeluaran {
   total_pengeluaran: number
   updated_at: string
   jenis_pengeluaran: {
-    nama_jenis_pengeluaran: string
+  nama_jenis_pengeluaran: string
   }
 }
 
@@ -80,7 +80,7 @@ export default function PengeluaranTable() {
           const date = new Date(getValue())
           return date.toLocaleString('id-ID', {
             day: '2-digit',
-            month: '2-digit',
+            month: 'long',
             year: 'numeric',
             hour: '2-digit',
             minute: '2-digit',

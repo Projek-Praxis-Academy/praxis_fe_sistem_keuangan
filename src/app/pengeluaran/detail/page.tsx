@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { ExternalLink } from 'lucide-react'
 import axios from 'axios'
 import {
   ColumnDef,
@@ -213,19 +214,23 @@ export default function DetailPengeluaran() {
           href={`http://127.0.0.1:8000/${row.original.file_nota}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 underline"
+          className="text-blue-600 hover:text-blue-800"
         >
-          {row.original.file_nota}
+          <ExternalLink size={18} />
         </a>
       ),
     },
     {
       header: 'Tanggal Pengeluaran',
       accessorKey: 'tanggal_pengeluaran',
-      cell: ({ row }) =>
-        new Date(
-          row.original.tanggal_pengeluaran
-        ).toLocaleDateString('id-ID'),
+      cell: ({ row }) => {
+      const date = new Date(row.original.tanggal_pengeluaran)
+      return date.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    },
     },
     {
       header: 'Aksi',
