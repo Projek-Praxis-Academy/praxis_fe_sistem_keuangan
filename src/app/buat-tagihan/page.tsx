@@ -204,7 +204,7 @@ export default function BuatTagihan() {
             </div>
           </form>
 
-          <div id="preview-area" className="mt-10 bg-white p-8 text-black">
+          {/* <div id="preview-area" className="mt-10 bg-white p-8 text-black">
             <div className="flex items-center justify-between mb-4">
               <Image src="/logo.png" alt="Praxis Academy" width={80} height={80} />
               <h1 className="text-2xl font-bold text-center flex-1 -ml-12">Praxis Academy</h1>
@@ -264,7 +264,7 @@ export default function BuatTagihan() {
 
             {catatan && <p className="text-sm mb-6"><strong>Catatan:</strong> {catatan}</p>}
             <p className="text-sm">Demikian bukti tagihan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.</p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

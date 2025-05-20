@@ -55,6 +55,7 @@ export default function EditPengeluaran() {
       setLoading(true)
       const token = localStorage.getItem('token') || ''
       const formData = new FormData()
+      console.log('Mau update sub ID:', id)
 
       formData.append("id_kategori_pengeluaran", editingData.id_kategori_pengeluaran || '')
       formData.append("nama_sub_pengeluaran", editingData.nama_sub_pengeluaran || '')

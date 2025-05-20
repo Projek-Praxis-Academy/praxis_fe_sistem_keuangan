@@ -82,6 +82,8 @@ const styles = StyleSheet.create({
   },
 });
 
+
+
 const formatRupiah = (val: number | string) =>
   'Rp ' + (parseInt(val as string) || 0).toLocaleString('id-ID');
 
@@ -152,13 +154,32 @@ export default function PDFTagihan({
     </View>
   );
 
+const akademikName = (data.akademik || '').toLowerCase();
+const isTechno = akademikName.includes('techno');
+const headerTitle = isTechno ? 'TechnoNatura' : 'Praxis Academy';
+const logoPath = isTechno ? '/logo-techno.png' : '/logo.png';
+const formatTanggalIndo = (tanggal: string) => {
+  const bulanIndo = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+
+  const dateObj = new Date(tanggal);
+  const tanggalNum = dateObj.getDate();
+  const bulan = bulanIndo[dateObj.getMonth()];
+  const tahun = dateObj.getFullYear();
+
+  return `${tanggalNum} ${bulan} ${tahun}`;
+};
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.headerRow}>
-          <Image src="/logo.png" style={styles.logo} />
-          <Text style={styles.headerText}>Praxis Academy</Text>
+          <Image src={logoPath} style={styles.logo} />
+          <Text style={styles.headerText}>{headerTitle}</Text>
         </View>
+
         <View style={styles.line} />
 
         <Text style={styles.subtext}>
@@ -185,11 +206,12 @@ export default function PDFTagihan({
             <Text style={styles.bold}>Akademik:</Text> {data.akademik}
           </Text>
           <Text style={styles.gridCol}>
-            <Text style={styles.bold}>Tanggal Tagihan:</Text> {data.tanggal}
+            <Text style={styles.bold}>Tanggal Tagihan:</Text> {formatTanggalIndo(data.tanggal)}
           </Text>
           <Text style={styles.gridCol}>
-            <Text style={styles.bold}>Jatuh Tempo:</Text> {data.jatuhTempo}
+            <Text style={styles.bold}>Jatuh Tempo:</Text> {formatTanggalIndo(data.jatuhTempo)}
           </Text>
+
         </View>
 
         <Text style={styles.bold}>Tunggakan Tahun Ajaran Sebelumnya</Text>
