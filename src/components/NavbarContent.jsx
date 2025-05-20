@@ -10,10 +10,35 @@ const SidebarContent = () => {
   const [openTagihin, setOpenTagihin] = useState(false)
   const router = useRouter()
 
-  const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated") // Hapus status login
-    router.push("/") // Arahkan ke halaman login
-  }
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const myHeaders = new Headers();
+      myHeaders.append('Authorization', `Bearer ${token}`);
+      
+      const requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        redirect: 'follow'
+      };
+
+      const response = await fetch('http://127.0.0.1:8000/api/logout', requestOptions);
+      const result = await response.json();
+
+      if (response.ok) {
+        // Hapus token dari localStorage
+        localStorage.removeItem('token');
+        // Redirect ke halaman login atau home
+        window.location.href = ''; // Ganti dengan path yang sesuai
+      } else {
+        console.error('Logout failed:', result);
+        alert('Logout gagal, silakan coba lagi');
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+      alert('Terjadi kesalahan saat logout');
+    }
+  };
 
   return (
     <div className="w-64 h-screen bg-[#01478C] text-white p-4 flex flex-col justify-between">

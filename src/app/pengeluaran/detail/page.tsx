@@ -27,6 +27,19 @@ interface SubPengeluaran {
   id_kategori_pengeluaran?: string
 }
 
+interface JenisPengeluaran {
+  id_jenis_pengeluaran: string
+  nama_jenis_pengeluaran: string
+  created_at?: string
+  updated_at?: string
+}
+
+interface PengeluaranItem {
+  id_pengeluaran: string
+  jenis_pengeluaran: string | JenisPengeluaran
+  // ... other properties
+}
+
 interface PengeluaranDetail {
   id_pengeluaran: string
   nama_pengeluaran: string
@@ -44,9 +57,9 @@ export default function DetailPengeluaran() {
   const [kategoriList, setKategoriList] = useState<Kategori[]>([])
   const [modalOpen, setModalOpen] = useState(false)
 
-  const handleUpdate = async ({ id_sub_pengeluaran, formData }) => {
+  const handleUpdate = async ({ id_sub_pengeluaran, formData }: { id_sub_pengeluaran: string, formData: FormData }) => {
     try {
-      const token = localStorage.getItem('token') || '';
+      const token = localStorage.getItem('token') || ''
       
       const response = await axios.post(
         `http://127.0.0.1:8000/api/monitoring-pengeluaran/sub-pengeluaran/update/${id_sub_pengeluaran}`,
@@ -57,19 +70,19 @@ export default function DetailPengeluaran() {
             'Content-Type': 'multipart/form-data',
           },
         }
-      );
+      )
 
-      console.log('Update sukses:', response.data);
+      console.log('Update sukses:', response.data)
       
       if (detail) {
         setDetail(prev => {
-          if (!prev) return null;
+          if (!prev) return null
           
           const updatedSub = prev.sub_pengeluaran.map(item => 
             item.id_sub_pengeluaran === id_sub_pengeluaran 
               ? response.data.data 
               : item
-          );
+          )
           
           return {
             ...prev,
@@ -78,86 +91,94 @@ export default function DetailPengeluaran() {
               (sum, item) => sum + (item.nominal * item.jumlah_item), 
               0
             )
-          };
-        });
+          }
+        })
       }
       
-      setModalOpen(false);
+      setModalOpen(false)
     } catch (err) {
-      console.error('Gagal update:', err);
-      alert('Terjadi kesalahan saat update');
+      console.error('Gagal update:', err)
+      alert('Terjadi kesalahan saat update')
     }
   }
 
   const fetchDetail = async () => {
     try {
-      setLoading(true);
-      const token = localStorage.getItem('token') || '';
+      setLoading(true)
+      const token = localStorage.getItem('token') || ''
       
-      // 1. Fetch detail pengeluaran
+      // Fetch detail pengeluaran
       const response = await axios.get(
         `http://127.0.0.1:8000/api/monitoring-pengeluaran/detail/${id_pengeluaran_query}`,
         { headers: { Authorization: `Bearer ${token}` } }
-      );
+      )
       
-      // 2. Set data detail
-      const updatedData = {
+      // Set data detail
+      const updatedData: PengeluaranDetail = {
         ...response.data,
         total_pengeluaran: response.data.sub_pengeluaran.reduce(
-          (sum, item) => sum + (item.nominal * item.jumlah_item), 
+          (sum: number, item: SubPengeluaran) => sum + (item.nominal * item.jumlah_item), 
           0
         )
-      };
+      }
       
-      setDetail(updatedData);
+      setDetail(updatedData)
 
-      // 3. Cari jenis pengeluaran
-      const jenisPengeluaranResponse = await axios.get(
+      // Fetch jenis pengeluaran
+      const jenisPengeluaranResponse = await axios.get<{data: PengeluaranItem[]}>(
         'http://127.0.0.1:8000/api/monitoring-pengeluaran',
         { headers: { Authorization: `Bearer ${token}` } }
-      );
+      )
       
-      const pengeluaranList = jenisPengeluaranResponse.data.data || [];
+      const pengeluaranList = jenisPengeluaranResponse.data.data || []
       const found = pengeluaranList.find(
-        (item: any) => item.id_pengeluaran === response.data.id_pengeluaran
-      );
-      
-      const jenisPengeluaran = found?.jenis_pengeluaran || '-';
-      setJenisPengeluaran(jenisPengeluaran);
+        (item) => item.id_pengeluaran === response.data.id_pengeluaran
+      )
 
-      // 4. Fetch kategori berdasarkan jenis pengeluaran
-      const kategoriRes = await axios.get(
-        `http://127.0.0.1:8000/api/monitoring-pengeluaran/kategori-pengeluaran?type=${jenisPengeluaran}`,
+      // Handle jenis pengeluaran (string or object)
+      let jenisPengeluaranValue = '-'
+      if (found) {
+        if (typeof found.jenis_pengeluaran === 'string') {
+          jenisPengeluaranValue = found.jenis_pengeluaran
+        } else {
+          jenisPengeluaranValue = (found.jenis_pengeluaran as JenisPengeluaran)?.nama_jenis_pengeluaran || '-'
+        }
+      }
+      setJenisPengeluaran(jenisPengeluaranValue)
+
+      // Fetch kategori
+      const kategoriRes = await axios.get<{data: Kategori[]}>(
+        `http://127.0.0.1:8000/api/monitoring-pengeluaran/kategori-pengeluaran?type=${jenisPengeluaranValue}`,
         { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      console.log('Kategori Response:', kategoriRes.data); // Debug
-      setKategoriList(kategoriRes.data.data || []);
+      )
       
+      setKategoriList(kategoriRes.data.data || [])
     } catch (error) {
-      console.error('Gagal memuat detail:', error);
+      console.error('Gagal memuat detail:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   useEffect(() => {
     if (id_pengeluaran_query) {
-      fetchDetail();
+      fetchDetail()
     }
-  }, [id_pengeluaran_query]);
+  }, [id_pengeluaran_query])
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Yakin ingin menghapus sub pengeluaran ini?')) return;
+    if (!confirm('Yakin ingin menghapus sub pengeluaran ini?')) return
     try {
-      const token = localStorage.getItem('token') || '';
+      const token = localStorage.getItem('token') || ''
       await axios.delete(
         `http://127.0.0.1:8000/api/monitoring-pengeluaran/sub-pengeluaran/delete/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchDetail();
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
+      fetchDetail()
     } catch (error) {
-      console.error('Gagal menghapus:', error);
+      console.error('Gagal menghapus:', error)
     }
   }
 
@@ -172,9 +193,9 @@ export default function DetailPengeluaran() {
       accessorKey: 'id_kategori_pengeluaran',
       cell: ({ row }) => {
         const kategori = kategoriList.find(
-          kategori => kategori.id_kategori_pengeluaran === row.original.id_kategori_pengeluaran?.toString()
-        );
-        return kategori?.nama_kategori_pengeluaran || '-';
+          k => k.id_kategori_pengeluaran === row.original.id_kategori_pengeluaran?.toString()
+        )
+        return kategori?.nama_kategori_pengeluaran || '-'
       },
     },
     {
@@ -224,8 +245,8 @@ export default function DetailPengeluaran() {
         <div className="flex gap-1">
           <button
             onClick={() => {
-              setSelectedRow(row.original);
-              setModalOpen(true);
+              setSelectedRow(row.original)
+              setModalOpen(true)
             }}
             className="px-2 py-1 bg-yellow-500 text-white rounded"
           >
@@ -240,16 +261,16 @@ export default function DetailPengeluaran() {
         </div>
       ),
     },
-  ];
+  ]
 
   const table = useReactTable({
     data: detail?.sub_pengeluaran || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
-  });
+  })
 
-  if (loading) return <div className="ml-64 p-6">Memuat...</div>;
-  if (!detail) return <div className="ml-64 p-6">Data tidak ditemukan</div>;
+  if (loading) return <div className="ml-64 p-6">Memuat...</div>
+  if (!detail) return <div className="ml-64 p-6">Data tidak ditemukan</div>
 
   return (
     <div className="ml-64 p-6 min-h-screen bg-white text-black">
@@ -305,5 +326,5 @@ export default function DetailPengeluaran() {
         />
       )}
     </div>
-  );
+  )
 }

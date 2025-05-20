@@ -191,26 +191,26 @@ export default function TambahPengeluaran() {
                   value={sub.nama_sub_pengeluaran}
                   onChange={(e) => handleSubChange(index, 'nama_sub_pengeluaran', e.target.value)}
                 />
-                <input
-                  type="number"
-                  placeholder="Nominal"
-                  className="w-full border rounded px-2 py-1"
-                  value={sub.nominal}
-                  onChange={(e) => handleSubChange(index, 'nominal', e.target.value)}
-                />
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nominal</label>
                       <div className="flex items-center border rounded px-2 bg-white">
                           <span className="text-gray-500 text-sm mr-1">Rp</span>
                             <input
                               type="number"
-                              placeholder="Jumlah Item"
+                              placeholder="Nominal"
                               className="w-full rounded px-2 py-1"
-                              value={sub.jumlah_item}
-                              onChange={(e) => handleSubChange(index, 'jumlah_item', e.target.value)}
+                              value={sub.nominal}
+                              onChange={(e) => handleSubChange(index, 'nominal', e.target.value)}
                             />
                       </div>
-                    </div>
+                </div>
+                <input
+                  type="number"
+                  placeholder="Jumlah Item"
+                  className="w-full border rounded px-2 py-1"
+                  value={sub.jumlah_item}
+                  onChange={(e) => handleSubChange(index, 'jumlah_item', e.target.value)}
+                />
                 <input
                   type="date"
                   className="w-full border rounded px-2 py-1"
