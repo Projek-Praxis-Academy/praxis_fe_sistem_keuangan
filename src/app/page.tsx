@@ -54,6 +54,7 @@ export default function HomePage() {
 
         <form className="flex flex-col gap-4" onSubmit={handleLogin}>
           <input
+            id="email"
             type="email"
             placeholder="example@mail.com"
             autoCorrect="off"
@@ -66,6 +67,7 @@ export default function HomePage() {
 
           <div className="relative">
             <input
+              id="password"
               type={showPassword ? "text" : "password"}
               placeholder="password"
               className="border bg-white p-2 rounded-md w-full text-blue-900 pr-10"
@@ -91,6 +93,7 @@ export default function HomePage() {
           </div>
 
           <button
+            id="loginButton"
             type="submit"
             className="bg-blue-500 text-white px-4 py-2 rounded-md w-full hover:bg-blue-600 active:bg-blue-700 transition duration-200"
           >

@@ -110,8 +110,8 @@ const SidebarContent = () => {
             </Link>
           </li> */}
           <li className="mb-2">
-            <Link href="/buat-tagihan" className="block p-2 text-left text-black bg-white hover:bg-gray-200 hover:text-black rounded">
-              Buat Tagihan
+            <Link href="/tagihan" className="block p-2 text-left text-black bg-white hover:bg-gray-200 hover:text-black rounded">
+              Tagihan
             </Link>
           </li>
         </ul>

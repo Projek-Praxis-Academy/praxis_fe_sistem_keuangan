@@ -157,7 +157,7 @@ export default function PDFTagihan({
 const akademikName = (data.akademik || '').toLowerCase();
 const isTechno = akademikName.includes('techno');
 const headerTitle = isTechno ? 'TechnoNatura' : 'Praxis Academy';
-const logoPath = isTechno ? '/logo-techno.png' : '/logo.png';
+const logoPath = isTechno ? '/logo-technonatura.png' : '/logo.png';
 const formatTanggalIndo = (tanggal: string) => {
   const bulanIndo = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
