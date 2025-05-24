@@ -1,14 +1,13 @@
 'use client'
-
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { FilePlus2 } from 'lucide-react'
 import axios from 'axios'
-// import html2pdf from 'html2pdf.js'
 import { pdf } from '@react-pdf/renderer'
 import PDFTagihan from '@/components/PDFTagihan'
 import Image from 'next/image'
 
 export default function BuatTagihan() {
+  // State untuk form tagihan
   const [nisn, setNisn] = useState('')
   const [namaSiswa, setNamaSiswa] = useState('')
   const [level, setLevel] = useState('')
@@ -21,6 +20,13 @@ export default function BuatTagihan() {
   const [catatan, setCatatan] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  // State untuk autocomplete
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const dropdownRef = useRef(null)
 
   const [inputTagihan, setInputTagihan] = useState({
     kbm: '',
@@ -44,7 +50,87 @@ export default function BuatTagihan() {
     uang_belanja: 0
   })
 
+  // Fetch data autocomplete
+  const fetchSearchResults = async (query: string) => {
+    if (!query || query.length < 3) {
+      setSearchResults([])
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/cari-siswa?query=${query}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+      
+      if (response.data.status === 'success') {
+        setSearchResults(response.data.data)
+        setShowDropdown(true)
+      }
+    } catch (error) {
+      console.error('Error fetching search results:', error)
+      setSearchResults([])
+    }
+  }
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchSearchResults(searchQuery)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Handle click outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  // Handle select siswa dari dropdown
+  const handleSelectSiswa = (siswa) => {
+    setNisn(siswa.nisn)
+    setNamaSiswa(siswa.nama_siswa)
+    setLevel(siswa.level)
+    setAkademik(siswa.akademik)
+    setSearchQuery(`${siswa.nisn}`)
+    setShowDropdown(false)
+    
+    // Fetch data tagihan siswa
+    fetchTagihanByNisn(siswa.nisn)
+  }
+
   const fetchTagihanByNisn = async (nisn: string) => {
+    if (!nisn) {
+      // Reset data jika NISN kosong
+      setNamaSiswa('')
+      setLevel('')
+      setAkademik('')
+      setTotalTagihan({
+        kbm: 0,
+        spp: 0,
+        pemeliharaan: 0,
+        sumbangan: 0,
+        konsumsi: 0,
+        boarding: 0,
+        ekstra: 0,
+        uang_belanja: 0
+      })
+      return
+    }
+
     try {
       const token = localStorage.getItem('token')
       const res = await axios.get(`http://127.0.0.1:8000/api/tagihan/${nisn}`, {
@@ -70,37 +156,79 @@ export default function BuatTagihan() {
     }
   }
 
-    const formatRupiah = (val: number | string) => 'Rp ' + (parseInt(val as string) || 0).toLocaleString('id-ID')
-    
+  const formatRupiah = (val: number | string) => 'Rp ' + (parseInt(val as string) || 0).toLocaleString('id-ID')
 
+  const handleGenerateAndUpload = async () => {
+    setIsLoading(true)
+    setError('')
+    setSuccess('')
 
-    const handlePrintPDF = async () => {
-    const blob = await pdf(
-     <PDFTagihan
+    try {
+      // Validasi data
+      if (!nisn || !namaSiswa) {
+        throw new Error('NISN dan Nama Siswa harus diisi')
+      }
+
+      // 1. Generate PDF sebagai Blob
+      const pdfBlob = await pdf(
+        <PDFTagihan
           data={{
-          namaSiswa,
-          nisn,
-          level,
-          akademik,
-          semester,
-          periode,
-          tanggal,
-          jatuhTempo,
-          tunggakan,
-          catatan,
-          inputTagihan,
-          totalTagihan
+            namaSiswa,
+            nisn,
+            level,
+            akademik,
+            semester,
+            periode,
+            tanggal,
+            jatuhTempo,
+            tunggakan,
+            catatan,
+            inputTagihan,
+            totalTagihan
           }}
-     />
-     ).toBlob()
+        />
+      ).toBlob()
 
-     const url = URL.createObjectURL(blob)
-     const a = document.createElement('a')
-     a.href = url
-     a.download = `tagihan_${namaSiswa}.pdf`
-     a.click()
-     }
+      // 2. Konversi Blob ke File
+      const pdfFile = new File([pdfBlob], `tagihan_${namaSiswa}_${Date.now()}.pdf`, {
+        type: 'application/pdf'
+      })
 
+      // 3. Buat FormData untuk API
+      const formData = new FormData()
+      formData.append('nisn', nisn)
+      formData.append('file_tagihan', pdfFile)
+
+      // 4. Kirim ke API
+      const token = localStorage.getItem('token')
+      const response = await axios.post(
+        'http://127.0.0.1:8000/api/tagihan/create',
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      )
+
+      // 5. Tampilkan pesan sukses
+      setSuccess('Tagihan berhasil dibuat dan disimpan!')
+      
+      // 6. Download PDF otomatis
+      const url = URL.createObjectURL(pdfBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `tagihan_${namaSiswa}.pdf`
+      a.click()
+
+    } catch (error) {
+      console.error('Error:', error)
+      setError(error.message || 'Gagal menyimpan tagihan. Silakan coba lagi.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const renderInputField = (label: string, key: keyof typeof inputTagihan) => (
     <div>
@@ -146,18 +274,48 @@ export default function BuatTagihan() {
           <hr className="border-t-3 border-blue-900 mb-5" />
 
           {error && <div className="text-red-600 mb-4 font-medium">{error}</div>}
+          {success && <div className="text-green-600 mb-4 font-medium">{success}</div>}
 
-          <form onSubmit={(e) => { e.preventDefault(); handlePrintPDF() }} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="text-sm font-medium">NISN Siswa</label>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            handleGenerateAndUpload()
+          }} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Field NISN dengan autocomplete */}
+            <div className="col-span-2 relative" ref={dropdownRef}>
+              <label className="text-sm font-medium">Cari Siswa (NISN/Nama)</label>
               <input
                 type="text"
-                value={nisn}
-                onChange={(e) => setNisn(e.target.value)}
-                onBlur={() => nisn && fetchTagihanByNisn(nisn)}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  if (e.target.value === '') {
+                    setNisn('')
+                    setNamaSiswa('')
+                    setLevel('')
+                    setAkademik('')
+                  }
+                }}
                 className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
-                placeholder="Masukkan NISN"
+                placeholder="Masukkan NISN atau Nama Siswa"
               />
+              
+              {showDropdown && searchResults.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                  {searchResults.map((siswa) => (
+                    <div
+                      key={siswa.id_siswa}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => handleSelectSiswa(siswa)}
+                    >
+                      <div className="font-medium">{siswa.nisn}</div>
+                      <div className="text-sm">{siswa.nama_siswa}</div>
+                      <div className="text-xs text-gray-500">
+                        {siswa.level} - {siswa.akademik}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div><label>Nama Siswa</label><p className="mt-1 bg-gray-100 px-3 py-2 rounded">{namaSiswa}</p></div>
@@ -197,77 +355,29 @@ export default function BuatTagihan() {
             <div className="col-span-2 mt-4">
               <button
                 type="submit"
-                className="flex items-center justify-center gap-2 w-full bg-green-600 text-white font-medium px-4 py-2 rounded-md hover:bg-green-700"
+                disabled={isLoading}
+                className={`flex items-center justify-center gap-2 w-full ${
+                  isLoading ? 'bg-blue-400' : 'bg-green-600 hover:bg-green-700'
+                } text-white font-medium px-4 py-2 rounded-md`}
               >
-                <FilePlus2 className="w-5 h-5" /> Cetak Tagihan
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Memproses...
+                  </>
+                ) : (
+                  <>
+                    <FilePlus2 className="w-5 h-5" /> Simpan & Cetak Tagihan
+                  </>
+                )}
               </button>
             </div>
           </form>
-
-          {/* <div id="preview-area" className="mt-10 bg-white p-8 text-black">
-            <div className="flex items-center justify-between mb-4">
-              <Image src="/logo.png" alt="Praxis Academy" width={80} height={80} />
-              <h1 className="text-2xl font-bold text-center flex-1 -ml-12">Praxis Academy</h1>
-            </div>
-            <hr className="border-black mb-4" />
-
-            <p className="text-sm mb-4">
-              Yth. Bapak/Ibu Wali Murid,<br />Dengan hormat,<br />Mohon untuk melakukan pembayaran sesuai dengan rincian berikut:
-            </p>
-
-            <div className="grid grid-cols-2 gap-2 text-sm mb-6">
-              <p><strong>Nama:</strong> {namaSiswa}</p>
-              <p><strong>NISN:</strong> {nisn}</p>
-              <p><strong>Kelas:</strong> {level}</p>
-              <p><strong>Semester:</strong> {semester}</p>
-              <p><strong>Periode:</strong> {periode}</p>
-              <p><strong>Akademik:</strong> {akademik}</p>
-              <p><strong>Tanggal Tagihan:</strong> {tanggal}</p>
-              <p><strong>Jatuh Tempo:</strong> {jatuhTempo}</p>
-            </div>
-
-            <h2 className="font-semibold mb-2">Tunggakan Tahun Ajaran Sebelumnya</h2>
-            <table className="w-full mb-6 text-sm border">
-              <thead><tr className="bg-gray-100"><th className="text-left border px-2 py-1">Tahun Ajaran</th><th className="text-right border px-2 py-1">Jumlah</th></tr></thead>
-              <tbody><tr><td className="border px-2 py-1">2023/2024</td><td className="border px-2 py-1 text-right">{formatRupiah(tunggakan)}</td></tr></tbody>
-            </table>
-
-            <h2 className="font-semibold mb-2">Tagihan Pokok</h2>
-            <table className="w-full mb-6 text-sm border">
-              <thead><tr className="bg-gray-100"><th className="text-left border px-2 py-1">Jenis</th><th className="text-right border px-2 py-1">Jumlah</th></tr></thead>
-              <tbody>
-                {tagihanPokok.map(({ label, key }, i) => (
-                  <tr key={i}><td className="border px-2 py-1">{label}</td><td className="border px-2 py-1 text-right">{formatRupiah(inputTagihan[key as keyof typeof inputTagihan])}</td></tr>
-                ))}
-              </tbody>
-            </table>
-
-            <h2 className="font-semibold mb-2">Tagihan Bulanan</h2>
-            <table className="w-full mb-6 text-sm border">
-              <thead><tr className="bg-gray-100"><th className="text-left border px-2 py-1">Jenis</th><th className="text-right border px-2 py-1">Jumlah</th></tr></thead>
-              <tbody>
-                {tagihanBulanan.map(({ label, key }, i) => (
-                  <tr key={i}><td className="border px-2 py-1">{label}</td><td className="border px-2 py-1 text-right">{formatRupiah(inputTagihan[key as keyof typeof inputTagihan])}</td></tr>
-                ))}
-              </tbody>
-            </table>
-
-            <h2 className="font-semibold mb-2">Sisa Tagihan</h2>
-            <table className="w-full mb-6 text-sm border">
-              <thead><tr className="bg-gray-100"><th className="text-left border px-2 py-1">Jenis</th><th className="text-right border px-2 py-1">Jumlah</th></tr></thead>
-              <tbody>
-                {sisaTagihan.map((item, i) => (
-                  <tr key={i}><td className="border px-2 py-1">{item.label}</td><td className="border px-2 py-1 text-right">{formatRupiah(item.jumlah)}</td></tr>
-                ))}
-              </tbody>
-            </table>
-
-            {catatan && <p className="text-sm mb-6"><strong>Catatan:</strong> {catatan}</p>}
-            <p className="text-sm">Demikian bukti tagihan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.</p>
-          </div> */}
         </div>
       </div>
     </div>
   )
 }
-
