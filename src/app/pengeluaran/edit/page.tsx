@@ -24,11 +24,11 @@ export default function EditPengeluaran() {
         const headers = { Authorization: `Bearer ${token}` }
 
         // Get detail pengeluaran
-        const res = await axios.get(`http://127.0.0.1:8000/api/monitoring-pengeluaran/update/${idPengeluaran}`, { headers })
+        const res = await axios.get(`https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/update/${idPengeluaran}`, { headers })
         setSubPengeluaran(res.data.sub_pengeluaran || [])
 
         // Get kategori pengeluaran
-        const kategoriRes = await axios.get('http://127.0.0.1:8000/api/kategori-pengeluaran', { headers })
+        const kategoriRes = await axios.get('https://fitrack-production.up.railway.app/api/kategori-pengeluaran', { headers })
         setKategoriList(kategoriRes.data.data || [])
       } catch (err) {
         console.error('Gagal fetch data', err)
@@ -67,7 +67,7 @@ export default function EditPengeluaran() {
         formData.append("file_nota", editingData.file_nota)
       }
 
-      await axios.post(`http://127.0.0.1:8000/api/monitoring-pengeluaran/sub-pengeluaran/update/${id}`, formData, {
+      await axios.post(`https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/sub-pengeluaran/update/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'

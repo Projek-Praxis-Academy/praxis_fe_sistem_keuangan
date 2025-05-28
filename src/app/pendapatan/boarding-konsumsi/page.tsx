@@ -36,7 +36,7 @@ export default function BoardingKonsumsi() {
     const fetchData = async () => {
       const token = localStorage.getItem('token') || '';
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/monitoring/bk', {
+        const response = await axios.get('https://fitrack-production.up.railway.app/api/monitoring/bk', {
           headers: {
             Authorization: `Bearer ${token}`,
           },

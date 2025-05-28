@@ -37,7 +37,7 @@ export default function DetailTechno() {
     }
 
     // Request API untuk mengambil data siswa
-    axios.get(`http://127.0.0.1:8000/api/monitoring-techno/detail-kontrak/${id_siswa}`, {
+    axios.get(`https://fitrack-production.up.railway.app/api/monitoring-techno/detail-kontrak/${id_siswa}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       }

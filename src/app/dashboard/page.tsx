@@ -22,7 +22,7 @@ export default function Dashboard() {
     async function fetchData() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://127.0.0.1:8000/api/dashboard", {
+        const response = await fetch("https://fitrack-production.up.railway.app/api/dashboard", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

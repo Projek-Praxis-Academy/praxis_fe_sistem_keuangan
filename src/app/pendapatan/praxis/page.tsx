@@ -48,7 +48,7 @@ export default function PendapatanPraxis() {
         const token = localStorage.getItem('token') || '';
         console.log('Token:', token);
   
-        const response = await axios.get('http://127.0.0.1:8000/api/monitoring-praxis', {
+        const response = await axios.get('https://fitrack-production.up.railway.app/api/monitoring-praxis', {
           headers: {
             Authorization: `Bearer ${token}`,
           },

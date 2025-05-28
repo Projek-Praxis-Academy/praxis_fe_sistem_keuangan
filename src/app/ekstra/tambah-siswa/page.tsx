@@ -22,7 +22,7 @@ export default function TambahSiswaEkstra() {
     const fetchEkstraList = async () => {
       try {
         const token = localStorage.getItem('token') || ''
-        const response = await axios.get('http://127.0.0.1:8000/api/ekstra/list', {
+        const response = await axios.get('https://fitrack-production.up.railway.app/api/ekstra/list', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -55,7 +55,7 @@ export default function TambahSiswaEkstra() {
     try {
       const token = localStorage.getItem('token') || ''
       const response = await axios.post(
-        'http://127.0.0.1:8000/api/monitoring-ekstra/create-siswa',
+        'https://fitrack-production.up.railway.app/api/monitoring-ekstra/create-siswa',
         {
           nisn,
           id_ekstra: selectedEkstra,

@@ -37,7 +37,7 @@ export default function RiwayatTagihan() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token') || ''
-        const response = await axios.get('http://127.0.0.1:8000/api/tagihan', {
+        const response = await axios.get('https://fitrack-production.up.railway.app/api/tagihan', {
           headers: { Authorization: `Bearer ${token}` },
         })
 
@@ -81,7 +81,7 @@ export default function RiwayatTagihan() {
         cell: ({ row }: any) => {
           const url = row.original.file_tagihan
           return (
-            <a href={`http://127.0.0.1:8000/${url}`} target="_blank" rel="noopener noreferrer">
+            <a href={`https://fitrack-production.up.railway.app/${url}`} target="_blank" rel="noopener noreferrer">
               <FileText className="text-blue-600 hover:text-blue-800 cursor-pointer" />
             </a>
           )

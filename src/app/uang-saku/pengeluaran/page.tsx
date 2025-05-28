@@ -37,7 +37,7 @@ export default function PengeluaranUangSaku() {
 
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/monitoring-uang-saku/pengeluaran/${id_siswa_query}`,
+          `https://fitrack-production.up.railway.app/api/monitoring-uang-saku/pengeluaran/${id_siswa_query}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -73,7 +73,7 @@ export default function PengeluaranUangSaku() {
 
     try {
       const response = await axios.post(
-        'http://127.0.0.1:8000/api/monitoring-uang-saku/pengeluaran',
+        'https://fitrack-production.up.railway.app/api/monitoring-uang-saku/pengeluaran',
         data,
         {
           headers: {

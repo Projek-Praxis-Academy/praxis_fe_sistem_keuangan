@@ -31,7 +31,7 @@ export default function TambahPengeluaran() {
          try {
            const token = localStorage.getItem('token') || ''  // Mendapatkan token atau default ke string kosong
            const response = await axios.get(
-             `http://127.0.0.1:8000/api/monitoring-pengeluaran/kategori-pengeluaran?type=${jenisPengeluaran}`,
+             `https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/kategori-pengeluaran?type=${jenisPengeluaran}`,
              {
                headers: {
                  Authorization: `Bearer ${token}`,
@@ -106,7 +106,7 @@ export default function TambahPengeluaran() {
         return
       }
 
-      await axios.post('http://127.0.0.1:8000/api/monitoring-pengeluaran/create', formData, {
+      await axios.post('https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/create', formData, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
         'Content-Type': 'multipart/form-data'

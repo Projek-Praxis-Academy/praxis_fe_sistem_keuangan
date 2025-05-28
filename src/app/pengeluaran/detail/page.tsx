@@ -62,7 +62,7 @@ export default function DetailPengeluaran() {
       const token = localStorage.getItem('token') || ''
       
       const response = await axios.post(
-        `http://127.0.0.1:8000/api/monitoring-pengeluaran/sub-pengeluaran/update/${id_sub_pengeluaran}`,
+        `https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/sub-pengeluaran/update/${id_sub_pengeluaran}`,
         formData,
         {
           headers: {
@@ -109,7 +109,7 @@ export default function DetailPengeluaran() {
       
       // Fetch detail pengeluaran
       const response = await axios.get(
-        `http://127.0.0.1:8000/api/monitoring-pengeluaran/detail/${id_pengeluaran_query}`,
+        `https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/detail/${id_pengeluaran_query}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       
@@ -126,7 +126,7 @@ export default function DetailPengeluaran() {
 
       // Fetch jenis pengeluaran
       const jenisPengeluaranResponse = await axios.get<{data: PengeluaranItem[]}>(
-        'http://127.0.0.1:8000/api/monitoring-pengeluaran',
+        'https://fitrack-production.up.railway.app/api/monitoring-pengeluaran',
         { headers: { Authorization: `Bearer ${token}` } }
       )
       
@@ -148,7 +148,7 @@ export default function DetailPengeluaran() {
 
       // Fetch kategori
       const kategoriRes = await axios.get<{data: Kategori[]}>(
-        `http://127.0.0.1:8000/api/monitoring-pengeluaran/kategori-pengeluaran?type=${jenisPengeluaranValue}`,
+        `https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/kategori-pengeluaran?type=${jenisPengeluaranValue}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       
@@ -171,7 +171,7 @@ export default function DetailPengeluaran() {
     try {
       const token = localStorage.getItem('token') || ''
       await axios.delete(
-        `http://127.0.0.1:8000/api/monitoring-pengeluaran/sub-pengeluaran/delete/${id}`,
+        `https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/sub-pengeluaran/delete/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -218,7 +218,7 @@ export default function DetailPengeluaran() {
       cell: ({ row }) =>
         row.original.file_nota ? (
           <a
-            href={`http://127.0.0.1:8000/${row.original.file_nota}`}
+            href={`https://fitrack-production.up.railway.app/${row.original.file_nota}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 hover:text-blue-800"

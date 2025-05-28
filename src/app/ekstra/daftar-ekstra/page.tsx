@@ -23,7 +23,7 @@ export default function DaftarEkstra() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token') || ''
-        const res = await axios.get('http://127.0.0.1:8000/api/monitoring-ekstra/ekstra', {
+        const res = await axios.get('https://fitrack-production.up.railway.app/api/monitoring-ekstra/ekstra', {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -52,7 +52,7 @@ export default function DetailUangSaku() {
 
         // Ambil data detail transaksi
         const detailRes = await axios.get(
-          `http://127.0.0.1:8000/api/monitoring-uang-saku/detail/${id_siswa_query}`,
+          `https://fitrack-production.up.railway.app/api/monitoring-uang-saku/detail/${id_siswa_query}`,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         const data = detailRes.data
@@ -79,7 +79,7 @@ export default function DetailUangSaku() {
 
         // Ambil saldo dari endpoint monitoring uang saku
         const listRes = await axios.get(
-          'http://127.0.0.1:8000/api/monitoring-uang-saku',
+          'https://fitrack-production.up.railway.app/api/monitoring-uang-saku',
           { headers: { Authorization: `Bearer ${token}` } }
         )
 

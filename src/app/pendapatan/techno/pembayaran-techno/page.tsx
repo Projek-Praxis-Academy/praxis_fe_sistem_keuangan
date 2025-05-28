@@ -40,7 +40,7 @@ export default function PembayaranTechno() {
       setError('')
 
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/monitoring-techno/pembayaran-siswa/${id_siswa_query}`, {
+        const response = await axios.get(`https://fitrack-production.up.railway.app/api/monitoring-techno/pembayaran-siswa/${id_siswa_query}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -95,7 +95,7 @@ export default function PembayaranTechno() {
     }
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/pembayaran', data, {
+      const response = await axios.post('https://fitrack-production.up.railway.app/api/pembayaran', data, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`

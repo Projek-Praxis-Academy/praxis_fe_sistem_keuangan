@@ -38,7 +38,7 @@ export default function MonitoringUangSaku() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token') || ''
-        const response = await axios.get('http://127.0.0.1:8000/api/monitoring-uang-saku', {
+        const response = await axios.get('https://fitrack-production.up.railway.app/api/monitoring-uang-saku', {
           headers: { Authorization: `Bearer ${token}` },
         })
 

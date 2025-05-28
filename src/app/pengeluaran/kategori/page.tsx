@@ -31,7 +31,7 @@ export default function KategoriPengeluaranPage() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token') || ''
-        const res = await axios.get('http://127.0.0.1:8000/api/monitoring-pengeluaran/kategori-pengeluaran', {
+        const res = await axios.get('https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/kategori-pengeluaran', {
           headers: {
             Authorization: `Bearer ${token}`,
           },

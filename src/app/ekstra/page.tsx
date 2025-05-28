@@ -32,7 +32,7 @@ export default function Ekstra() {
       setIsLoading(true)
       try {
         const token = localStorage.getItem('token') || ''
-        const response = await axios.get('http://127.0.0.1:8000/api/monitoring-ekstra', {
+        const response = await axios.get('https://fitrack-production.up.railway.app/api/monitoring-ekstra', {
           headers: {
             Authorization: `Bearer ${token}`,
           },

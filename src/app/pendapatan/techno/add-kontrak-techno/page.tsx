@@ -62,7 +62,7 @@ export default function TambahKontrakTechno() {
 
       const config = {
         method: 'post',
-        url: 'http://127.0.0.1:8000/api/kontrak',
+        url: 'https://fitrack-production.up.railway.app/api/kontrak',
         headers: {
           'Authorization': `Bearer ${token}`, // Gunakan token dari localStorage
         },

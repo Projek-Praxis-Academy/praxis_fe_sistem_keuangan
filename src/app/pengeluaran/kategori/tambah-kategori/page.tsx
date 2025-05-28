@@ -21,7 +21,7 @@ export default function TambahKategoriPengeluaran() {
     try {
       const token = localStorage.getItem('token') || ''
       const response = await axios.post(
-        'http://127.0.0.1:8000/api/monitoring-pengeluaran/kategori-pengeluaran/create',
+        'https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/kategori-pengeluaran/create',
         {
           jenis_pengeluaran: jenisPengeluaran,
           nama_kategori_pengeluaran: namaKategori,

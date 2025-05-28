@@ -43,7 +43,7 @@ export default function DetailPembayaranBk() {
     const fetchDetail = async () => {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/monitoring/bk/detail-pembayaran/${id_siswa_query}`,
+          `https://fitrack-production.up.railway.app/api/monitoring/bk/detail-pembayaran/${id_siswa_query}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,

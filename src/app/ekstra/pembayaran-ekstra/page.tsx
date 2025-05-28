@@ -38,7 +38,7 @@ export default function PembayaranEkstra() {
 
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/monitoring-praxis/pembayaran-siswa/${id_siswa_query}`,
+          `https://fitrack-production.up.railway.app/api/monitoring-praxis/pembayaran-siswa/${id_siswa_query}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -81,7 +81,7 @@ export default function PembayaranEkstra() {
 
     try {
       const response = await axios.post(
-        'http://127.0.0.1:8000/api/monitoring-ekstra/pembayaran',
+        'https://fitrack-production.up.railway.app/api/monitoring-ekstra/pembayaran',
         data,
         {
           headers: {

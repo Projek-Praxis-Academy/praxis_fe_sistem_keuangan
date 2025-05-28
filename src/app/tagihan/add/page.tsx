@@ -60,7 +60,7 @@ export default function BuatTagihan() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(
-        `http://127.0.0.1:8000/api/cari-siswa?query=${query}`,
+        `https://fitrack-production.up.railway.app/api/cari-siswa?query=${query}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -133,7 +133,7 @@ export default function BuatTagihan() {
 
     try {
       const token = localStorage.getItem('token')
-      const res = await axios.get(`http://127.0.0.1:8000/api/tagihan/${nisn}`, {
+      const res = await axios.get(`https://fitrack-production.up.railway.app/api/tagihan/${nisn}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       const data = res.data
@@ -202,7 +202,7 @@ export default function BuatTagihan() {
       // 4. Kirim ke API
       const token = localStorage.getItem('token')
       const response = await axios.post(
-        'http://127.0.0.1:8000/api/tagihan/create',
+        'https://fitrack-production.up.railway.app/api/tagihan/create',
         formData,
         {
           headers: {

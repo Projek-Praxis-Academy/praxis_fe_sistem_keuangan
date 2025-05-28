@@ -39,8 +39,8 @@ export default function TambahSiswa() {
     try {
       const url =
         jenisTagihan === 'boarding'
-          ? 'http://127.0.0.1:8000/api/create/siswa/boarding'
-          : 'http://127.0.0.1:8000/api/create/siswa/konsumsi'
+          ? 'https://fitrack-production.up.railway.app/api/create/siswa/boarding'
+          : 'https://fitrack-production.up.railway.app/api/create/siswa/konsumsi'
 
       const token = localStorage.getItem('token') || ''
 

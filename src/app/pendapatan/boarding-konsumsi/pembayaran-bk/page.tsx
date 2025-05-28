@@ -37,7 +37,7 @@ export default function PembayaranBoardingKonsumsi() {
       setError('')
 
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/monitoring/bk/pembayaran-siswa/${id_siswa_query}`, {
+        const response = await axios.get(`https://fitrack-production.up.railway.app/api/monitoring/bk/pembayaran-siswa/${id_siswa_query}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -85,7 +85,7 @@ export default function PembayaranBoardingKonsumsi() {
     }
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/pembayaran/bk', data, {
+      const response = await axios.post('https://fitrack-production.up.railway.app/api/pembayaran/bk', data, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
