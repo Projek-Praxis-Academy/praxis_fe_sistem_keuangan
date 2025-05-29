@@ -39,13 +39,13 @@ export default function DetailSiswaEkstra() {
         const token = localStorage.getItem('token') || ''
 
         const resDetail = await axios.get(
-          `https://fitrack-production.up.railway.app/api/monitoring-ekstra/pembayaran/${id_ekstra_siswa}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/pembayaran/${id_ekstra_siswa}`,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         setDetailSiswa(resDetail.data.data)
 
         const resPembayaran = await axios.get(
-          `https://fitrack-production.up.railway.app/api/monitoring-ekstra/detail/${id_ekstra_siswa}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/detail/${id_ekstra_siswa}`,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         setPembayaran(resPembayaran.data.pembayaran_ekstra)

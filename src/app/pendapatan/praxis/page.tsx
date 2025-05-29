@@ -48,7 +48,7 @@ export default function PendapatanPraxis() {
         const token = localStorage.getItem('token') || '';
         console.log('Token:', token);
   
-        const response = await axios.get('https://fitrack-production.up.railway.app/api/monitoring-praxis', {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-praxis`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -138,6 +138,7 @@ export default function PendapatanPraxis() {
           const id_siswa = row.original.id_siswa
           return (
             <CreditCard
+              id="kontrak"
               className="text-gray-600 cursor-pointer hover:text-blue-600"
               onClick={() => router.push(`/pendapatan/praxis/detail-praxis?id_siswa=${id_siswa}`)}
             />
@@ -151,6 +152,7 @@ export default function PendapatanPraxis() {
           const id_siswa = row.original.id_siswa
           return (
             <FileSignature
+              id="bayar"
               className="text-gray-600 cursor-pointer hover:text-blue-600"
               onClick={() => router.push(`/pendapatan/praxis/pembayaran-siswa?id_siswa=${id_siswa}`)}
             />
@@ -172,6 +174,7 @@ export default function PendapatanPraxis() {
       <div className="flex justify-between items-center mb-2">
         <div className="flex justify-start gap-2 items-center">
           <select
+            id="level-select"
             className="px-2 py-1 bg-gray-300 text-black rounded-md text-sm"
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
@@ -182,6 +185,7 @@ export default function PendapatanPraxis() {
           </select>
           <div className="relative">
             <input
+              id="search-praxis"
               type="text"
               placeholder="Search..."
               className="px-2 py-1 pl-8 bg-gray-300 text-black rounded-md text-sm"

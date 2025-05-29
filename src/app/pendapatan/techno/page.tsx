@@ -45,7 +45,7 @@ export default function PendapatanTechno() {
       try {
         const token = localStorage.getItem('token') || ''
 
-        const response = await axios.get('https://fitrack-production.up.railway.app/api/monitoring-techno', {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-techno`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -144,6 +144,8 @@ export default function PendapatanTechno() {
           const id_siswa = row.original.id_siswa
           return (
             <FileSignature
+              id="bayar"
+              type='button'
               className="text-gray-600 cursor-pointer hover:text-blue-600"
               onClick={() => router.push(`/pendapatan/techno/pembayaran-techno?id_siswa=${id_siswa}`)}
             />
@@ -181,6 +183,7 @@ export default function PendapatanTechno() {
           </select>
           <div className="relative">
             <input
+              id="search-techno"
               type="text"
               placeholder="Search..."
               className="px-2 py-1 pl-8 bg-gray-300 text-black rounded-md text-sm"
@@ -190,8 +193,10 @@ export default function PendapatanTechno() {
             <Search size={14} className="absolute left-2 top-2 text-gray-700" />
           </div>
           <button
+            id="tambah-kontrak-techno"
+            type='button'
             className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
-            onClick={() => router.push('http://127.0.0.1:3000/pendapatan/techno/add-kontrak-techno')}
+            onClick={() => router.push('/pendapatan/techno/add-kontrak-techno')}
           >
             + Tambah Kontrak
           </button>

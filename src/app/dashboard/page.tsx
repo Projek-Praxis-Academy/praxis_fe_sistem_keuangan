@@ -22,7 +22,7 @@ export default function Dashboard() {
     async function fetchData() {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("https://fitrack-production.up.railway.app/api/dashboard", {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dashboard`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -83,11 +83,11 @@ function Card({ title, saldo, tagihan, fullWidth }: { title: string; saldo: numb
       {saldo !== 0 && (
         <>
           <p className="text-sm mt-2">Saldo saat ini</p>
-          <input type="text" readOnly value={formatRupiah(saldo)} className="w-full p-3 mt-1 bg-white text-black rounded-md" />
+          <input id="saldo-saat-ini" type="text" readOnly value={formatRupiah(saldo)} className="w-full p-3 mt-1 bg-white text-black rounded-md" />
         </>
       )}
       <p className="text-sm mt-2">Tagihan saat ini</p>
-      <input type="text" readOnly value={formatRupiah(tagihan)} className="w-full p-3 mt-1 bg-white text-black rounded-md" />
+      <input id="tagihan-saat-ini" type="text" readOnly value={formatRupiah(tagihan)} className="w-full p-3 mt-1 bg-white text-black rounded-md" />
     </div>
   );
 }

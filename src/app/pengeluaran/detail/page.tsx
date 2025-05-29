@@ -62,7 +62,7 @@ export default function DetailPengeluaran() {
       const token = localStorage.getItem('token') || ''
       
       const response = await axios.post(
-        `https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/sub-pengeluaran/update/${id_sub_pengeluaran}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran/sub-pengeluaran/update/${id_sub_pengeluaran}`,
         formData,
         {
           headers: {
@@ -109,7 +109,7 @@ export default function DetailPengeluaran() {
       
       // Fetch detail pengeluaran
       const response = await axios.get(
-        `https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/detail/${id_pengeluaran_query}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran/detail/${id_pengeluaran_query}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       
@@ -126,7 +126,7 @@ export default function DetailPengeluaran() {
 
       // Fetch jenis pengeluaran
       const jenisPengeluaranResponse = await axios.get<{data: PengeluaranItem[]}>(
-        'https://fitrack-production.up.railway.app/api/monitoring-pengeluaran',
+        '${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran',
         { headers: { Authorization: `Bearer ${token}` } }
       )
       
@@ -148,7 +148,7 @@ export default function DetailPengeluaran() {
 
       // Fetch kategori
       const kategoriRes = await axios.get<{data: Kategori[]}>(
-        `https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/kategori-pengeluaran?type=${jenisPengeluaranValue}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran/kategori-pengeluaran?type=${jenisPengeluaranValue}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       
@@ -171,7 +171,7 @@ export default function DetailPengeluaran() {
     try {
       const token = localStorage.getItem('token') || ''
       await axios.delete(
-        `https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/sub-pengeluaran/delete/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran/sub-pengeluaran/delete/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -244,6 +244,8 @@ export default function DetailPengeluaran() {
       cell: ({ row }) => (
         <div className="flex gap-1">
           <button
+            type="button"
+            id="edit-button"
             onClick={() => {
               setSelectedRow(row.original)
               setModalOpen(true)
@@ -253,6 +255,8 @@ export default function DetailPengeluaran() {
             Edit
           </button>
           <button
+            type="button"
+            id="delete-button"
             onClick={() => handleDelete(row.original.id_sub_pengeluaran)}
             className="px-2 py-1 bg-red-600 text-white rounded"
           >

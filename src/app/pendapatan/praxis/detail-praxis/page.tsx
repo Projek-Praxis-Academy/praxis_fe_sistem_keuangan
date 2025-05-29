@@ -37,7 +37,7 @@ export default function KontrakSiswa() {
     }
 
     // Request API untuk mengambil data siswa
-    axios.get(`https://fitrack-production.up.railway.app/api/monitoring-praxis/detail-kontrak/${id_siswa}`, {
+    axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-praxis/detail-kontrak/${id_siswa}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       }

@@ -38,7 +38,7 @@ export default function PembayaranEkstra() {
 
       try {
         const response = await axios.get(
-          `https://fitrack-production.up.railway.app/api/monitoring-praxis/pembayaran-siswa/${id_siswa_query}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/monitoring-praxis/pembayaran-siswa/${id_siswa_query}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -81,7 +81,7 @@ export default function PembayaranEkstra() {
 
     try {
       const response = await axios.post(
-        'https://fitrack-production.up.railway.app/api/monitoring-ekstra/pembayaran',
+        '${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/pembayaran',
         data,
         {
           headers: {
@@ -139,19 +139,21 @@ export default function PembayaranEkstra() {
           {siswaDetail && (
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
-                <input value={siswaDetail.nama_siswa} readOnly className="border px-3 py-2 rounded bg-gray-100" />
-                <input value={`Level ${siswaDetail.level}`} readOnly className="border px-3 py-2 rounded bg-gray-100" />
-                <input value={siswaDetail.akademik} readOnly className="border px-3 py-2 rounded bg-gray-100" />
+                <input id='nama_siswa' value={siswaDetail.nama_siswa} readOnly className="border px-3 py-2 rounded bg-gray-100" />
+                <input id='level' value={`Level ${siswaDetail.level}`} readOnly className="border px-3 py-2 rounded bg-gray-100" />
+                <input id='akademik' value={siswaDetail.akademik} readOnly className="border px-3 py-2 rounded bg-gray-100" />
               </div>
 
-              <input value={`NISN: ${siswaDetail.nisn}`} readOnly className="w-full border px-3 py-2 rounded bg-gray-100" />
-              <input type="hidden" value={siswaDetail.id_siswa} readOnly name="id_siswa" />
-              <input type="hidden" value={id_ekstra_siswa_query} readOnly name="id_ekstra_siswa" />
+              <input id='nisn' value={`NISN: ${siswaDetail.nisn}`} readOnly className="w-full border px-3 py-2 rounded bg-gray-100" />
+              <input id='id_siswa' type="hidden" value={siswaDetail.id_siswa} readOnly name="id_siswa" />
+              <input id='id_ekstra_siswa' type="hidden" value={id_ekstra_siswa_query} readOnly name="id_ekstra_siswa" />
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Pembayaran</label>
                 <input
+                  id='tanggal_pembayaran'
                   type="date"
+                  placeholder='Pilih tanggal pembayaran'
                   value={tanggalPembayaran}
                   onChange={(e) => setTanggalPembayaran(e.target.value)}
                   className="w-full border px-3 py-2 rounded"
@@ -163,6 +165,7 @@ export default function PembayaranEkstra() {
                 <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
                     <input
+                      id='nominal'
                       placeholder="Nominal pembayaran"
                       value={nominal}
                       onChange={(e) => setNominal(e.target.value.replace(/\D/g, ''))}
@@ -174,6 +177,7 @@ export default function PembayaranEkstra() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
                 <textarea
+                  id='catatan'
                   value={catatan}
                   onChange={(e) => setCatatan(e.target.value)}
                   className="w-full border px-3 py-2 rounded"

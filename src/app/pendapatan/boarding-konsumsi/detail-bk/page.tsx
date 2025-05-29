@@ -43,7 +43,7 @@ export default function DetailPembayaranBk() {
     const fetchDetail = async () => {
       try {
         const response = await axios.get(
-          `https://fitrack-production.up.railway.app/api/monitoring/bk/detail-pembayaran/${id_siswa_query}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/monitoring/bk/detail-pembayaran/${id_siswa_query}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,

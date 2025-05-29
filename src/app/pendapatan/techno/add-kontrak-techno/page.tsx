@@ -62,7 +62,7 @@ export default function TambahKontrakTechno() {
 
       const config = {
         method: 'post',
-        url: 'https://fitrack-production.up.railway.app/api/kontrak',
+        url: `${process.env.NEXTz_PUBLIC_API_URL}/kontrak`,
         headers: {
           'Authorization': `Bearer ${token}`, // Gunakan token dari localStorage
         },
@@ -108,6 +108,7 @@ export default function TambahKontrakTechno() {
             <div className="col-span-2">
               <label className="text-sm font-medium">NISN Siswa</label>
               <input
+                id="nisn"
                 type="text"
                 value={nisn}
                 onChange={(e) => setNisn(e.target.value)}
@@ -121,6 +122,7 @@ export default function TambahKontrakTechno() {
               <div className="flex items-center border rounded px-2 bg-white">
                 <span className="text-gray-500 text-sm mr-1">Rp</span>
                 <input
+                  id="uang_kbm"
                   type="number"
                   value={uangKBM}
                   onChange={(e) => setUangKBM(e.target.value)}
@@ -135,6 +137,7 @@ export default function TambahKontrakTechno() {
               <div className="flex items-center border rounded px-2 bg-white">
                 <span className="text-gray-500 text-sm mr-1">Rp</span>
                 <input
+                  id="uang_spp"
                   type="number"
                   value={uangSPP}
                   onChange={(e) => setUangSPP(e.target.value)}
@@ -149,6 +152,7 @@ export default function TambahKontrakTechno() {
               <div className="flex items-center border rounded px-2 bg-white">
                 <span className="text-gray-500 text-sm mr-1">Rp</span>
                 <input
+                  id="uang_pemeliharaan"
                   type="number"
                   value={uangPemeliharaan}
                   onChange={(e) => setUangPemeliharaan(e.target.value)}
@@ -163,6 +167,7 @@ export default function TambahKontrakTechno() {
               <div className="flex items-center border rounded px-2 bg-white">
                 <span className="text-gray-500 text-sm mr-1">Rp</span>
                 <input
+                  id="uang_sumbangan"
                   type="number"
                   value={uangSumbangan}
                   onChange={(e) => setUangSumbangan(e.target.value)}
@@ -175,6 +180,7 @@ export default function TambahKontrakTechno() {
             <div className="col-span-2">
               <label className="text-sm font-medium">Catatan</label>
               <textarea
+                id="catatan"
                 value={catatan}
                 onChange={(e) => setCatatan(e.target.value)}
                 className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
@@ -188,6 +194,7 @@ export default function TambahKontrakTechno() {
                 <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-700">
                   Pilih File
                   <input
+                    id="file_kontrak"
                     type="file"
                     accept=".pdf"
                     onChange={(e) => setFileKontrak(e.target.files?.[0] || null)}
@@ -205,6 +212,7 @@ export default function TambahKontrakTechno() {
 
             <div className="col-span-2 mt-4">
               <button
+                id="submitButton"
                 type="submit"
                 className="flex items-center justify-center gap-2 w-full bg-blue-600 text-white font-medium px-4 py-2 rounded-md hover:bg-blue-700"
                 disabled={loading}

@@ -32,7 +32,7 @@ export default function Ekstra() {
       setIsLoading(true)
       try {
         const token = localStorage.getItem('token') || ''
-        const response = await axios.get('https://fitrack-production.up.railway.app/api/monitoring-ekstra', {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -137,6 +137,7 @@ export default function Ekstra() {
                 ekstraList.map((e: any, index: number) => (
                   <div key={index} className="border-b last:border-b-0 py-1">
                     <FileSignature
+                      id='bayar-ekstra'
                       className="text-gray-600 cursor-pointer"
                       title={`Bayar ${e.nama_ekstra}`}
                       onClick={() =>
@@ -165,6 +166,7 @@ export default function Ekstra() {
                 ekstraList.map((e: any, index: number) => (
                   <div key={index} className="border-b last:border-b-0 py-1">
                     <CreditCard
+                      id='riwayat-ekstra'
                       className="text-gray-600 cursor-pointer"
                       title={`Riwayat ${e.nama_ekstra}`}
                       onClick={() =>
@@ -194,6 +196,7 @@ export default function Ekstra() {
 
       <div className="flex justify-start gap-2 items-center mb-4">
         <select
+          id="level-ekstra"
           className="px-2 py-1 bg-gray-300 text-black rounded-md text-sm"
           value={selectedLevel}
           onChange={(e) => setSelectedLevel(e.target.value)}
@@ -205,6 +208,7 @@ export default function Ekstra() {
 
         <div className="relative">
           <input
+            id='search-ekstra'
             type="text"
             placeholder="Search..."
             className="px-2 py-1 pl-8 bg-gray-300 text-black rounded-md text-sm"
@@ -216,12 +220,14 @@ export default function Ekstra() {
 
         <div className="flex-1 flex justify-end gap-2">
           <Link
+            id='tambah-kontrak-ekstra'
             href="/ekstra/tambah-siswa"
             className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
           >
            + Tambah Kontrak
           </Link>
           <Link
+            id='biaya-ekstra'
             href="/ekstra/daftar-ekstra"
             className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
           >

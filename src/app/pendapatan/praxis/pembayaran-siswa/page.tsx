@@ -42,7 +42,7 @@ export default function PembayaranSiswa() {
       setError('')
 
       try {
-        const response = await axios.get(`https://fitrack-production.up.railway.app/api/monitoring-praxis/pembayaran-siswa/${id_siswa_query}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-praxis/pembayaran-siswa/${id_siswa_query}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -98,7 +98,7 @@ export default function PembayaranSiswa() {
     }
 
     try {
-      const response = await axios.post('https://fitrack-production.up.railway.app/api/pembayaran', data, {
+      const response = await axios.post('${process.env.NEXT_PUBLIC_API_URL}/pembayaran', data, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -153,16 +153,19 @@ export default function PembayaranSiswa() {
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <input
+                  id='nama_siswa'
                   value={siswaDetail.nama_siswa}
                   readOnly
                   className="border px-3 py-2 rounded bg-gray-100"
                 />
                 <input
+                  id='level'
                   value={`Level ${siswaDetail.level}`}
                   readOnly
                   className="border px-3 py-2 rounded bg-gray-100"
                 />
                 <input
+                  id='akademik'
                   value={siswaDetail.akademik}
                   readOnly
                   className="border px-3 py-2 rounded bg-gray-100"
@@ -170,6 +173,7 @@ export default function PembayaranSiswa() {
               </div>
 
               <input
+                id='nisn'
                 value={`NISN: ${siswaDetail.nisn}`}
                 readOnly
                 className="w-full border px-3 py-2 rounded bg-gray-100"
@@ -177,6 +181,7 @@ export default function PembayaranSiswa() {
 
               {/* ID Siswa Hidden */}
               <input
+                id='id_siswa'
                 type="hidden"
                 value={siswaDetail.id_siswa}
                 readOnly
@@ -186,6 +191,7 @@ export default function PembayaranSiswa() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Pembayaran</label>
                 <input
+                  id='tanggal_pembayaran'
                   type="date"
                   value={tanggalPembayaran}
                   onChange={(e) => setTanggalPembayaran(e.target.value)}
@@ -199,6 +205,7 @@ export default function PembayaranSiswa() {
                   <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
                     <input
+                      id='kbm'
                       type="number"
                       placeholder="0"
                       value={kbm}
@@ -212,6 +219,7 @@ export default function PembayaranSiswa() {
                   <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
                     <input
+                      id='spp'
                       type="number"
                       placeholder="0"
                       value={spp}
@@ -225,6 +233,7 @@ export default function PembayaranSiswa() {
                   <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
                     <input
+                      id='pemeliharaan'
                       type="number"
                       placeholder="0"
                       value={pemeliharaan}
@@ -238,6 +247,7 @@ export default function PembayaranSiswa() {
                   <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
                     <input
+                      id='sumbangan'
                       type="number"
                       placeholder="0"
                       value={sumbangan}
@@ -255,6 +265,7 @@ export default function PembayaranSiswa() {
                   <span className="text-gray-500 text-sm mr-1">Rp</span>
                   {/* Format totalPembayaran to Indonesian currency format */}
                   <input
+                    id='total_pembayaran'
                     type="text"
                     value={totalPembayaran.toLocaleString('id-ID')}
                     readOnly
@@ -266,6 +277,7 @@ export default function PembayaranSiswa() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
                 <textarea
+                  id='catatan'
                   value={catatan}
                   onChange={(e) => setCatatan(e.target.value)}
                   className="w-full border px-3 py-2 rounded"

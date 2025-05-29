@@ -23,7 +23,7 @@ export default function DaftarEkstra() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token') || ''
-        const res = await axios.get('https://fitrack-production.up.railway.app/api/monitoring-ekstra/ekstra', {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/ekstra`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -77,6 +77,7 @@ export default function DaftarEkstra() {
       <div className="flex justify-between gap-2 items-center mb-4">
         <div className="relative">
           <input
+            id='search-ekstra'
             type="text"
             placeholder="Cari nama ekstra..."
             className="px-2 py-1 pl-8 bg-gray-300 text-black rounded-md text-sm"

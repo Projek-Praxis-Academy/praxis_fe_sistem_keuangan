@@ -22,7 +22,7 @@ export default function TambahSiswaEkstra() {
     const fetchEkstraList = async () => {
       try {
         const token = localStorage.getItem('token') || ''
-        const response = await axios.get('https://fitrack-production.up.railway.app/api/ekstra/list', {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/ekstra/list`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -55,7 +55,7 @@ export default function TambahSiswaEkstra() {
     try {
       const token = localStorage.getItem('token') || ''
       const response = await axios.post(
-        'https://fitrack-production.up.railway.app/api/monitoring-ekstra/create-siswa',
+        `${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/create-siswa`,
         {
           nisn,
           id_ekstra: selectedEkstra,
@@ -109,6 +109,7 @@ export default function TambahSiswaEkstra() {
           {/* NISN Input */}
           <div className="mb-4">
             <input
+              id='nisn'
               type="text"
               value={nisn}
               onChange={(e) => setNisn(e.target.value)}
@@ -125,6 +126,7 @@ export default function TambahSiswaEkstra() {
             {selectedEkstra.map((item, index) => (
               <div key={index} className="flex gap-2 items-center">
                 <select
+                  id={`ekstra-${index}`}
                   value={item}
                   onChange={(e) => {
                     const newSelectedEkstra = [...selectedEkstra]
@@ -155,6 +157,7 @@ export default function TambahSiswaEkstra() {
           {/* Tanggal Mulai */}
           <label className="block mb-2 font-semibold">Tanggal Mulai</label>
           <input
+            id='tanggalMulai'
             type="date"
             value={tanggalMulai}
             onChange={(e) => setTanggalMulai(e.target.value)}
@@ -164,6 +167,7 @@ export default function TambahSiswaEkstra() {
           {/* Tanggal Selesai */}
           <label className="block mb-2 font-semibold">Tanggal Selesai</label>
           <input
+            id='tanggalSelesai'
             type="date"
             value={tanggalSelesai}
             onChange={(e) => setTanggalSelesai(e.target.value)}
@@ -173,6 +177,7 @@ export default function TambahSiswaEkstra() {
           {/* Catatan */}
           <label className="block mb-2 font-semibold">Catatan</label>
           <textarea
+            id='catatan'
             value={catatan}
             onChange={(e) => setCatatan(e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 mb-6"
@@ -181,6 +186,7 @@ export default function TambahSiswaEkstra() {
 
           {/* Submit */}
           <button
+            id='submit-tambah-siswa-ekstra'
             type="submit"
             disabled={loading}
             className="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 flex justify-center items-center gap-2"

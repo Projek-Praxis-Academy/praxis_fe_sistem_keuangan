@@ -24,11 +24,11 @@ export default function EditPengeluaran() {
         const headers = { Authorization: `Bearer ${token}` }
 
         // Get detail pengeluaran
-        const res = await axios.get(`https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/update/${idPengeluaran}`, { headers })
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran/update/${idPengeluaran}`, { headers })
         setSubPengeluaran(res.data.sub_pengeluaran || [])
 
         // Get kategori pengeluaran
-        const kategoriRes = await axios.get('https://fitrack-production.up.railway.app/api/kategori-pengeluaran', { headers })
+        const kategoriRes = await axios.get('${process.env.NEXT_PUBLIC_API_URL}/kategori-pengeluaran', { headers })
         setKategoriList(kategoriRes.data.data || [])
       } catch (err) {
         console.error('Gagal fetch data', err)
@@ -67,7 +67,7 @@ export default function EditPengeluaran() {
         formData.append("file_nota", editingData.file_nota)
       }
 
-      await axios.post(`https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/sub-pengeluaran/update/${id}`, formData, {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran/sub-pengeluaran/update/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -96,6 +96,7 @@ export default function EditPengeluaran() {
             {editedRow === sub.id_sub_pengeluaran ? (
               <>
                 <select
+                  id='id_kategori_pengeluaran'
                   value={editingData.id_kategori_pengeluaran}
                   onChange={(e) => handleChange('id_kategori_pengeluaran', e.target.value)}
                   className="w-full border rounded px-2 py-1 mb-2"
@@ -108,6 +109,7 @@ export default function EditPengeluaran() {
                   ))}
                 </select>
                 <input
+                  id='nama_sub_pengeluaran'
                   type="text"
                   value={editingData.nama_sub_pengeluaran}
                   onChange={(e) => handleChange('nama_sub_pengeluaran', e.target.value)}
@@ -115,6 +117,7 @@ export default function EditPengeluaran() {
                   placeholder="Nama Sub Pengeluaran"
                 />
                 <input
+                  id='nominal'
                   type="number"
                   value={editingData.nominal}
                   onChange={(e) => handleChange('nominal', e.target.value)}
@@ -122,6 +125,7 @@ export default function EditPengeluaran() {
                   placeholder="Nominal"
                 />
                 <input
+                  id='jumlah_item'
                   type="number"
                   value={editingData.jumlah_item}
                   onChange={(e) => handleChange('jumlah_item', e.target.value)}
@@ -129,17 +133,20 @@ export default function EditPengeluaran() {
                   placeholder="Jumlah Item"
                 />
                 <input
+                  id='tanggal_pengeluaran'
                   type="date"
                   value={editingData.tanggal_pengeluaran}
                   onChange={(e) => handleChange('tanggal_pengeluaran', e.target.value)}
                   className="w-full border rounded px-2 py-1 mb-2"
                 />
                 <input
+                  id='file_nota'
                   type="file"
                   onChange={(e) => handleChange('file_nota', e.target.files?.[0] || null)}
                   className="w-full"
                 />
                 <button
+                  type='button'
                   className="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-800 flex items-center gap-2"
                   onClick={() => handleSave(sub.id_sub_pengeluaran)}
                   disabled={loading}

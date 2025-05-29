@@ -31,7 +31,7 @@ export default function TambahPengeluaran() {
          try {
            const token = localStorage.getItem('token') || ''  // Mendapatkan token atau default ke string kosong
            const response = await axios.get(
-             `https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/kategori-pengeluaran?type=${jenisPengeluaran}`,
+             `${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran/kategori-pengeluaran?type=${jenisPengeluaran}`,
              {
                headers: {
                  Authorization: `Bearer ${token}`,
@@ -106,7 +106,7 @@ export default function TambahPengeluaran() {
         return
       }
 
-      await axios.post('https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/create', formData, {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran/create`, formData, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`,
         'Content-Type': 'multipart/form-data'
@@ -148,6 +148,7 @@ export default function TambahPengeluaran() {
             <div>
               <label className="text-sm font-medium">Jenis Pengeluaran</label>
               <select
+                id='jenis_pengeluaran'
                 value={jenisPengeluaran}
                 onChange={(e) => setJenisPengeluaran(e.target.value)}
                 className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
@@ -161,6 +162,7 @@ export default function TambahPengeluaran() {
             <div>
               <label className="text-sm font-medium">Nama Pengeluaran</label>
               <input
+                id='nama_pengeluaran'
                 type="text"
                 value={namaPengeluaran}
                 onChange={(e) => setNamaPengeluaran(e.target.value)}
@@ -173,6 +175,7 @@ export default function TambahPengeluaran() {
               <div key={index} className="border rounded-md p-4 space-y-2 bg-gray-50">
                 <h4 className="font-semibold text-sm text-gray-700">Sub Pengeluaran {index + 1}</h4>
                 <select
+                  id={`kategori_pengeluaran_${index}`}
                   value={sub.id_kategori_pengeluaran}
                   onChange={(e) => handleSubChange(index, 'id_kategori_pengeluaran', e.target.value)}
                   className="w-full border rounded px-2 py-1"
@@ -185,6 +188,7 @@ export default function TambahPengeluaran() {
                   ))}
                 </select>
                 <input
+                  id={`nama_sub_pengeluaran_${index}`}
                   type="text"
                   placeholder="Nama Sub Pengeluaran"
                   className="w-full border rounded px-2 py-1"
@@ -196,6 +200,7 @@ export default function TambahPengeluaran() {
                       <div className="flex items-center border rounded px-2 bg-white">
                           <span className="text-gray-500 text-sm mr-1">Rp</span>
                             <input
+                              id={`nominal_${index}`}
                               type="number"
                               placeholder="Nominal"
                               className="w-full rounded px-2 py-1"
@@ -205,6 +210,7 @@ export default function TambahPengeluaran() {
                       </div>
                 </div>
                 <input
+                  id={`jumlah_item_${index}`}
                   type="number"
                   placeholder="Jumlah Item"
                   className="w-full border rounded px-2 py-1"
@@ -212,6 +218,7 @@ export default function TambahPengeluaran() {
                   onChange={(e) => handleSubChange(index, 'jumlah_item', e.target.value)}
                 />
                 <input
+                  id={`tanggal_pengeluaran_${index}`}
                   type="date"
                   className="w-full border rounded px-2 py-1"
                   value={sub.tanggal_pengeluaran}
@@ -229,6 +236,7 @@ export default function TambahPengeluaran() {
                           <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-700">
                             Pilih File
                             <input
+                              id={`file_nota_${index}`}
                               type="file"
                               accept=".pdf,.jpg,.jpeg,.png"
                               className="hidden"

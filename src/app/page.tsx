@@ -29,7 +29,7 @@ export default function HomePage() {
     };
   
     try {
-      const response = await fetch("https://fitrack-production.up.railway.app/api/login", requestOptions);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, requestOptions);
       const data = await response.json(); // Ini ambil body JSON
   
       if (response.ok) {

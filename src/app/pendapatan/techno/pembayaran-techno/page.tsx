@@ -40,7 +40,7 @@ export default function PembayaranTechno() {
       setError('')
 
       try {
-        const response = await axios.get(`https://fitrack-production.up.railway.app/api/monitoring-techno/pembayaran-siswa/${id_siswa_query}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-techno/pembayaran-siswa/${id_siswa_query}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -95,7 +95,7 @@ export default function PembayaranTechno() {
     }
 
     try {
-      const response = await axios.post('https://fitrack-production.up.railway.app/api/pembayaran', data, {
+      const response = await axios.post('${process.env.NEXT_PUBLIC_API_URL}/pembayaran', data, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -110,7 +110,7 @@ export default function PembayaranTechno() {
         setPemeliharaan('')
         setSumbangan('')
         setCatatan('')
-        window.location.href = 'http://127.0.0.1:3000/pendapatan/techno'
+        window.location.href = '/pendapatan/techno'
       } else {
         alert(response.data.message || 'Gagal menyimpan pembayaran.')
       }
@@ -182,6 +182,7 @@ export default function PembayaranTechno() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Pembayaran</label>
                 <input
+                  id='tanggal-pembayaran'
                   type="date"
                   value={tanggalPembayaran}
                   onChange={(e) => setTanggalPembayaran(e.target.value)}
@@ -195,6 +196,7 @@ export default function PembayaranTechno() {
                   <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
                     <input
+                      id="kbm"
                       type="number"
                       placeholder="0"
                       value={kbm}
@@ -208,6 +210,7 @@ export default function PembayaranTechno() {
                   <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
                     <input
+                      id="spp"
                       type="number"
                       placeholder="0"
                       value={spp}
@@ -221,6 +224,7 @@ export default function PembayaranTechno() {
                   <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
                     <input
+                      id="pemeliharaan"
                       type="number"
                       placeholder="0"
                       value={pemeliharaan}
@@ -234,6 +238,7 @@ export default function PembayaranTechno() {
                   <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
                     <input
+                      id="sumbangan"
                       type="number"
                       placeholder="0"
                       value={sumbangan}
@@ -251,6 +256,7 @@ export default function PembayaranTechno() {
                   <span className="text-gray-500 text-sm mr-1">Rp</span>
                   {/* Format totalPembayaran to Indonesian currency format */}
                   <input
+                    id="total-pembayaran"
                     type="text"
                     value={totalPembayaran.toLocaleString('id-ID')}
                     readOnly
@@ -263,6 +269,7 @@ export default function PembayaranTechno() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
                 <textarea
+                  id="catatan"
                   value={catatan}
                   onChange={(e) => setCatatan(e.target.value)}
                   className="w-full border px-3 py-2 rounded"

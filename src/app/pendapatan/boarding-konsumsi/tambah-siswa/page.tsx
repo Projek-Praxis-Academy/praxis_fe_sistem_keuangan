@@ -39,8 +39,8 @@ export default function TambahSiswa() {
     try {
       const url =
         jenisTagihan === 'boarding'
-          ? 'https://fitrack-production.up.railway.app/api/create/siswa/boarding'
-          : 'https://fitrack-production.up.railway.app/api/create/siswa/konsumsi'
+          ? `${process.env.NEXT_PUBLIC_API_URL}/create/siswa/boarding`
+          : `${process.env.NEXT_PUBLIC_API_URL}/create/siswa/konsumsi`
 
       const token = localStorage.getItem('token') || ''
 
@@ -96,6 +96,7 @@ export default function TambahSiswa() {
             <div className="col-span-2">
               <label className="text-sm font-medium">NISN Siswa</label>
               <input
+                id='nisn'
                 type="text"
                 value={nisn}
                 onChange={(e) => setNisn(e.target.value)}
@@ -107,6 +108,7 @@ export default function TambahSiswa() {
             <div>
               <label className="text-sm font-medium">Tanggal Mulai</label>
               <input
+                id='tanggal_mulai'
                 type="date"
                 value={tanggalMulai}
                 onChange={(e) => setTanggalMulai(e.target.value)}
@@ -117,6 +119,7 @@ export default function TambahSiswa() {
             <div>
               <label className="text-sm font-medium">Tanggal Selesai</label>
               <input
+                id='tanggal_selesai'
                 type="date"
                 value={tanggalSelesai}
                 onChange={(e) => setTanggalSelesai(e.target.value)}
@@ -129,6 +132,7 @@ export default function TambahSiswa() {
               <div className="flex items-center border rounded px-2 bg-white">
                 <span className="text-gray-500 text-sm mr-1">Rp</span>
                   <input
+                    id='nominal'
                     type="number"
                     value={nominal}
                     onChange={(e) => setNominal(e.target.value)}
@@ -141,6 +145,8 @@ export default function TambahSiswa() {
             <div>
               <label className="text-sm font-medium">Jenis Tagihan</label>
               <select
+                typeof='select'
+                id='jenis_tagihan'
                 value={jenisTagihan}
                 onChange={(e) => setJenisTagihan(e.target.value)}
                 className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
@@ -153,6 +159,7 @@ export default function TambahSiswa() {
             <div className="col-span-2">
               <label className="text-sm font-medium">Catatan</label>
               <textarea
+                id='catatan'
                 value={catatan}
                 onChange={(e) => setCatatan(e.target.value)}
                 className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"

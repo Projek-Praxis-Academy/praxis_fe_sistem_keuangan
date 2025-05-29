@@ -23,7 +23,7 @@ export default function TambahEkstra() {
     try {
       const token = localStorage.getItem('token') || ''
       const response = await axios.post(
-        'http://127.0.0.1:8000/api/monitoring-ekstra/ekstra/create',
+        `${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/ekstra/create`,
         {
           nama_ekstra: namaEkstra,
           harga_ekstra: hargaEkstra,

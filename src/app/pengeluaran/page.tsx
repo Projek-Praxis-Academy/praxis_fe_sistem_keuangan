@@ -25,7 +25,7 @@ export default function PengeluaranTable() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token') || ''
-        const response = await axios.get('https://fitrack-production.up.railway.app/api/monitoring-pengeluaran', {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

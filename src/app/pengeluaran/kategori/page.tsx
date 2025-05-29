@@ -31,7 +31,7 @@ export default function KategoriPengeluaranPage() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token') || ''
-        const res = await axios.get('https://fitrack-production.up.railway.app/api/monitoring-pengeluaran/kategori-pengeluaran', {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran/kategori-pengeluaran`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -100,6 +100,7 @@ export default function KategoriPengeluaranPage() {
       <div className="flex justify-between gap-2 items-center mb-4">
         <div className="relative">
           <input
+            id='search'
             type="text"
             placeholder="Cari kategori..."
             className="px-2 py-1 pl-8 bg-gray-300 text-black rounded-md text-sm"

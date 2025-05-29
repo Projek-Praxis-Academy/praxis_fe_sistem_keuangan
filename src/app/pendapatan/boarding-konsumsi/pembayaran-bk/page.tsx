@@ -37,7 +37,7 @@ export default function PembayaranBoardingKonsumsi() {
       setError('')
 
       try {
-        const response = await axios.get(`https://fitrack-production.up.railway.app/api/monitoring/bk/pembayaran-siswa/${id_siswa_query}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring/bk/pembayaran-siswa/${id_siswa_query}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -85,7 +85,7 @@ export default function PembayaranBoardingKonsumsi() {
     }
 
     try {
-      const response = await axios.post('https://fitrack-production.up.railway.app/api/pembayaran/bk', data, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/pembayaran/bk`, data, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -170,6 +170,7 @@ export default function PembayaranBoardingKonsumsi() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Pembayaran</label>
                 <input
+                  id='tanggal_pembayaran'
                   type="date"
                   value={tanggalPembayaran}
                   onChange={(e) => setTanggalPembayaran(e.target.value)}
@@ -183,6 +184,7 @@ export default function PembayaranBoardingKonsumsi() {
                   <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
                       <input
+                        id='boarding'
                         placeholder="1000000"
                         value={boarding}
                         onChange={(e) => setBoarding(e.target.value.replace(/\D/g, ''))}
@@ -195,6 +197,7 @@ export default function PembayaranBoardingKonsumsi() {
                   <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
                       <input
+                        id='konsumsi'
                         placeholder="1000000"
                         value={konsumsi}
                         onChange={(e) => setKonsumsi(e.target.value.replace(/\D/g, ''))}
@@ -211,6 +214,7 @@ export default function PembayaranBoardingKonsumsi() {
                   <span className="text-gray-500 text-sm mr-1">Rp</span>
                   {/* Format totalPembayaran to Indonesian currency format */}
                   <input
+                    id='total_pembayaran'
                     type="text"
                     value={totalPembayaran.toLocaleString('id-ID')}
                     readOnly
@@ -223,6 +227,7 @@ export default function PembayaranBoardingKonsumsi() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
                 <textarea
+                  id='catatan'
                   value={catatan}
                   onChange={(e) => setCatatan(e.target.value)}
                   className="w-full border px-3 py-2 rounded"
@@ -231,6 +236,7 @@ export default function PembayaranBoardingKonsumsi() {
               </div>
 
               <button
+                type='button'
                 onClick={handleSubmit}
                 className="mt-6 w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 transition font-semibold"
               >

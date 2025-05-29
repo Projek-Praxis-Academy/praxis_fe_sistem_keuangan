@@ -36,7 +36,7 @@ export default function BoardingKonsumsi() {
     const fetchData = async () => {
       const token = localStorage.getItem('token') || '';
       try {
-        const response = await axios.get('https://fitrack-production.up.railway.app/api/monitoring/bk', {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring/bk`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -96,6 +96,7 @@ export default function BoardingKonsumsi() {
           const id_siswa = row.original.id_siswa;
           return (
             <FileSignature
+              id='bayar'
               className="text-gray-600 cursor-pointer hover:text-blue-600"
               onClick={() => router.push(`/pendapatan/boarding-konsumsi/pembayaran-bk?id_siswa=${id_siswa}`)}
             />
@@ -109,7 +110,7 @@ export default function BoardingKonsumsi() {
           const id_siswa = row.original.id_siswa;
           return (
             <a href={`/pendapatan/boarding-konsumsi/detail-bk?id_siswa=${id_siswa}`}>
-              <CreditCard className="text-gray-600 cursor-pointer hover:text-blue-600" />
+              <CreditCard id='riwayat' className="text-gray-600 cursor-pointer hover:text-blue-600" />
             </a>
           );
         }
@@ -152,6 +153,7 @@ export default function BoardingKonsumsi() {
         </div>
 
         <button
+          type='button'
           className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
           onClick={() => router.push('/pendapatan/boarding-konsumsi/tambah-siswa')}
         >
