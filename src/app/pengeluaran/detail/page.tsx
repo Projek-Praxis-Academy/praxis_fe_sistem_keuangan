@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ExternalLink } from 'lucide-react'
 import axios from 'axios'
@@ -60,7 +60,7 @@ interface PengeluaranDetail {
   sub_pengeluaran: SubPengeluaran[]
 }
 
-export default function DetailPengeluaran() {
+function DetailPengeluaranInner() {
   const [detail, setDetail] = useState<PengeluaranDetail | null>(null)
   const [jenisPengeluaran, setJenisPengeluaran] = useState<string>('-')
   const [loading, setLoading] = useState(true)
@@ -343,5 +343,13 @@ export default function DetailPengeluaran() {
         />
       )}
     </div>
+  )
+}
+
+export default function DetailPengeluaran() {
+  return (
+    <Suspense fallback={<div className="ml-64 p-6">Memuat...</div>}>
+      <DetailPengeluaranInner />
+    </Suspense>
   )
 }
