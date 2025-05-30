@@ -184,6 +184,8 @@ export default function PendapatanPraxis() {
             <option value="V">Level V</option>
             <option value="VI">Level VI</option>
             <option value="VII">Level VII</option>
+            <option value="VIII">Level VIII</option>
+            <option value="IX">Level IX</option>
           </select>
           <div className="relative">
             <input

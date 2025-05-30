@@ -129,7 +129,7 @@ const SidebarContent = () => {
               href="/ekstra" 
               className={`flex items-center p-2 text-left text-black bg-white hover:bg-gray-200 rounded ${isCollapsed ? 'justify-center' : ''}`}
             >
-              {!isCollapsed && <span>Ekstra</span>}
+              {!isCollapsed && <span>Ekstrakurikuler</span>}
             </Link>
           </li>
           

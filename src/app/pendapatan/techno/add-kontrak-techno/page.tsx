@@ -1,15 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link';
 import { useRouter } from 'next/navigation'
 import { FilePlus2 } from 'lucide-react'
 import axios from 'axios'
 
+interface Siswa {
+  id_siswa: number
+  nisn: string
+  nama_siswa: string
+  level: string
+  akademik: string
+}
+
 export default function TambahKontrakTechno() {
   const router = useRouter()
 
   const [nisn, setNisn] = useState('')
+  const [namaSiswa, setNamaSiswa] = useState<string>('')
+  const [level, setLevel] = useState<string>('')
+  const [akademik, setAkademik] = useState<string>('')
   const [uangKBM, setUangKBM] = useState('')
   const [uangSPP, setUangSPP] = useState('')
   const [uangPemeliharaan, setUangPemeliharaan] = useState('')
@@ -19,6 +30,71 @@ export default function TambahKontrakTechno() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState("")
+
+  // State untuk autocomplete
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [searchResults, setSearchResults] = useState<Siswa[]>([])
+  const [showDropdown, setShowDropdown] = useState<boolean>(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Fetch data autocomplete
+  const fetchSearchResults = async (query: string) => {
+    if (!query || query.length < 3) {
+      setSearchResults([])
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/cari-siswa?query=${query}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+      
+      if (response.data.status === 'success') {
+        setSearchResults(response.data.data)
+        setShowDropdown(true)
+      }
+    } catch (error) {
+      console.error('Error fetching search results:', error)
+      setSearchResults([])
+    }
+  }
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchSearchResults(searchQuery)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Handle click outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  // Handle select siswa dari dropdown
+  const handleSelectSiswa = (siswa: Siswa) => {
+    setNisn(siswa.nisn)
+    setNamaSiswa(siswa.nama_siswa)
+    setLevel(siswa.level)
+    setAkademik(siswa.akademik)
+    setSearchQuery(`${siswa.nisn} - ${siswa.nama_siswa}`)
+    setShowDropdown(false)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,6 +114,7 @@ export default function TambahKontrakTechno() {
       setError('Ukuran file kontrak maksimal 10MB')
       return
     }
+    
     setSuccess('')
     setError('')
     setLoading(true)
@@ -65,22 +142,18 @@ export default function TambahKontrakTechno() {
         method: 'post',
         url: `${process.env.NEXT_PUBLIC_API_URL}/kontrak`,
         headers: {
-          'Authorization': `Bearer ${token}`, // Gunakan token dari localStorage
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         },
         data: formData
       }
 
-      const response = await axios.request(config)
+      const response = await axios(config)
       if (response.data.status === 'success') {
         setSuccess('Kontrak berhasil ditambahkan.')
-        setNisn('')
-        setUangKBM('')
-        setUangSPP('')
-        setUangPemeliharaan('')
-        setUangSumbangan('')
-        setFileKontrak(null)
-        setCatatan('')
-        window.location.href = '/pendapatan/techno'
+        setTimeout(() => {
+          router.push('/pendapatan/techno')
+        }, 1500)
       }
     } catch (err: any) {
       console.error(err)
@@ -95,11 +168,9 @@ export default function TambahKontrakTechno() {
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="overflow-x-auto">
         <div className="bg-white rounded-lg shadow-md p-10 w-full max-w-2xl mx-auto border">
-          <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">TAMBAH KONTRAK SISWA</h2>
+          <h2 className="text-2xl font-bold text-center text-blue-900 mb-8">TAMBAH KONTRAK SISWA TECHNO</h2>
           <p className="text-sm text-gray-500 mb-4">Lengkapi data kontrak pembayaran siswa berikut ini.</p>
           <hr className="border-t-2 border-blue-900 mb-5" />
-
-          {loading && <p>Loading...</p>}
 
           {/* Alert Error */}
           {error && (
@@ -116,22 +187,72 @@ export default function TambahKontrakTechno() {
           )}
 
           {/* Form Input */}
-
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="text-sm font-medium">NISN Siswa</label>
+            <div className="col-span-2 relative">
+              <label className="text-sm font-medium">Cari Siswa (NISN/Nama)</label>
               <input
-                id='nisn'
+                id='cari_siswa'
                 type="text"
-                value={nisn}
-                onChange={(e) => setNisn(e.target.value)}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  if (e.target.value === '') {
+                    setNisn('')
+                    setNamaSiswa('')
+                    setLevel('')
+                    setAkademik('')
+                  }
+                }}
                 className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
-                placeholder="Masukkan NISN Siswa"
+                placeholder="Masukkan NISN atau Nama Siswa"
               />
+              {showDropdown && searchResults.length > 0 && (
+                <div 
+                  ref={dropdownRef}
+                  className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                >
+                  {searchResults.map((siswa) => (
+                    <div
+                      key={siswa.id_siswa}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => handleSelectSiswa(siswa)}
+                    >
+                      <div className="font-medium">{siswa.nisn} - {siswa.nama_siswa}</div>
+                      <div className="text-sm text-gray-500">
+                        {siswa.level} - {siswa.akademik}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="col-span-2">
+              <div className="bg-gray-50 p-3 rounded-md">
+                <h4 className="font-medium text-sm mb-1">Informasi Siswa</h4>
+                {nisn ? (
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-gray-500">NISN:</span> {nisn}
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Nama:</span> {namaSiswa}
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Level:</span> {level}
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Akademik:</span> {akademik}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Silakan cari dan pilih siswa</p>
+                )}
+              </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium"> KBM</label>
+              <label className="text-sm font-medium">KBM</label>
               <div className="flex items-center border rounded px-2 bg-white">
                 <span className="text-gray-500 text-sm mr-1">Rp</span>
                 <input
@@ -146,7 +267,7 @@ export default function TambahKontrakTechno() {
             </div>
 
             <div>
-              <label className="text-sm font-medium"> SPP</label>
+              <label className="text-sm font-medium">SPP</label>
               <div className="flex items-center border rounded px-2 bg-white">
                 <span className="text-gray-500 text-sm mr-1">Rp</span>
                 <input
@@ -161,7 +282,7 @@ export default function TambahKontrakTechno() {
             </div>
 
             <div>
-              <label className="text-sm font-medium"> Pemeliharaan</label>
+              <label className="text-sm font-medium">Pemeliharaan</label>
               <div className="flex items-center border rounded px-2 bg-white">
                 <span className="text-gray-500 text-sm mr-1">Rp</span>
                 <input
@@ -176,7 +297,7 @@ export default function TambahKontrakTechno() {
             </div>
 
             <div>
-              <label className="text-sm font-medium"> Sumbangan</label>
+              <label className="text-sm font-medium">Sumbangan</label>
               <div className="flex items-center border rounded px-2 bg-white">
                 <span className="text-gray-500 text-sm mr-1">Rp</span>
                 <input
@@ -211,7 +332,6 @@ export default function TambahKontrakTechno() {
               </p>
 
               <div className="flex items-center gap-4">
-                {/* Tombol Upload */}
                 <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-700">
                   Pilih File
                   <input
@@ -223,7 +343,6 @@ export default function TambahKontrakTechno() {
                   />
                 </label>
 
-                {/* Nama File */}
                 {fileKontrak && (
                   <span className="text-sm text-gray-700 truncate max-w-xs">
                     {fileKontrak.name}
@@ -232,23 +351,19 @@ export default function TambahKontrakTechno() {
               </div>
             </div>
 
-
-            {/* Tombol Simpan */}
-
             <div className="col-span-2 mt-4">
               <div className="flex justify-between gap-4">
-                {/* Tombol Kembali */}
-                  <Link
-                    id='kembali-kontrak'
-                    href="/pendapatan/praxis"
-                    className="flex flex-1 items-center justify-center gap-2  bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-md hover:bg-gray-300"
-                  >
-                    Kembali
-                  </Link>
+                <Link
+                  id='kembali-kontrak'
+                  href="/pendapatan/techno"
+                  className="flex flex-1 items-center justify-center gap-2 bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-md hover:bg-gray-300"
+                >
+                  Kembali
+                </Link>
                 <button
                   type="submit"
                   className="flex flex-1 items-center justify-center gap-2 bg-blue-600 text-white font-medium px-4 py-2 rounded-md hover:bg-blue-700"
-                  disabled={loading}
+                  disabled={loading || !nisn}
                 >
                   <FilePlus2 className="w-5 h-5" />
                   {loading ? 'Menyimpan...' : 'Simpan Kontrak'}
