@@ -187,7 +187,7 @@ function PengeluaranUangSakuInner() {
                   value={catatan}
                   onChange={(e) => setCatatan(e.target.value)}
                   className="w-full border px-3 py-2 rounded"
-                  placeholder="Contoh: Uang transportasi ke rumah."
+                  placeholder="Wajib diisi. Contoh: Uang transportasi ke rumah."
                 />
               </div>
 

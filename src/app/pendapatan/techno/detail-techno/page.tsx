@@ -9,7 +9,11 @@ interface Siswa {
   id_siswa: string
   nisn: string
   level: string
+  kategori: string
   akademik: string
+  nama_wali: string
+  no_hp_wali: string
+  file_kontrak: string
   tagihan_uang_kbm: number | null
   tagihan_uang_spp: number | null
   tagihan_uang_pemeliharaan: number | null
@@ -40,37 +44,41 @@ function DetailTechnoInner() {
         Authorization: `Bearer ${token}`,
       }
     })
-    .then(res => {
-      const siswa = res.data
-      const kontrak = siswa.kontrak || {}
+      .then(res => {
+        const siswa = res.data.data
+        const kontrak = siswa.kontrak || {}
 
-      const siswaData: Siswa = {
-        id_siswa: siswa.id_siswa,
-        nama_siswa: siswa.nama_siswa,
-        nisn: siswa.nisn,
-        level: siswa.level,
-        akademik: siswa.akademik,
-        tagihan_uang_kbm: Number(kontrak.uang_kbm ?? 0),
-        tagihan_uang_spp: Number(kontrak.uang_spp ?? 0),
-        tagihan_uang_pemeliharaan: Number(kontrak.uang_pemeliharaan ?? 0),
-        tagihan_uang_sumbangan: Number(kontrak.uang_sumbangan ?? 0),
-      }
+        const siswaData: Siswa = {
+          id_siswa: siswa.id_siswa.toString(),
+          nama_siswa: siswa.nama_siswa,
+          nisn: siswa.nisn,
+          level: siswa.level,
+          kategori: siswa.kategori,
+          akademik: siswa.akademik,
+          nama_wali: siswa.nama_wali,
+          no_hp_wali: siswa.no_hp_wali,
+          file_kontrak: kontrak.file_kontrak || '',
+          tagihan_uang_kbm: Number(kontrak.uang_kbm ?? 0),
+          tagihan_uang_spp: Number(kontrak.uang_spp ?? 0),
+          tagihan_uang_pemeliharaan: Number(kontrak.uang_pemeliharaan ?? 0),
+          tagihan_uang_sumbangan: Number(kontrak.uang_sumbangan ?? 0),
+        }
 
-      setSiswaDetail(siswaData)
-      setLoading(false)
-    })
-    .catch(err => {
-      console.error('Gagal ambil data:', err)
-      setError('Gagal mengambil data siswa.')
-      setLoading(false)
-    })
+        setSiswaDetail(siswaData)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Gagal ambil data:', err)
+        setError('Gagal mengambil data siswa.')
+        setLoading(false)
+      })
   }, [id_siswa])
 
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="overflow-x-auto">
         <div className="bg-white rounded-lg shadow-md p-10 min-w-[700px] w-full max-w-2xl border mx-auto">
-          <h2 className="text-2xl text-bold text-center text-blue-900 mb-3">KONTRAK SISWA TECHNONATURA</h2>
+          <h2 className="text-2xl font-bold text-center text-blue-900 mb-3">KONTRAK SISWA TECHNONATURA</h2>
           <hr className="border-t-3 border-blue-900 mb-8" />
 
           {loading && (
@@ -80,7 +88,6 @@ function DetailTechnoInner() {
             </div>
           )}
 
-          {/* Alert Error */}
           {error && (
             <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
               <p className="font-medium">{error}</p>
@@ -89,87 +96,93 @@ function DetailTechnoInner() {
 
           {siswaDetail && (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <input
+                  id='nama_siswa'
                   value={siswaDetail.nama_siswa}
                   readOnly
-                  className="w-70 border px-3 py-2 rounded bg-gray-100 text-center"
+                  className="w-full border px-3 py-2 rounded bg-gray-100 "
                 />
                 <input
+                  id='id_siswa'
                   value={`Level ${siswaDetail.level}`}
                   readOnly
-                  className="ml-20 w-30 border px-3 py-2 rounded bg-gray-100 text-center"
-                />
-                <input
-                  value={siswaDetail.akademik}
-                  readOnly
-                  className="w-30 border px-3 py-2 rounded bg-gray-100 text-center"
+                  className="w-full border px-3 py-2 rounded bg-gray-100 "
                 />
               </div>
 
-              <input
-                value={`NISN: ${siswaDetail.nisn}`}
-                readOnly
-                className="text-center w-100 border px-3 py-2 rounded bg-gray-100"
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  id='nisn'
+                  value={`NISN: ${siswaDetail.nisn}`}
+                  readOnly
+                  className="w-full border px-3 py-2 rounded bg-gray-100 "
+                />
+                <input
+                  id='akademik'
+                  value={`${siswaDetail.akademik}`}
+                  readOnly
+                  className="w-full border px-3 py-2 rounded bg-gray-100 "
+                />
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-base font-medium text-bold mb-1">KBM</label>
+                  <label className="block font-bold mb-1">KBM</label>
                   <input
-                    type="text"
-                    value={
-                      siswaDetail.tagihan_uang_kbm != null
-                        ? `Rp${siswaDetail.tagihan_uang_kbm.toLocaleString('id-ID')}`
-                        : '-'
-                    }
+                    id='uang_kbm'
+                    value={`Rp${siswaDetail.tagihan_uang_kbm?.toLocaleString('id-ID')}`}
                     readOnly
-                    className="border px-3 py-2 rounded w-full bg-gray-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-base font-medium text-bold mb-1">SPP</label>
-                  <input
-                    type="text"
-                    value={
-                      siswaDetail.tagihan_uang_spp != null
-                        ? `Rp${siswaDetail.tagihan_uang_spp.toLocaleString('id-ID')}`
-                        : '-'
-                    }
-                    readOnly
-                    className="border px-3 py-2 rounded w-full bg-gray-100"
+                    className="w-full border px-3 py-2 rounded bg-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-base font-medium text-bold mb-1">Pemeliharaan</label>
+                  <label className="block font-bold mb-1">SPP</label>
                   <input
-                    type="text"
-                    value={
-                      siswaDetail.tagihan_uang_pemeliharaan != null
-                        ? `Rp${siswaDetail.tagihan_uang_pemeliharaan.toLocaleString('id-ID')}`
-                        : '-'
-                    }
+                    id='uang_spp'
+                    value={`Rp${siswaDetail.tagihan_uang_spp?.toLocaleString('id-ID')}`}
                     readOnly
-                    className="border px-3 py-2 rounded w-full bg-gray-100"
+                    className="w-full border px-3 py-2 rounded bg-gray-100"
                   />
                 </div>
                 <div>
-                  <label className="block text-base font-medium text-bold mb-1">Sumbangan</label>
+                  <label className="block font-bold mb-1">Pemeliharaan</label>
                   <input
-                    type="text"
-                    value={
-                      siswaDetail.tagihan_uang_sumbangan != null
-                        ? `Rp${siswaDetail.tagihan_uang_sumbangan.toLocaleString('id-ID')}`
-                        : '-'
-                    }
+                    id='uang_pemeliharaan'
+                    value={`Rp${siswaDetail.tagihan_uang_pemeliharaan?.toLocaleString('id-ID')}`}
                     readOnly
-                    className="border px-3 py-2 rounded w-full bg-gray-100"
+                    className="w-full border px-3 py-2 rounded bg-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Sumbangan</label>
+                  <input
+                    id='uang_sumbangan'
+                    value={`Rp${siswaDetail.tagihan_uang_sumbangan?.toLocaleString('id-ID')}`}
+                    readOnly
+                    className="w-full border px-3 py-2 rounded bg-gray-100"
                   />
                 </div>
               </div>
 
+              {/* File Kontrak */}
+              {siswaDetail.file_kontrak && (
+                <div>
+                  <label className="block font-bold mb-1">File Kontrak</label>
+                  <a
+                    id='file_kontrak'
+                    href={`${process.env.NEXT_PUBLIC_API_URL}/${siswaDetail.file_kontrak}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    Lihat File Kontrak
+                  </a>
+                </div>
+              )}
+
               <button
+                type="button"
                 onClick={() => router.push('/pendapatan/techno')}
                 className="mt-6 w-full bg-gray-600 text-white py-2 rounded hover:bg-gray-500 transition font-semibold"
               >
@@ -190,5 +203,3 @@ export default function DetailTechno() {
     </Suspense>
   )
 }
-
-

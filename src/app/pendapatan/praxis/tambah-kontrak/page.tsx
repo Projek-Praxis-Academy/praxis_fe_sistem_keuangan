@@ -80,7 +80,7 @@ export default function TambahKontrak() {
         setUangSumbangan('')
         setFileKontrak(null)
         setCatatan('')
-        window.location.href = 'http://127.0.0.1:3000/pendapatan/praxis'
+        window.location.href = '/pendapatan/praxis'
       }
     } catch (err: any) {
       console.error(err)

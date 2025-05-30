@@ -4,8 +4,17 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 
+interface Kontrak {
+  uang_kbm: number | null
+  uang_spp: number | null
+  uang_pemeliharaan: number | null
+  uang_sumbangan: number | null
+  file_kontrak: string
+  catatan: string
+}
+
 interface Siswa {
-  id_siswa: number
+  id_siswa: string
   nama_siswa: string
   nisn: string
   level: string
@@ -13,6 +22,7 @@ interface Siswa {
   akademik: string
   nama_wali: string
   no_hp_wali: string
+  kontrak?: Kontrak
 }
 
 function PembayaranSiswaInner() {
@@ -46,8 +56,20 @@ function PembayaranSiswaInner() {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         })
-        setSuccess(response.data.success)
-        setSiswaDetail(response.data)
+
+        const data = response.data.data
+        setSiswaDetail({
+          id_siswa: data.id_siswa.toString(),
+          nama_siswa: data.nama_siswa,
+          nisn: data.nisn,
+          level: data.level,
+          kategori: data.kategori,
+          akademik: data.akademik,
+          nama_wali: data.nama_wali,
+          no_hp_wali: data.no_hp_wali,
+          kontrak: data.kontrak
+        })
+        setSuccess(response.data.message || 'Data siswa berhasil dimuat')
       } catch (err) {
         setError('Terjadi kesalahan saat mengambil data siswa.')
       } finally {
@@ -58,7 +80,6 @@ function PembayaranSiswaInner() {
     fetchSiswaDetail()
   }, [id_siswa_query])
 
-  // Update total pembayaran setiap field berubah
   useEffect(() => {
     const total =
       (parseInt(kbm || '0') || 0) +
@@ -112,9 +133,9 @@ function PembayaranSiswaInner() {
         setPemeliharaan('')
         setSumbangan('')
         setCatatan('')
-        window.location.href = 'http://127.0.0.1:3000/pendapatan/praxis'
+        window.location.href = '/pendapatan/praxis'
       } else {
-        setSuccess(response.data.message || 'Gagal menyimpan pembayaran.')
+        setError(response.data.message || 'Gagal menyimpan pembayaran.')
       }
     } catch (error: any) {
       if (error.response && error.response.data) {
@@ -133,15 +154,11 @@ function PembayaranSiswaInner() {
           <hr className="border-t-2 border-blue-900 mb-5" />
 
           {loading && <p>Loading...</p>}
-
-          {/* Alert Error */}
           {error && (
             <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
               <p className="font-medium">{error}</p>
             </div>
           )}
-
-          {/* Alert Success */}
           {success && (
             <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
               <p className="font-medium">{success}</p>
@@ -151,144 +168,74 @@ function PembayaranSiswaInner() {
           {siswaDetail && (
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
-                <input
-                  id='nama_siswa'
-                  value={siswaDetail.nama_siswa}
-                  readOnly
-                  className="border px-3 py-2 rounded bg-gray-100"
-                />
-                <input
-                  id='level'
-                  value={`Level ${siswaDetail.level}`}
-                  readOnly
-                  className="border px-3 py-2 rounded bg-gray-100"
-                />
-                <input
-                  id='akademik'
-                  value={siswaDetail.akademik}
-                  readOnly
-                  className="border px-3 py-2 rounded bg-gray-100"
-                />
+                <input value={siswaDetail.nama_siswa} readOnly className="border px-3 py-2 rounded bg-gray-100" />
+                <input value={`Level ${siswaDetail.level}`} readOnly className="border px-3 py-2 rounded bg-gray-100" />
+                <input value={siswaDetail.akademik} readOnly className="border px-3 py-2 rounded bg-gray-100" />
               </div>
 
-              <input
-                id='nisn'
-                value={`NISN: ${siswaDetail.nisn}`}
-                readOnly
-                className="w-full border px-3 py-2 rounded bg-gray-100"
-              />
-
-              {/* ID Siswa Hidden */}
-              <input
-                id='id_siswa'
-                type="hidden"
-                value={siswaDetail.id_siswa}
-                readOnly
-                name="id_siswa"
-              />
+              <input value={`NISN: ${siswaDetail.nisn}`} readOnly className="w-full border px-3 py-2 rounded bg-gray-100" />
+              <input type="hidden" value={siswaDetail.id_siswa} readOnly name="id_siswa" />
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Pembayaran</label>
-                <input
-                  id='tanggal_pembayaran'
-                  type="date"
-                  value={tanggalPembayaran}
-                  onChange={(e) => setTanggalPembayaran(e.target.value)}
-                  className="w-full border px-3 py-2 rounded"
-                />
+                <label className="block text-sm font-medium mb-1">Tanggal Pembayaran</label>
+                <input type="date" value={tanggalPembayaran} onChange={(e) => setTanggalPembayaran(e.target.value)} className="w-full border px-3 py-2 rounded" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">KBM</label>
-                  <div className="flex items-center border rounded px-2 bg-white">
-                    <span className="text-gray-500 text-sm mr-1">Rp</span>
-                    <input
-                      id='kbm'
-                      type="number"
-                      placeholder="0"
-                      value={kbm}
-                      onChange={(e) => setKbm(e.target.value.replace(/\D/g, ''))}
-                      className="px-2 py-2 w-full focus:outline-none"
-                    />
+                {[
+                  { label: 'KBM', value: kbm, set: setKbm },
+                  { label: 'SPP', value: spp, set: setSpp },
+                  { label: 'Pemeliharaan', value: pemeliharaan, set: setPemeliharaan },
+                  { label: 'Sumbangan', value: sumbangan, set: setSumbangan }
+                ].map(({ label, value, set }, i) => (
+                  <div key={i}>
+                    <label className="block text-sm font-medium mb-1">{label}</label>
+                    <div className="flex items-center border rounded px-2 bg-white">
+                      <span className="text-gray-500 text-sm mr-1">Rp</span>
+                      <input
+                        id={label.toLowerCase()}
+                        type="number"
+                        placeholder="0"
+                        value={value}
+                        onChange={(e) => set(e.target.value.replace(/\D/g, ''))}
+                        className="px-2 py-2 w-full focus:outline-none"
+                      />
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">SPP</label>
-                  <div className="flex items-center border rounded px-2 bg-white">
-                    <span className="text-gray-500 text-sm mr-1">Rp</span>
-                    <input
-                      id='spp'
-                      type="number"
-                      placeholder="0"
-                      value={spp}
-                      onChange={(e) => setSpp(e.target.value.replace(/\D/g, ''))}
-                      className="px-2 py-2 w-full focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Pemeliharaan</label>
-                  <div className="flex items-center border rounded px-2 bg-white">
-                    <span className="text-gray-500 text-sm mr-1">Rp</span>
-                    <input
-                      id='pemeliharaan'
-                      type="number"
-                      placeholder="0"
-                      value={pemeliharaan}
-                      onChange={(e) => setPemeliharaan(e.target.value.replace(/\D/g, ''))}
-                      className="px-2 py-2 w-full focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Sumbangan</label>
-                  <div className="flex items-center border rounded px-2 bg-white">
-                    <span className="text-gray-500 text-sm mr-1">Rp</span>
-                    <input
-                      id='sumbangan'
-                      type="number"
-                      placeholder="0"
-                      value={sumbangan}
-                      onChange={(e) => setSumbangan(e.target.value.replace(/\D/g, ''))}
-                      className="px-2 py-2 w-full focus:outline-none"
-                    />
-                  </div>
-                </div>
+                ))}
               </div>
 
-              {/* Total pembayaran */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Total Pembayaran</label>
                 <div className="flex items-center border rounded px-2 bg-white">
                   <span className="text-gray-500 text-sm mr-1">Rp</span>
-                  {/* Format totalPembayaran to Indonesian currency format */}
                   <input
-                    id='total_pembayaran'
                     type="text"
                     value={totalPembayaran.toLocaleString('id-ID')}
                     readOnly
-                    className="w-full px-3 py-2 rounded"
+                    className="px-2 py-2 w-full bg-gray-100"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Catatan</label>
                 <textarea
                   id='catatan'
+                  placeholder="Masukkan catatan (opsional)"
                   value={catatan}
                   onChange={(e) => setCatatan(e.target.value)}
+                  rows={2}
                   className="w-full border px-3 py-2 rounded"
-                  placeholder="Contoh: Pembayaran sebagian untuk KBM dan Pemeliharaan."
                 />
               </div>
 
               <button
+                type="button"
                 onClick={handleSubmit}
-                className="mt-6 w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 transition font-semibold"
+                className="w-full py-2 px-4 bg-blue-900 text-white rounded hover:bg-blue-800 transition"
               >
-                Simpan
+                Simpan Pembayaran
               </button>
             </div>
           )}
@@ -298,10 +245,12 @@ function PembayaranSiswaInner() {
   )
 }
 
-export default function PembayaranSiswa() {
+function PembayaranSiswaPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="ml-64 p-8">Loading...</div>}>
       <PembayaranSiswaInner />
     </Suspense>
   )
 }
+
+export default PembayaranSiswaPage

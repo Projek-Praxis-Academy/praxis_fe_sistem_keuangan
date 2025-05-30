@@ -46,25 +46,23 @@ export default function PendapatanPraxis() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token') || '';
-        console.log('Token:', token);
-  
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-praxis`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-  
-        console.log('API Response:', response.data);
-  
-        const fetchedData = response.data.data.map((item: any, index: number) => {
-          console.log('Item:', item); // Cek setiap item
+
+        // Ambil array siswa dari response.data.data.data
+        const siswaArray = response.data.data?.data || [];
+
+        const fetchedData = siswaArray.map((item: any) => {
           const tagihan = item.tagihan || {};
-  
+
           const kbm = parseFormattedNumber(tagihan.tagihan_uang_kbm);
           const spp = parseFormattedNumber(tagihan.tagihan_uang_spp);
           const pemeliharaan = parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan);
           const sumbanganVal = parseFormattedNumber(tagihan.tagihan_uang_sumbangan);
-  
+
           return {
             nama_siswa: item.nama_siswa,
             nisn: item.nisn,
@@ -78,14 +76,14 @@ export default function PendapatanPraxis() {
             total: kbm + spp + pemeliharaan + sumbanganVal,
           };
         });
-  
+
         setData(fetchedData);
       } catch (error: any) {
         console.error('Failed to fetch data:', error);
         console.error('Error response:', error.response?.data);
       }
     };
-  
+
     fetchData();
   }, []);
   

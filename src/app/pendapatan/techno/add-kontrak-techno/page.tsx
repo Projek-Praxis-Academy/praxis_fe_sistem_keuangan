@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link';
 import { useRouter } from 'next/navigation'
 import { FilePlus2 } from 'lucide-react'
 import axios from 'axios'
@@ -38,8 +39,8 @@ export default function TambahKontrakTechno() {
       return
     }
     setSuccess('')
-    setLoading(true)
     setError('')
+    setLoading(true)
 
     try {
       const formData = new FormData()
@@ -62,7 +63,7 @@ export default function TambahKontrakTechno() {
 
       const config = {
         method: 'post',
-        url: `${process.env.NEXTz_PUBLIC_API_URL}/kontrak`,
+        url: `${process.env.NEXT_PUBLIC_API_URL}/kontrak`,
         headers: {
           'Authorization': `Bearer ${token}`, // Gunakan token dari localStorage
         },
@@ -70,9 +71,17 @@ export default function TambahKontrakTechno() {
       }
 
       const response = await axios.request(config)
-
-    setSuccess('Kontrak berhasil ditambahkan!')
-      router.push('/pendapatan/techno')
+      if (response.data.status === 'success') {
+        setSuccess('Kontrak berhasil ditambahkan.')
+        setNisn('')
+        setUangKBM('')
+        setUangSPP('')
+        setUangPemeliharaan('')
+        setUangSumbangan('')
+        setFileKontrak(null)
+        setCatatan('')
+        window.location.href = '/pendapatan/techno'
+      }
     } catch (err: any) {
       console.error(err)
       const msg = err.response?.data?.message || 'Terjadi kesalahan saat mengirim data. Silakan coba lagi.'
@@ -90,6 +99,8 @@ export default function TambahKontrakTechno() {
           <p className="text-sm text-gray-500 mb-4">Lengkapi data kontrak pembayaran siswa berikut ini.</p>
           <hr className="border-t-2 border-blue-900 mb-5" />
 
+          {loading && <p>Loading...</p>}
+
           {/* Alert Error */}
           {error && (
             <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
@@ -104,11 +115,13 @@ export default function TambahKontrakTechno() {
             </div>
           )}
 
+          {/* Form Input */}
+
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="text-sm font-medium">NISN Siswa</label>
               <input
-                id="nisn"
+                id='nisn'
                 type="text"
                 value={nisn}
                 onChange={(e) => setNisn(e.target.value)}
@@ -122,7 +135,7 @@ export default function TambahKontrakTechno() {
               <div className="flex items-center border rounded px-2 bg-white">
                 <span className="text-gray-500 text-sm mr-1">Rp</span>
                 <input
-                  id="uang_kbm"
+                  id='uang_kbm'
                   type="number"
                   value={uangKBM}
                   onChange={(e) => setUangKBM(e.target.value)}
@@ -137,7 +150,7 @@ export default function TambahKontrakTechno() {
               <div className="flex items-center border rounded px-2 bg-white">
                 <span className="text-gray-500 text-sm mr-1">Rp</span>
                 <input
-                  id="uang_spp"
+                  id='uang_spp'
                   type="number"
                   value={uangSPP}
                   onChange={(e) => setUangSPP(e.target.value)}
@@ -152,7 +165,7 @@ export default function TambahKontrakTechno() {
               <div className="flex items-center border rounded px-2 bg-white">
                 <span className="text-gray-500 text-sm mr-1">Rp</span>
                 <input
-                  id="uang_pemeliharaan"
+                  id='uang_pemeliharaan'
                   type="number"
                   value={uangPemeliharaan}
                   onChange={(e) => setUangPemeliharaan(e.target.value)}
@@ -167,7 +180,7 @@ export default function TambahKontrakTechno() {
               <div className="flex items-center border rounded px-2 bg-white">
                 <span className="text-gray-500 text-sm mr-1">Rp</span>
                 <input
-                  id="uang_sumbangan"
+                  id='uang_sumbangan'
                   type="number"
                   value={uangSumbangan}
                   onChange={(e) => setUangSumbangan(e.target.value)}
@@ -180,7 +193,7 @@ export default function TambahKontrakTechno() {
             <div className="col-span-2">
               <label className="text-sm font-medium">Catatan</label>
               <textarea
-                id="catatan"
+                id='catatan'
                 value={catatan}
                 onChange={(e) => setCatatan(e.target.value)}
                 className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
@@ -189,7 +202,15 @@ export default function TambahKontrakTechno() {
               />
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Upload Kontrak (PDF)
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                * Maksimal ukuran 10 MB, hanya format PDF
+              </p>
+
+              <div className="flex items-center gap-4">
                 {/* Tombol Upload */}
                 <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-700">
                   Pilih File
@@ -208,18 +229,31 @@ export default function TambahKontrakTechno() {
                     {fileKontrak.name}
                   </span>
                 )}
+              </div>
             </div>
 
+
+            {/* Tombol Simpan */}
+
             <div className="col-span-2 mt-4">
-              <button
-                id="submitButton"
-                type="submit"
-                className="flex items-center justify-center gap-2 w-full bg-blue-600 text-white font-medium px-4 py-2 rounded-md hover:bg-blue-700"
-                disabled={loading}
-              >
-                <FilePlus2 className="w-5 h-5" />
-                {loading ? 'Menyimpan...' : 'Simpan Kontrak'}
-              </button>
+              <div className="flex justify-between gap-4">
+                {/* Tombol Kembali */}
+                  <Link
+                    id='kembali-kontrak'
+                    href="/pendapatan/praxis"
+                    className="flex flex-1 items-center justify-center gap-2  bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-md hover:bg-gray-300"
+                  >
+                    Kembali
+                  </Link>
+                <button
+                  type="submit"
+                  className="flex flex-1 items-center justify-center gap-2 bg-blue-600 text-white font-medium px-4 py-2 rounded-md hover:bg-blue-700"
+                  disabled={loading}
+                >
+                  <FilePlus2 className="w-5 h-5" />
+                  {loading ? 'Menyimpan...' : 'Simpan Kontrak'}
+                </button>
+              </div>
             </div>
           </form>
         </div>

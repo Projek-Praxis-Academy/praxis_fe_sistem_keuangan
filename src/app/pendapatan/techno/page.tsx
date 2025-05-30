@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation'
 import axios from 'axios'
 
 interface Siswa {
-  no: number
   nama_siswa: string
   nisn: string
   level: string
@@ -20,47 +19,51 @@ interface Siswa {
   total: number
 }
 
-export default function PendapatanTechno() {
+export default function PendapatanPraxis() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLevel, setSelectedLevel] = useState(() => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('selectedLevel') || 'I'
+    return localStorage.getItem('selectedLevel') || ''
   }
-  return 'I'
+  return ''
 })
+
   const [data, setData] = useState<Siswa[]>([])
   const router = useRouter()
 
+  // Konversi "1.000.000" ke 1000000
   const parseFormattedNumber = (value: string | null | undefined): number => {
     if (!value || value === 'Lunas') return 0
     return Number(value.replace(/\./g, ''))
   }
 
+  // Simpan level yang dipilih ke localStorage
   useEffect(() => {
-      localStorage.setItem('selectedLevel', selectedLevel)
-    }, [selectedLevel])
+    localStorage.setItem('selectedLevel', selectedLevel)
+  }, [selectedLevel])
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token') || ''
-
+        const token = localStorage.getItem('token') || '';
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-techno`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        })
+        });
 
-        const fetchedData = response.data.data.map((item: any, index: number) => {
-          const tagihan = item.tagihan || {}
+        // Ambil array siswa dari response.data.data.data
+        const siswaArray = response.data.data?.data || [];
 
-          const kbm = parseFormattedNumber(tagihan.tagihan_uang_kbm)
-          const spp = parseFormattedNumber(tagihan.tagihan_uang_spp)
-          const pemeliharaan = parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan)
-          const sumbanganVal = parseFormattedNumber(tagihan.tagihan_uang_sumbangan)
+        const fetchedData = siswaArray.map((item: any) => {
+          const tagihan = item.tagihan || {};
+
+          const kbm = parseFormattedNumber(tagihan.tagihan_uang_kbm);
+          const spp = parseFormattedNumber(tagihan.tagihan_uang_spp);
+          const pemeliharaan = parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan);
+          const sumbanganVal = parseFormattedNumber(tagihan.tagihan_uang_sumbangan);
 
           return {
-            no: index + 1,
             nama_siswa: item.nama_siswa,
             nisn: item.nisn,
             level: item.level,
@@ -71,17 +74,19 @@ export default function PendapatanTechno() {
             tagihan_uang_pemeliharaan: pemeliharaan,
             tagihan_uang_sumbangan: tagihan.tagihan_uang_sumbangan === '0' ? 'Lunas' : tagihan.tagihan_uang_sumbangan,
             total: kbm + spp + pemeliharaan + sumbanganVal,
-          }
-        })
+          };
+        });
 
-        setData(fetchedData)
+        setData(fetchedData);
       } catch (error: any) {
-        console.error('Gagal mengambil data:', error)
+        console.error('Failed to fetch data:', error);
+        console.error('Error response:', error.response?.data);
       }
-    }
+    };
 
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
+  
 
   const filteredData = useMemo(() => {
     return data
@@ -131,6 +136,7 @@ export default function PendapatanTechno() {
           const id_siswa = row.original.id_siswa
           return (
             <CreditCard
+              id="kontrak"
               className="text-gray-600 cursor-pointer hover:text-blue-600"
               onClick={() => router.push(`/pendapatan/techno/detail-techno?id_siswa=${id_siswa}`)}
             />
@@ -145,7 +151,6 @@ export default function PendapatanTechno() {
           return (
             <FileSignature
               id="bayar"
-              type='button'
               className="text-gray-600 cursor-pointer hover:text-blue-600"
               onClick={() => router.push(`/pendapatan/techno/pembayaran-techno?id_siswa=${id_siswa}`)}
             />
@@ -163,10 +168,11 @@ export default function PendapatanTechno() {
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold">Monitoring TechnoNatura</h2>
       </div>
-  
-      <div className="flex justify-between items-center mb-4">
+
+      <div className="flex justify-between items-center mb-2">
         <div className="flex justify-start gap-2 items-center">
           <select
+            id="level-select"
             className="px-2 py-1 bg-gray-300 text-black rounded-md text-sm"
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
@@ -178,8 +184,6 @@ export default function PendapatanTechno() {
             <option value="V">Level V</option>
             <option value="VI">Level VI</option>
             <option value="VII">Level VII</option>
-            <option value="VIII">Level VIII</option>
-            <option value="IX">Level IX</option>
           </select>
           <div className="relative">
             <input
@@ -192,17 +196,10 @@ export default function PendapatanTechno() {
             />
             <Search size={14} className="absolute left-2 top-2 text-gray-700" />
           </div>
-          <button
-            id="tambah-kontrak-techno"
-            type='button'
-            className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
-            onClick={() => router.push('/pendapatan/techno/add-kontrak-techno')}
-          >
-            + Tambah Kontrak
-          </button>
+          <button className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm" onClick={() => router.push('/pendapatan/techno/add-kontrak-techno')}> + Tambah Kontrak</button>
         </div>
       </div>
-  
+
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300 text-left text-sm text-black">
           <thead>
@@ -231,5 +228,4 @@ export default function PendapatanTechno() {
       </div>
     </div>
   )
-  
 }

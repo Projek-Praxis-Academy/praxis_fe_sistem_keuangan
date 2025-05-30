@@ -6,7 +6,7 @@ import axios from 'axios'
 
 export default function TambahEkstra() {
   const [namaEkstra, setNamaEkstra] = useState('')
-  const [hargaEkstra, setHargaEkstra] = useState('')
+  const [biayaEkstra, setBiayaEkstra] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')  // Untuk pesan sukses
   const [isLoading, setIsLoading] = useState(false)
@@ -26,7 +26,7 @@ export default function TambahEkstra() {
         `${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/ekstra/create`,
         {
           nama_ekstra: namaEkstra,
-          harga_ekstra: hargaEkstra,
+          biaya_ekstra: biayaEkstra,
         },
         {
           headers: {
@@ -88,14 +88,14 @@ export default function TambahEkstra() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700" htmlFor="hargaEkstra">
+              <label className="block text-sm font-medium text-gray-700" htmlFor="biayaEkstra">
                 Harga Per Semester
               </label>
               <input
-                id="hargaEkstra"
+                id="biayaEkstra"
                 type="text"
-                value={hargaEkstra}
-                onChange={(e) => setHargaEkstra(e.target.value.replace(/\D/g, ''))}
+                value={biayaEkstra}
+                onChange={(e) => setBiayaEkstra(e.target.value.replace(/\D/g, ''))}
                 className="border px-3 py-2 w-full rounded bg-gray-100"
                 placeholder="500000"
                 required

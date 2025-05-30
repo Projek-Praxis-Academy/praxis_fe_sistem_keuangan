@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 interface Ekstra {
   id_ekstra: string
   nama_ekstra: string
-  harga_ekstra: string
+  biaya_ekstra: string
   created_at: string
   updated_at: string
 }
@@ -50,7 +50,7 @@ export default function DaftarEkstra() {
         header: 'Nama Ekstra',
       },
       {
-        accessorKey: 'harga_ekstra',
+        accessorKey: 'biaya_ekstra',
         header: 'Harga Ekstra',
         cell: ({ getValue }: { getValue: () => string }) => {
           const rawValue = getValue()
