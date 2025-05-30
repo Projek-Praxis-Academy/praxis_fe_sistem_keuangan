@@ -39,8 +39,8 @@ export default function TambahSiswa() {
     try {
       const url =
         jenisTagihan === 'boarding'
-          ? `${process.env.NEXT_PUBLIC_API_URL}/create/siswa/boarding`
-          : `${process.env.NEXT_PUBLIC_API_URL}/create/siswa/konsumsi`
+          ? `${process.env.NEXT_PUBLIC_API_URL}/monitoring-bk/create-siswa/boarding`
+          : `${process.env.NEXT_PUBLIC_API_URL}/monitoring-bk/create-siswa/konsumsi`
 
       const token = localStorage.getItem('token') || ''
 

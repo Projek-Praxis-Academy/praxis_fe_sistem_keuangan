@@ -57,14 +57,14 @@ export default function Dashboard() {
       {/* Dashboard Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card title="PRAXIS ACADEMY" saldo={data.saldoPraxis} tagihan={data.tagihanPraxis} />
-        <Card title="TECHNO NATURE" saldo={data.saldoTechno} tagihan={data.tagihanTechno} />
-        <Card title="Ekstra" saldo={data.saldoEkstra} tagihan={data.tagihanEkstra} />
-        <Card title="Uang Saku" saldo={0} tagihan={data.tagihanUangSaku} />
+        <Card title="TECHNONATURA" saldo={data.saldoTechno} tagihan={data.tagihanTechno} />
+        <Card title="EKSTRAKURIKULER" saldo={data.saldoEkstra} tagihan={data.tagihanEkstra} />
+        <Card title="UANG SAKU SISWA" saldo={0} tagihan={data.tagihanUangSaku} />
       </div>
 
       {/* Rekapitulasi Keseluruhan */}
       <div className="mt-8">
-        <Card title="Rekapitulasi Keseluruhan" saldo={data.rekapSaldo} tagihan={data.rekapTagihan} fullWidth />
+        <Card title="REKAPITULASI KESELURUHAN" saldo={data.rekapSaldo} tagihan={data.rekapTagihan} fullWidth />
       </div>
     </div>
   );

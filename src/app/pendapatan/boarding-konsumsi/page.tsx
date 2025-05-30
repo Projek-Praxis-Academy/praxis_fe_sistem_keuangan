@@ -36,7 +36,7 @@ export default function BoardingKonsumsi() {
     const fetchData = async () => {
       const token = localStorage.getItem('token') || '';
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring/bk`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-bk/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

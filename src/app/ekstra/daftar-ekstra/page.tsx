@@ -23,7 +23,7 @@ export default function DaftarEkstra() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token') || ''
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/ekstra`, {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/ekstra/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

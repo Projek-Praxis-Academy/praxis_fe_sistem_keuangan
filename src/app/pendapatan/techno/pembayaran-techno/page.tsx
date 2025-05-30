@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 
@@ -15,7 +15,7 @@ interface Siswa {
   no_hp_wali: string
 }
 
-export default function PembayaranTechno() {
+function PembayaranTechnoInner() {
   const searchParams = useSearchParams()
   const id_siswa_query = searchParams.get('id_siswa') || ''
 
@@ -95,7 +95,7 @@ export default function PembayaranTechno() {
     }
 
     try {
-      const response = await axios.post('${process.env.NEXT_PUBLIC_API_URL}/pembayaran', data, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/pembayaran`, data, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -265,7 +265,7 @@ export default function PembayaranTechno() {
                 </div>
               </div>
 
-              {/* Catatab */}
+              {/* Catatan */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
                 <textarea
@@ -288,5 +288,13 @@ export default function PembayaranTechno() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PembayaranTechno() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PembayaranTechnoInner />
+    </Suspense>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 
@@ -15,7 +15,7 @@ interface Siswa {
   no_hp_wali: string
 }
 
-export default function PembayaranBoardingKonsumsi() {
+function PembayaranBoardingKonsumsiInner() {
   const searchParams = useSearchParams()
   const id_siswa_query = searchParams.get('id_siswa') || ''
 
@@ -37,7 +37,7 @@ export default function PembayaranBoardingKonsumsi() {
       setError('')
 
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring/bk/pembayaran-siswa/${id_siswa_query}`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-bk/pembayaran-siswa/${id_siswa_query}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -85,7 +85,7 @@ export default function PembayaranBoardingKonsumsi() {
     }
 
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/pembayaran/bk`, data, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-bk/pembayaran`, data, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -183,26 +183,26 @@ export default function PembayaranBoardingKonsumsi() {
                   <label className="block text-sm font-medium mb-1">Boarding</label>
                   <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
-                      <input
-                        id='boarding'
-                        placeholder="1000000"
-                        value={boarding}
-                        onChange={(e) => setBoarding(e.target.value.replace(/\D/g, ''))}
-                        className="px-3 py-2 rounded"
-                      />
+                    <input
+                      id='boarding'
+                      placeholder="1000000"
+                      value={boarding}
+                      onChange={(e) => setBoarding(e.target.value.replace(/\D/g, ''))}
+                      className="px-3 py-2 rounded"
+                    />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Konsumsi</label>
                   <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
-                      <input
-                        id='konsumsi'
-                        placeholder="1000000"
-                        value={konsumsi}
-                        onChange={(e) => setKonsumsi(e.target.value.replace(/\D/g, ''))}
-                        className="px-3 py-2 rounded"
-                      />
+                    <input
+                      id='konsumsi'
+                      placeholder="1000000"
+                      value={konsumsi}
+                      onChange={(e) => setKonsumsi(e.target.value.replace(/\D/g, ''))}
+                      className="px-3 py-2 rounded"
+                    />
                   </div>
                 </div>
               </div>
@@ -223,7 +223,7 @@ export default function PembayaranBoardingKonsumsi() {
                 </div>
               </div>
 
-              {/* Catatab */}
+              {/* Catatan */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
                 <textarea
@@ -247,5 +247,13 @@ export default function PembayaranBoardingKonsumsi() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PembayaranBoardingKonsumsi() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PembayaranBoardingKonsumsiInner />
+    </Suspense>
   )
 }

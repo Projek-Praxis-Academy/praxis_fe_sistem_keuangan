@@ -6,29 +6,62 @@ import { pdf } from '@react-pdf/renderer'
 import PDFTagihan from '@/components/PDFTagihan'
 import Image from 'next/image'
 
+// Define types for the student data
+interface Siswa {
+  id_siswa: number
+  nisn: string
+  nama_siswa: string
+  level: string
+  akademik: string
+}
+
+// Define types for the input tagihan
+interface InputTagihan {
+  kbm: string
+  spp: string
+  pemeliharaan: string
+  sumbangan: string
+  konsumsi: string
+  boarding: string
+  ekstra: string
+  uang_belanja: string
+}
+
+// Define types for the total tagihan
+interface TotalTagihan {
+  kbm: number
+  spp: number
+  pemeliharaan: number
+  sumbangan: number
+  konsumsi: number
+  boarding: number
+  ekstra: number
+  uang_belanja: number
+}
+
 export default function BuatTagihan() {
   // State untuk form tagihan
-  const [nisn, setNisn] = useState('')
-  const [namaSiswa, setNamaSiswa] = useState('')
-  const [level, setLevel] = useState('')
-  const [akademik, setAkademik] = useState('')
-  const [semester, setSemester] = useState('')
-  const [periode, setPeriode] = useState('')
-  const [tanggal, setTanggal] = useState('')
-  const [jatuhTempo, setJatuhTempo] = useState('')
-  const [tunggakan, setTunggakan] = useState('')
-  const [catatan, setCatatan] = useState('')
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [nisn, setNisn] = useState<string>('')
+  const [namaSiswa, setNamaSiswa] = useState<string>('')
+  const [level, setLevel] = useState<string>('')
+  const [akademik, setAkademik] = useState<string>('')
+  const [semester, setSemester] = useState<string>('')
+  const [periode, setPeriode] = useState<string>('')
+  const [tanggal, setTanggal] = useState<string>('')
+  const [jatuhTempo, setJatuhTempo] = useState<string>('')
+  const [tunggakan, setTunggakan] = useState<string>('')
+  const [catatan, setCatatan] = useState<string>('')
+  const [error, setError] = useState<string>('')
+  const [success, setSuccess] = useState<string>('')
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   // State untuk autocomplete
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState([])
-  const [showDropdown, setShowDropdown] = useState(false)
-  const dropdownRef = useRef(null)
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [searchResults, setSearchResults] = useState<Siswa[]>([])
+  const [showDropdown, setShowDropdown] = useState<boolean>(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const [inputTagihan, setInputTagihan] = useState({
+  const [inputTagihan, setInputTagihan] = useState<InputTagihan>({
     kbm: '',
     spp: '',
     pemeliharaan: '',
@@ -39,7 +72,7 @@ export default function BuatTagihan() {
     uang_belanja: ''
   })
 
-  const [totalTagihan, setTotalTagihan] = useState({
+  const [totalTagihan, setTotalTagihan] = useState<TotalTagihan>({
     kbm: 0,
     spp: 0,
     pemeliharaan: 0,
@@ -87,8 +120,8 @@ export default function BuatTagihan() {
 
   // Handle click outside dropdown
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowDropdown(false)
       }
     }
@@ -100,7 +133,7 @@ export default function BuatTagihan() {
   }, [])
 
   // Handle select siswa dari dropdown
-  const handleSelectSiswa = (siswa) => {
+  const handleSelectSiswa = (siswa: Siswa) => {
     setNisn(siswa.nisn)
     setNamaSiswa(siswa.nama_siswa)
     setLevel(siswa.level)
@@ -141,14 +174,14 @@ export default function BuatTagihan() {
       setLevel(data.level)
       setAkademik(data.akademik)
       setTotalTagihan({
-        kbm: parseInt(data.tagihan_uang_kbm.replace(/\./g, '')) || 0,
-        spp: parseInt(data.tagihan_uang_spp.replace(/\./g, '')) || 0,
-        pemeliharaan: parseInt(data.tagihan_uang_pemeliharaan.replace(/\./g, '')) || 0,
-        sumbangan: parseInt(data.tagihan_uang_sumbangan.replace(/\./g, '')) || 0,
-        konsumsi: parseInt(data.tagihan_konsumsi.replace(/\./g, '')) || 0,
-        boarding: parseInt(data.tagihan_boarding.replace(/\./g, '')) || 0,
-        ekstra: parseInt(data.tagihan_ekstra.replace(/\./g, '')) || 0,
-        uang_belanja: parseInt(data.tagihan_uang_saku.replace(/\./g, '')) || 0
+        kbm: parseInt(data.tagihan_uang_kbm?.replace(/\./g, '') || '0') || 0,
+        spp: parseInt(data.tagihan_uang_spp?.replace(/\./g, '') || '0') || 0,
+        pemeliharaan: parseInt(data.tagihan_uang_pemeliharaan?.replace(/\./g, '') || '0') || 0,
+        sumbangan: parseInt(data.tagihan_uang_sumbangan?.replace(/\./g, '') || '0') || 0,
+        konsumsi: parseInt(data.tagihan_konsumsi?.replace(/\./g, '') || '0') || 0,
+        boarding: parseInt(data.tagihan_boarding?.replace(/\./g, '') || '0') || 0,
+        ekstra: parseInt(data.tagihan_ekstra?.replace(/\./g, '') || '0') || 0,
+        uang_belanja: parseInt(data.tagihan_uang_saku?.replace(/\./g, '') || '0') || 0
       })
     } catch (err) {
       console.error(err)
@@ -202,7 +235,7 @@ export default function BuatTagihan() {
       // 4. Kirim ke API
       const token = localStorage.getItem('token')
       const response = await axios.post(
-        '${process.env.NEXT_PUBLIC_API_URL}/tagihan/create',
+        `${process.env.NEXT_PUBLIC_API_URL}/tagihan/create`,
         formData,
         {
           headers: {
@@ -222,15 +255,19 @@ export default function BuatTagihan() {
       a.download = `tagihan_${namaSiswa}.pdf`
       a.click()
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error:', error)
-      setError(error.message || 'Gagal menyimpan tagihan. Silakan coba lagi.')
+      if (error instanceof Error) {
+        setError(error.message || 'Gagal menyimpan tagihan. Silakan coba lagi.')
+      } else {
+        setError('Gagal menyimpan tagihan. Silakan coba lagi.')
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
-  const renderInputField = (label: string, key: keyof typeof inputTagihan) => (
+  const renderInputField = (label: string, key: keyof InputTagihan) => (
     <div>
       <label className="text-sm font-medium">{label}</label>
       <p className="text-xs text-gray-500 mb-1">
@@ -247,22 +284,22 @@ export default function BuatTagihan() {
   )
 
   const tagihanPokok = [
-    { label: 'KBM', key: 'kbm' },
-    { label: 'SPP', key: 'spp' },
-    { label: 'Pemeliharaan', key: 'pemeliharaan' },
-    { label: 'Sumbangan', key: 'sumbangan' }
+    { label: 'KBM', key: 'kbm' as const },
+    { label: 'SPP', key: 'spp' as const },
+    { label: 'Pemeliharaan', key: 'pemeliharaan' as const },
+    { label: 'Sumbangan', key: 'sumbangan' as const }
   ]
 
   const tagihanBulanan = [
-    { label: 'Konsumsi', key: 'konsumsi' },
-    { label: 'Boarding', key: 'boarding' },
-    { label: 'Ekstra Kurikuler', key: 'ekstra' },
-    { label: 'Uang Belanja', key: 'uang_belanja' }
+    { label: 'Konsumsi', key: 'konsumsi' as const },
+    { label: 'Boarding', key: 'boarding' as const },
+    { label: 'Ekstra Kurikuler', key: 'ekstra' as const },
+    { label: 'Uang Belanja', key: 'uang_belanja' as const }
   ]
 
   const sisaTagihan = [...tagihanPokok, ...tagihanBulanan].map(item => ({
     label: item.label,
-    jumlah: totalTagihan[item.key as keyof typeof totalTagihan] - parseInt(inputTagihan[item.key as keyof typeof inputTagihan] || '0')
+    jumlah: totalTagihan[item.key] - parseInt(inputTagihan[item.key] || '0')
   }))
 
   return (
@@ -327,10 +364,10 @@ export default function BuatTagihan() {
             <div><label>Jatuh Tempo</label><input type="date" value={jatuhTempo} onChange={(e) => setJatuhTempo(e.target.value)} className="w-full mt-1 border px-3 py-2 rounded" /></div>
 
             <h3 className="col-span-2 mt-4 font-bold border-b pb-1">Tagihan Pokok</h3>
-            {tagihanPokok.map(item => renderInputField(item.label, item.key as keyof typeof inputTagihan))}
+            {tagihanPokok.map(item => renderInputField(item.label, item.key))}
 
             <h3 className="col-span-2 mt-4 font-bold border-b pb-1">Tagihan Bulanan</h3>
-            {tagihanBulanan.map(item => renderInputField(item.label, item.key as keyof typeof inputTagihan))}
+            {tagihanBulanan.map(item => renderInputField(item.label, item.key))}
 
             <div className="col-span-2">
               <label className="text-sm font-medium">Tunggakan Tahun Ajaran Sebelumnya</label>

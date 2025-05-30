@@ -194,7 +194,7 @@ export default function PendapatanPraxis() {
             />
             <Search size={14} className="absolute left-2 top-2 text-gray-700" />
           </div>
-          <button className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm" onClick={() => router.push('http://127.0.0.1:3000/pendapatan/praxis/tambah-kontrak')}> + Tambah Kontrak</button>
+          <button className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm" onClick={() => router.push('/pendapatan/praxis/tambah-kontrak')}> + Tambah Kontrak</button>
         </div>
       </div>
 

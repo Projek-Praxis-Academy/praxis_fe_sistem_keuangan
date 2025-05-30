@@ -7,13 +7,21 @@ interface Kategori {
   nama_kategori_pengeluaran: string
 }
 
+interface EditSubPengeluaranModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  data: any; // Replace 'any' with a more specific type if available
+  onSave: (payload: any) => void; // Adjust the payload type as needed
+  jenisPengeluaran: string;
+}
+
 export default function EditSubPengeluaranModal({
   isOpen,
   onClose,
   data,
   onSave,
   jenisPengeluaran,
-}) {
+}: EditSubPengeluaranModalProps) {
   const defaultForm = {
      id_sub_pengeluaran: '',
     nama_sub_pengeluaran: '',
@@ -34,7 +42,7 @@ export default function EditSubPengeluaranModal({
         setLoadingKategori(true)
         const token = localStorage.getItem('token') || ''
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/monitoring-pengeluaran/kategori-pengeluaran?type=${jenisPengeluaran}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran/kategori-pengeluaran?type=${jenisPengeluaran}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -69,7 +77,7 @@ export default function EditSubPengeluaranModal({
     }
   }, [data])
 
-  const handleChange = (field, value) => {
+  const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 

@@ -7,7 +7,7 @@ import axios from 'axios'
 
 export default function TambahPengeluaran() {
   const router = useRouter()
-  const [kategoriList, setKategoriList] = useState<{ id_kategori_pengeluaran: string; nama_kategori: string }[]>([])
+  const [kategoriList, setKategoriList] = useState<{ id_kategori_pengeluaran: string; nama_kategori_pengeluaran: string }[]>([])
   const [jenisPengeluaran, setJenisPengeluaran] = useState('')
   const [namaPengeluaran, setNamaPengeluaran] = useState('')
   const [subPengeluaran, setSubPengeluaran] = useState([

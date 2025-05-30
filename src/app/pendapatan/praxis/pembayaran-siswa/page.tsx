@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 
@@ -15,12 +15,11 @@ interface Siswa {
   no_hp_wali: string
 }
 
-export default function PembayaranSiswa() {
+function PembayaranSiswaInner() {
   const searchParams = useSearchParams()
   const id_siswa_query = searchParams.get('id_siswa') || ''
 
   const [siswaDetail, setSiswaDetail] = useState<Siswa | null>(null)
-
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -98,7 +97,7 @@ export default function PembayaranSiswa() {
     }
 
     try {
-      const response = await axios.post('${process.env.NEXT_PUBLIC_API_URL}/pembayaran', data, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/pembayaran`, data, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -296,5 +295,13 @@ export default function PembayaranSiswa() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PembayaranSiswa() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PembayaranSiswaInner />
+    </Suspense>
   )
 }

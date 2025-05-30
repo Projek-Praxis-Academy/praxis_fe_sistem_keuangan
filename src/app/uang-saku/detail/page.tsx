@@ -1,165 +1,148 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import axios from 'axios'
 
-interface Transaksi {
-  id: string
-  tanggal: string
-  nominal: number
-  catatan: string
-  jenis: 'TOPUP' | 'PENGELUARAN'
-}
-
-interface SiswaDetail {
-  id_siswa: number
+interface SiswaUangSaku {
+  id_siswa: string
   nama_siswa: string
   nisn: string
   level: string
-  kategori: string
   akademik: string
-  nama_wali: string
-  no_hp_wali: string
-  pembayaran_uang_saku: {
-    id_pembayaran_uang_saku: string
-    nominal: number
-    tanggal_pembayaran: string
-    catatan: string
-  }[]
-  pengeluaran_uang_saku: {
-    id_pengeluaran_uang_saku: string
-    nominal: number
-    tanggal_pengeluaran: string
-    catatan: string
-  }[]
+  total_uang_saku: number
+  saku_terpakai: number
+  saku_tersisa: number
 }
 
-export default function DetailUangSaku() {
+function DetailUangSakuInner() {
   const searchParams = useSearchParams()
-  const id_siswa_query = searchParams.get('id_siswa') || ''
+  const id_siswa = searchParams.get('id_siswa') || ''
+  const router = useRouter()
 
-  const [siswaDetail, setSiswaDetail] = useState<SiswaDetail | null>(null)
-  const [transaksi, setTransaksi] = useState<Transaksi[]>([])
-  const [saldo, setSaldo] = useState<string>('Rp 0')
+  const [siswaDetail, setSiswaDetail] = useState<SiswaUangSaku | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const fetchDetail = async () => {
-      try {
-        const token = localStorage.getItem('token') || ''
+    if (!id_siswa) return
 
-        // Ambil data detail transaksi
-        const detailRes = await axios.get(
-          `https://fitrack-production.up.railway.app/api/monitoring-uang-saku/detail/${id_siswa_query}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        const data = detailRes.data
-
-        // Gabungkan transaksi topup dan pengeluaran
-        const topup = data.pembayaran_uang_saku.map((item: any) => ({
-          id: item.id_pembayaran_uang_saku,
-          tanggal: item.tanggal_pembayaran,
-          nominal: item.nominal,
-          catatan: item.catatan,
-          jenis: 'TOPUP' as const,
-        }))
-
-        const pengeluaran = data.pengeluaran_uang_saku.map((item: any) => ({
-          id: item.id_pengeluaran_uang_saku,
-          tanggal: item.tanggal_pengeluaran,
-          nominal: item.nominal,
-          catatan: item.catatan,
-          jenis: 'PENGELUARAN' as const,
-        }))
-
-        setSiswaDetail(data)
-        setTransaksi([...topup, ...pengeluaran])
-
-        // Ambil saldo dari endpoint monitoring uang saku
-        const listRes = await axios.get(
-          'https://fitrack-production.up.railway.app/api/monitoring-uang-saku',
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-
-        const siswaMonitoring = listRes.data.data.find(
-          (item: any) => item.id_siswa === Number(id_siswa_query)
-        )
-
-        if (siswaMonitoring && siswaMonitoring.uang_saku?.saldo !== undefined) {
-          setSaldo(`Rp ${siswaMonitoring.uang_saku.saldo.toLocaleString('id-ID')}`)
-        }
-
-      } catch (err) {
-        console.error(err)
-        setError('Gagal mengambil data detail.')
-      } finally {
-        setLoading(false)
-      }
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setError('Token tidak ditemukan. Anda perlu login ulang.')
+      setLoading(false)
+      return
     }
 
-    if (id_siswa_query) fetchDetail()
-
-  }, [id_siswa_query])
-
-  const formatRupiah = (num: number) =>
-    `Rp ${num.toLocaleString('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).slice(3)}` // Menghapus 'Rp' yang sudah ditambahkan di atas
+    axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-uang-saku/detail/${id_siswa}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      }
+    })
+      .then(res => {
+        setSiswaDetail(res.data)
+        setLoading(false)
+      })
+      .catch(err => {
+        setError('Gagal mengambil data siswa.')
+        setLoading(false)
+      })
+  }, [id_siswa])
 
   return (
-    <div className="ml-64 p-8 text-black min-h-screen">
-      <h1 className="text-2xl font-bold text-blue-900 mb-4 text-center">Transaksi Uang Saku Siswa</h1>
+    <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
+      <div className="overflow-x-auto">
+        <div className="bg-white rounded-lg shadow-md p-10 min-w-[700px] w-full max-w-2xl border mx-auto">
+          <h2 className="text-2xl font-bold text-center text-blue-900 mb-3">DETAIL UANG SAKU SISWA</h2>
+          <hr className="border-t-3 border-blue-900 mb-8" />
 
-      {loading && <p>Loading...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-
-      {!loading && siswaDetail && (
-        <>
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <p className="text-lg font-semibold">Nama: <span className="font-normal">{siswaDetail.nama_siswa}</span></p>
-              <p className="text-lg font-semibold">Level: <span className="font-normal">{siswaDetail.level}</span></p>
+          {loading && (
+            <div className="flex justify-center items-center">
+              <div className="spinner"></div>
+              <span className="ml-2">Loading...</span>
             </div>
-            <div className="text-right">
-              <p className="text-lg font-semibold">Saldo Total</p>
-              <p className="text-xl font-bold text-green-700">{saldo}</p>
-            </div>
-          </div>
+          )}
 
-          <div className="overflow-x-auto">
-            <table className="table-fixed w-full border border-blue-900 text-sm">
-              <thead className="bg-blue-900 text-white">
-                <tr>
-                  <th className="w-1/5 border px-4 py-2">Tanggal</th>
-                  <th className="w-1/5 border px-4 py-2">Aksi</th>
-                  <th className="w-1/5 border px-4 py-2">Nominal</th>
-                  <th className="w-2/5 border px-4 py-2">Catatan</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transaksi.map((item, index) => (
-                  <tr key={index} className="text-center border-b">
-                    <td className="border px-4 py-2">{item.tanggal}</td>
-                    <td className="border px-4 py-2">
-                      <span className={`text-white px-2 py-1 rounded text-xs font-semibold ${
-                        item.jenis === 'TOPUP' ? 'bg-green-500' : 'bg-red-500'
-                      }`}>
-                        {item.jenis}
-                      </span>
-                    </td>
-                    <td className="border px-4 py-2">{formatRupiah(item.nominal)}</td>
-                    <td className="border px-4 py-2 text-left">{item.catatan}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+          {error && (
+            <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+              <p className="font-medium">{error}</p>
+            </div>
+          )}
+
+          {siswaDetail && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <input
+                  value={siswaDetail.nama_siswa}
+                  readOnly
+                  className="w-70 border px-3 py-2 rounded bg-gray-100 text-center"
+                />
+                <input
+                  value={`Level ${siswaDetail.level}`}
+                  readOnly
+                  className="ml-20 w-30 border px-3 py-2 rounded bg-gray-100 text-center"
+                />
+                <input
+                  value={siswaDetail.akademik}
+                  readOnly
+                  className="w-30 border px-3 py-2 rounded bg-gray-100 text-center"
+                />
+              </div>
+
+              <input
+                value={`NISN: ${siswaDetail.nisn}`}
+                readOnly
+                className="text-center w-100 border px-3 py-2 rounded bg-gray-100"
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-base font-medium font-bold mb-1">Total Uang Saku</label>
+                  <input
+                    type="text"
+                    value={`Rp${siswaDetail.total_uang_saku.toLocaleString('id-ID')}`}
+                    readOnly
+                    className="border px-3 py-2 rounded w-full bg-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-base font-medium font-bold mb-1">Saku Terpakai</label>
+                  <input
+                    type="text"
+                    value={`Rp${siswaDetail.saku_terpakai.toLocaleString('id-ID')}`}
+                    readOnly
+                    className="border px-3 py-2 rounded w-full bg-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-base font-medium font-bold mb-1">Saku Tersisa</label>
+                  <input
+                    type="text"
+                    value={`Rp${siswaDetail.saku_tersisa.toLocaleString('id-ID')}`}
+                    readOnly
+                    className="border px-3 py-2 rounded w-full bg-gray-100"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={() => router.push('/uang-saku')}
+                className="mt-6 w-full bg-gray-600 text-white py-2 rounded hover:bg-gray-500 transition font-semibold"
+              >
+                Kembali
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
+  )
+}
+
+export default function DetailUangSaku() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DetailUangSakuInner />
+    </Suspense>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 
@@ -15,7 +15,7 @@ interface Siswa {
   no_hp_wali: string
 }
 
-export default function TopUpUangSaku() {
+function TopUpUangSakuInner() {
   const searchParams = useSearchParams()
   const id_siswa_query = searchParams.get('id_siswa') || ''
 
@@ -37,7 +37,7 @@ export default function TopUpUangSaku() {
 
       try {
         const response = await axios.get(
-          `https://fitrack-production.up.railway.app/api/monitoring-uang-saku/topup/${id_siswa_query}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/monitoring-uang-saku/topup/${id_siswa_query}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -73,7 +73,7 @@ export default function TopUpUangSaku() {
 
     try {
       const response = await axios.post(
-        'https://fitrack-production.up.railway.app/api/monitoring-uang-saku/topup',
+        `${process.env.NEXT_PUBLIC_API_URL}/monitoring-uang-saku/topup`,
         data,
         {
           headers: {
@@ -88,7 +88,7 @@ export default function TopUpUangSaku() {
         setTanggalPembayaran('')
         setNominal('')
         setCatatan('')
-        window.location.href = 'http://127.0.0.1:3000/uang-saku'
+        window.location.href = '/uang-saku'
       } else {
         setError(response.data.message || 'Gagal menyimpan top up.')
       }
@@ -157,6 +157,7 @@ export default function TopUpUangSaku() {
                   Tanggal Pembayaran
                 </label>
                 <input
+                  id='tanggalPembayaran'
                   type="date"
                   value={tanggalPembayaran}
                   onChange={(e) => setTanggalPembayaran(e.target.value)}
@@ -167,6 +168,7 @@ export default function TopUpUangSaku() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nominal</label>
                 <input
+                  id='nominal'
                   type="text"
                   placeholder="Rp"
                   value={nominal}
@@ -178,6 +180,7 @@ export default function TopUpUangSaku() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
                 <textarea
+                  id='catatan'
                   value={catatan}
                   onChange={(e) => setCatatan(e.target.value)}
                   className="w-full border px-3 py-2 rounded"
@@ -186,6 +189,7 @@ export default function TopUpUangSaku() {
               </div>
 
               <button
+                type='button'
                 onClick={handleSubmit}
                 className="mt-6 w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 transition font-semibold"
               >
@@ -196,5 +200,13 @@ export default function TopUpUangSaku() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function TopUpUangSaku() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TopUpUangSakuInner />
+    </Suspense>
   )
 }

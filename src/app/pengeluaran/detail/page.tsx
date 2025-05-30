@@ -14,8 +14,14 @@ import {
 
 interface Kategori {
   id_kategori_pengeluaran: string
+  id_jenis_pengeluaran: string
   nama_kategori_pengeluaran: string
+  jenis_pengeluaran: {
+    id_jenis_pengeluaran: string
+    nama_jenis_pengeluaran: string
+  }
 }
+
 
 interface SubPengeluaran {
   id_sub_pengeluaran: string
@@ -24,7 +30,14 @@ interface SubPengeluaran {
   jumlah_item: number
   file_nota: string
   tanggal_pengeluaran: string
-  id_kategori_pengeluaran?: string
+  id_kategori_pengeluaran: string
+  kategori_pengeluaran?: {
+    id_kategori_pengeluaran: string
+    id_jenis_pengeluaran: string
+    nama_kategori_pengeluaran: string
+    created_at: string
+    updated_at: string
+  }
 }
 
 interface JenisPengeluaran {
@@ -126,7 +139,7 @@ export default function DetailPengeluaran() {
 
       // Fetch jenis pengeluaran
       const jenisPengeluaranResponse = await axios.get<{data: PengeluaranItem[]}>(
-        '${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran',
+        `${process.env.NEXT_PUBLIC_API_URL}/monitoring-pengeluaran`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       
@@ -160,6 +173,14 @@ export default function DetailPengeluaran() {
     }
   }
 
+  // Get categories filtered by the current jenis pengeluaran
+  // const getFilteredKategoriList = () => {
+  //   if (!detail) return []
+  //   return kategoriList.filter(
+  //     k => k.id_jenis_pengeluaran === detail.id_jenis_pengeluaran
+  //   )
+  // }
+
   useEffect(() => {
     if (id_pengeluaran_query) {
       fetchDetail()
@@ -191,12 +212,8 @@ export default function DetailPengeluaran() {
     {
       header: 'Kategori',
       accessorKey: 'id_kategori_pengeluaran',
-      cell: ({ row }) => {
-        const kategori = kategoriList.find(
-          k => k.id_kategori_pengeluaran === row.original.id_kategori_pengeluaran?.toString()
-        )
-        return kategori?.nama_kategori_pengeluaran || '-'
-      },
+      cell: ({ row }) =>
+        row.original.kategori_pengeluaran?.nama_kategori_pengeluaran || '-',
     },
     {
       header: 'Nominal',
@@ -244,8 +261,6 @@ export default function DetailPengeluaran() {
       cell: ({ row }) => (
         <div className="flex gap-1">
           <button
-            type="button"
-            id="edit-button"
             onClick={() => {
               setSelectedRow(row.original)
               setModalOpen(true)
@@ -255,8 +270,6 @@ export default function DetailPengeluaran() {
             Edit
           </button>
           <button
-            type="button"
-            id="delete-button"
             onClick={() => handleDelete(row.original.id_sub_pengeluaran)}
             className="px-2 py-1 bg-red-600 text-white rounded"
           >

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 
@@ -24,7 +24,7 @@ interface DetailSiswaEkstra {
   catatan: string
 }
 
-export default function DetailSiswaEkstra() {
+function DetailSiswaEkstraInner() {
   const searchParams = useSearchParams()
   const id_ekstra_siswa = searchParams.get('id_ekstra_siswa') || ''
 
@@ -73,12 +73,11 @@ export default function DetailSiswaEkstra() {
 
       {loading && <p>Loading...</p>}
       {/* Alert Error */}
-          {error && (
-            <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
-              <p className="font-medium">{error}</p>
-            </div>
-          )}
-
+      {error && (
+        <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+          <p className="font-medium">{error}</p>
+        </div>
+      )}
 
       {!loading && detailSiswa && (
         <>
@@ -125,5 +124,13 @@ export default function DetailSiswaEkstra() {
         </>
       )}
     </div>
+  )
+}
+
+export default function DetailSiswaEkstra() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DetailSiswaEkstraInner />
+    </Suspense>
   )
 }

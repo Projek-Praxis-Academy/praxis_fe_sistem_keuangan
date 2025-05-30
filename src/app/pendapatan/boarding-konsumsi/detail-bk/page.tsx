@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 
@@ -31,7 +31,7 @@ interface Rekap {
   catatan: string[]
 }
 
-export default function DetailPembayaranBk() {
+function DetailPembayaranBkInner() {
   const searchParams = useSearchParams()
   const id_siswa_query = searchParams.get('id_siswa') || ''
 
@@ -43,7 +43,7 @@ export default function DetailPembayaranBk() {
     const fetchDetail = async () => {
       try {
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/monitoring/bk/detail-pembayaran/${id_siswa_query}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/monitoring-bk/detail-pembayaran/${id_siswa_query}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -155,5 +155,13 @@ export default function DetailPembayaranBk() {
         </table>
       </div>
     </div>
+  )
+}
+
+export default function DetailPembayaranBk() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DetailPembayaranBkInner />
+    </Suspense>
   )
 }

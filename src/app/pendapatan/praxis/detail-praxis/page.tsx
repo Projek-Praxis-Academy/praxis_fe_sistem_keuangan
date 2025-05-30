@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import axios from 'axios'
 
@@ -16,7 +16,7 @@ interface Siswa {
   tagihan_uang_sumbangan: number | null
 }
 
-export default function KontrakSiswa() {
+function DetailPraxisInner() {
   const searchParams = useSearchParams()
   const id_siswa = searchParams.get('id_siswa') || ''
   const router = useRouter()
@@ -119,7 +119,7 @@ export default function KontrakSiswa() {
                 <div>
                   <label className="block text-base font-medium font-bold mb-1">KBM</label>
                   <input
-                    type="text" // ubah dari 'number' ke 'text'
+                    type="text"
                     value={
                       siswaDetail.tagihan_uang_kbm != null
                         ? `Rp${siswaDetail.tagihan_uang_kbm.toLocaleString('id-ID')}`
@@ -133,7 +133,7 @@ export default function KontrakSiswa() {
                 <div>
                   <label className="block text-base font-medium font-bold mb-1">SPP</label>
                   <input
-                    type="text" // ubah dari 'number' ke 'text'
+                    type="text"
                     value={
                       siswaDetail.tagihan_uang_spp != null
                         ? `Rp${siswaDetail.tagihan_uang_spp.toLocaleString('id-ID')}`
@@ -146,7 +146,7 @@ export default function KontrakSiswa() {
                 <div>
                   <label className="block text-base font-medium font-bold mb-1">Pemeliharaan</label>
                   <input
-                    type="text" // ubah dari 'number' ke 'text'
+                    type="text"
                     value={
                       siswaDetail.tagihan_uang_pemeliharaan != null
                         ? `Rp${siswaDetail.tagihan_uang_pemeliharaan.toLocaleString('id-ID')}`
@@ -158,16 +158,16 @@ export default function KontrakSiswa() {
                 </div>
                 <div>
                   <label className="block text-base font-medium font-bold mb-1">Sumbangan</label>
-                    <input
-                      type="text" // ubah dari 'number' ke 'text'
-                      value={
-                        siswaDetail.tagihan_uang_sumbangan != null
-                          ? `Rp${siswaDetail.tagihan_uang_sumbangan.toLocaleString('id-ID')}`
-                          : '-'
-                      }
-                      readOnly
-                      className="border px-3 py-2 rounded w-full bg-gray-100"
-                    />
+                  <input
+                    type="text"
+                    value={
+                      siswaDetail.tagihan_uang_sumbangan != null
+                        ? `Rp${siswaDetail.tagihan_uang_sumbangan.toLocaleString('id-ID')}`
+                        : '-'
+                    }
+                    readOnly
+                    className="border px-3 py-2 rounded w-full bg-gray-100"
+                  />
                 </div>
               </div>
 
@@ -182,5 +182,13 @@ export default function KontrakSiswa() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function DetailPraxis() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DetailPraxisInner />
+    </Suspense>
   )
 }

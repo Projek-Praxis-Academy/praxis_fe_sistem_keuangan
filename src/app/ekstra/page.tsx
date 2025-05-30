@@ -32,7 +32,7 @@ export default function Ekstra() {
       setIsLoading(true)
       try {
         const token = localStorage.getItem('token') || ''
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra`, {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -45,6 +45,8 @@ export default function Ekstra() {
             no: index + 1,
             id_siswa: item.id_siswa,
             nama_siswa: item.nama_siswa,
+            nisn: item.nisn,
+            akademik: item.akademik,
             level: item.level ?? '',
             ekstra: item.ekstra || []
           }))
@@ -55,7 +57,7 @@ export default function Ekstra() {
   
           // Cari level pertama yang ada dalam data, fallback ke "I"
           const firstAvailableLevel = levels.find(level =>
-            formattedData.some(item => item.level === level)
+            formattedData.some((item: { level: string }) => item.level === level)
           ) || "I"
           setSelectedLevel(firstAvailableLevel) // Setel level pertama
   
@@ -136,14 +138,24 @@ export default function Ekstra() {
               {ekstraList.length > 0 ? (
                 ekstraList.map((e: any, index: number) => (
                   <div key={index} className="border-b last:border-b-0 py-1">
-                    <FileSignature
-                      id='bayar-ekstra'
-                      className="text-gray-600 cursor-pointer"
+                    <span
+                      id="bayar-ekstra"
                       title={`Bayar ${e.nama_ekstra}`}
-                      onClick={() =>
+                      className="text-gray-600 cursor-pointer"
+                      onClick={() => {
+                        // Simpan data siswa ke localStorage
+                        localStorage.setItem('ekstra_siswa_detail', JSON.stringify({
+                          id_siswa,
+                          nama_siswa: row.original.nama_siswa,
+                          nisn: row.original.nisn,
+                          level: row.original.level,
+                          akademik: row.original.akademik,
+                        }))
                         router.push(`/ekstra/pembayaran-ekstra?id_siswa=${id_siswa}&id_ekstra_siswa=${e.id_ekstra_siswa}`)
-                      }
-                    />
+                      }}
+                    >
+                      <FileSignature />
+                    </span>
                   </div>
                 ))
               ) : (
@@ -165,14 +177,16 @@ export default function Ekstra() {
               {ekstraList.length > 0 ? (
                 ekstraList.map((e: any, index: number) => (
                   <div key={index} className="border-b last:border-b-0 py-1">
-                    <CreditCard
+                    <span
                       id='riwayat-ekstra'
                       className="text-gray-600 cursor-pointer"
                       title={`Riwayat ${e.nama_ekstra}`}
                       onClick={() =>
                         router.push(`/ekstra/detail-siswa-ekstra?id_siswa=${id_siswa}&id_ekstra_siswa=${e.id_ekstra_siswa}`)
                       }
-                    />
+                    >
+                    <CreditCard />
+                    </span>
                   </div>
                 ))
               ) : (

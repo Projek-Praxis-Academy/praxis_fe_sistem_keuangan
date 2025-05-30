@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 
@@ -15,7 +15,7 @@ interface Siswa {
   no_hp_wali: string
 }
 
-export default function PengeluaranUangSaku() {
+function PengeluaranUangSakuInner() {
   const searchParams = useSearchParams()
   const id_siswa_query = searchParams.get('id_siswa') || ''
 
@@ -37,7 +37,7 @@ export default function PengeluaranUangSaku() {
 
       try {
         const response = await axios.get(
-          `https://fitrack-production.up.railway.app/api/monitoring-uang-saku/pengeluaran/${id_siswa_query}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/monitoring-uang-saku/pengeluaran/${id_siswa_query}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -73,7 +73,7 @@ export default function PengeluaranUangSaku() {
 
     try {
       const response = await axios.post(
-        'https://fitrack-production.up.railway.app/api/monitoring-uang-saku/pengeluaran',
+        `${process.env.NEXT_PUBLIC_API_URL}/monitoring-uang-saku/pengeluaran`,
         data,
         {
           headers: {
@@ -88,7 +88,7 @@ export default function PengeluaranUangSaku() {
         setTanggalPengeluaran('')
         setNominal('')
         setCatatan('')
-        window.location.href = 'http://127.0.0.1:3000/uang-saku'
+        window.location.href = `/uang-saku`
       } else {
         setError(response.data.message || 'Gagal menyimpan pengeluaran.')
       }
@@ -157,6 +157,7 @@ export default function PengeluaranUangSaku() {
                   Tanggal Pengeluaran
                 </label>
                 <input
+                  id='tanggalPembayaran'
                   type="date"
                   value={tanggalPengeluaran}
                   onChange={(e) => setTanggalPengeluaran(e.target.value)}
@@ -169,6 +170,7 @@ export default function PengeluaranUangSaku() {
                 <div className="flex items-center border rounded px-2 bg-white">
                     <span className="text-gray-500 text-sm mr-1">Rp</span>
                       <input
+                        id='nominal'
                         type="text"
                         placeholder="1000000"
                         value={nominal}
@@ -181,6 +183,7 @@ export default function PengeluaranUangSaku() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
                 <textarea
+                  id='catatan'
                   value={catatan}
                   onChange={(e) => setCatatan(e.target.value)}
                   className="w-full border px-3 py-2 rounded"
@@ -189,6 +192,7 @@ export default function PengeluaranUangSaku() {
               </div>
 
               <button
+                type='button'
                 onClick={handleSubmit}
                 className="mt-6 w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 transition font-semibold"
               >
@@ -199,5 +203,13 @@ export default function PengeluaranUangSaku() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PengeluaranUangSaku() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PengeluaranUangSakuInner />
+    </Suspense>
   )
 }

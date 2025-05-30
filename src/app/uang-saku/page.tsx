@@ -38,7 +38,7 @@ export default function MonitoringUangSaku() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token') || ''
-        const response = await axios.get('https://fitrack-production.up.railway.app/api/monitoring-uang-saku', {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-uang-saku`, {
           headers: { Authorization: `Bearer ${token}` },
         })
 
@@ -147,6 +147,7 @@ export default function MonitoringUangSaku() {
           </select>
           <div className="relative">
             <input
+              id='search-input'
               type="text"
               placeholder="Search..."
               className="px-2 py-1 pl-8 bg-gray-300 text-black rounded-md text-sm"

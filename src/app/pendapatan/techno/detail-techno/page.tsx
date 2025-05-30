@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import axios from 'axios'
 
@@ -16,7 +16,7 @@ interface Siswa {
   tagihan_uang_sumbangan: number | null
 }
 
-export default function DetailTechno() {
+function DetailTechnoInner() {
   const searchParams = useSearchParams()
   const id_siswa = searchParams.get('id_siswa') || ''
   const router = useRouter()
@@ -28,7 +28,6 @@ export default function DetailTechno() {
   useEffect(() => {
     if (!id_siswa) return
 
-    // Ambil token dari localStorage
     const token = localStorage.getItem('token')
     if (!token) {
       setError('Token tidak ditemukan. Anda perlu login ulang.')
@@ -36,7 +35,6 @@ export default function DetailTechno() {
       return
     }
 
-    // Request API untuk mengambil data siswa
     axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-techno/detail-kontrak/${id_siswa}`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -72,7 +70,7 @@ export default function DetailTechno() {
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="overflow-x-auto">
         <div className="bg-white rounded-lg shadow-md p-10 min-w-[700px] w-full max-w-2xl border mx-auto">
-          <h2 className="text-2xl font-bold text-center text-blue-900 mb-3">KONTRAK SISWA TECHNONATURA</h2>
+          <h2 className="text-2xl text-bold text-center text-blue-900 mb-3">KONTRAK SISWA TECHNONATURA</h2>
           <hr className="border-t-3 border-blue-900 mb-8" />
 
           {loading && (
@@ -117,9 +115,9 @@ export default function DetailTechno() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-base font-medium font-bold mb-1">KBM</label>
+                  <label className="block text-base font-medium text-bold mb-1">KBM</label>
                   <input
-                    type="text" // ubah dari 'number' ke 'text'
+                    type="text"
                     value={
                       siswaDetail.tagihan_uang_kbm != null
                         ? `Rp${siswaDetail.tagihan_uang_kbm.toLocaleString('id-ID')}`
@@ -131,9 +129,9 @@ export default function DetailTechno() {
                 </div>
 
                 <div>
-                  <label className="block text-base font-medium font-bold mb-1">SPP</label>
+                  <label className="block text-base font-medium text-bold mb-1">SPP</label>
                   <input
-                    type="text" // ubah dari 'number' ke 'text'
+                    type="text"
                     value={
                       siswaDetail.tagihan_uang_spp != null
                         ? `Rp${siswaDetail.tagihan_uang_spp.toLocaleString('id-ID')}`
@@ -144,9 +142,9 @@ export default function DetailTechno() {
                   />
                 </div>
                 <div>
-                  <label className="block text-base font-medium font-bold mb-1">Pemeliharaan</label>
+                  <label className="block text-base font-medium text-bold mb-1">Pemeliharaan</label>
                   <input
-                    type="text" // ubah dari 'number' ke 'text'
+                    type="text"
                     value={
                       siswaDetail.tagihan_uang_pemeliharaan != null
                         ? `Rp${siswaDetail.tagihan_uang_pemeliharaan.toLocaleString('id-ID')}`
@@ -157,17 +155,17 @@ export default function DetailTechno() {
                   />
                 </div>
                 <div>
-                  <label className="block text-base font-medium font-bold mb-1">Sumbangan</label>
-                    <input
-                      type="text" // ubah dari 'number' ke 'text'
-                      value={
-                        siswaDetail.tagihan_uang_sumbangan != null
-                          ? `Rp${siswaDetail.tagihan_uang_sumbangan.toLocaleString('id-ID')}`
-                          : '-'
-                      }
-                      readOnly
-                      className="border px-3 py-2 rounded w-full bg-gray-100"
-                    />
+                  <label className="block text-base font-medium text-bold mb-1">Sumbangan</label>
+                  <input
+                    type="text"
+                    value={
+                      siswaDetail.tagihan_uang_sumbangan != null
+                        ? `Rp${siswaDetail.tagihan_uang_sumbangan.toLocaleString('id-ID')}`
+                        : '-'
+                    }
+                    readOnly
+                    className="border px-3 py-2 rounded w-full bg-gray-100"
+                  />
                 </div>
               </div>
 
@@ -184,3 +182,13 @@ export default function DetailTechno() {
     </div>
   )
 }
+
+export default function DetailTechno() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DetailTechnoInner />
+    </Suspense>
+  )
+}
+
+
