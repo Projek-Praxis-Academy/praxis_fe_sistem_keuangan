@@ -72,22 +72,54 @@ export default function Dashboard() {
 
 // Komponen Card
 function Card({ title, saldo, tagihan, fullWidth }: { title: string; saldo: number; tagihan: number; fullWidth?: boolean }) {
-  // Format angka ke rupiah
-  const formatRupiah = (angka: number) => {
-    return angka.toLocaleString("id-ID", { style: "currency", currency: "IDR" });
+  // Format angka ke rupiah dengan opsi minimum fraction digits
+  const formatRupiah = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount);
   };
 
   return (
     <div className={`p-6 rounded-lg shadow-md bg-blue-900 text-white ${fullWidth ? "w-full" : ""}`}>
-      <h2 className="font-bold text-lg">{title}</h2>
-      {saldo !== 0 && (
-        <>
-          <p className="text-sm mt-2">Saldo saat ini</p>
-          <input id="saldo-saat-ini" type="text" readOnly value={formatRupiah(saldo)} className="w-full p-3 mt-1 bg-white text-black rounded-md" />
-        </>
-      )}
-      <p className="text-sm mt-2">Tagihan saat ini</p>
-      <input id="tagihan-saat-ini" type="text" readOnly value={formatRupiah(tagihan)} className="w-full p-3 mt-1 bg-white text-black rounded-md" />
+      <h2 className="font-bold text-lg mb-4">{title}</h2>
+      
+      <div className="space-y-4">
+        {saldo !== 0 && (
+          <div>
+            <label htmlFor="saldo-saat-ini" className="block text-sm mb-1">
+              Saldo saat ini
+            </label>
+            <div className="relative">
+              <input
+                id="saldo-saat-ini"
+                type="text"
+                readOnly
+                value={formatRupiah(saldo)}
+                className="w-full p-3 bg-gray-100 text-gray-800 rounded-md border-none focus:ring-0 cursor-default"
+                onMouseEnter={(e) => e.currentTarget.blur()}
+              />
+            </div>
+          </div>
+        )}
+        
+        <div>
+          <label htmlFor="tagihan-saat-ini" className="block text-sm mb-1">
+            Tagihan saat ini
+          </label>
+          <div className="relative">
+            <input
+              id="tagihan-saat-ini"
+              type="text"
+              readOnly
+              value={formatRupiah(tagihan)}
+              className="w-full p-3 bg-gray-100 text-gray-800 rounded-md border-none focus:ring-0 cursor-default"
+              onMouseEnter={(e) => e.currentTarget.blur()}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

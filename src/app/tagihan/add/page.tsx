@@ -1,12 +1,10 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { FilePlus2 } from 'lucide-react'
-import axios from 'axios'
 import { pdf } from '@react-pdf/renderer'
 import PDFTagihan from '@/components/PDFTagihan'
-import Image from 'next/image'
+import axios from 'axios'
 
-// Define types for the student data
 interface Siswa {
   id_siswa: number
   nisn: string
@@ -15,7 +13,6 @@ interface Siswa {
   akademik: string
 }
 
-// Define types for the input tagihan
 interface InputTagihan {
   kbm: string
   spp: string
@@ -27,7 +24,6 @@ interface InputTagihan {
   uang_belanja: string
 }
 
-// Define types for the total tagihan
 interface TotalTagihan {
   kbm: number
   spp: number
@@ -40,11 +36,19 @@ interface TotalTagihan {
 }
 
 export default function BuatTagihan() {
-  // State untuk form tagihan
+  // Autocomplete state
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [searchResults, setSearchResults] = useState<Siswa[]>([])
+  const [showDropdown, setShowDropdown] = useState<boolean>(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Siswa terpilih
   const [nisn, setNisn] = useState<string>('')
   const [namaSiswa, setNamaSiswa] = useState<string>('')
   const [level, setLevel] = useState<string>('')
   const [akademik, setAkademik] = useState<string>('')
+
+  // Form tagihan
   const [semester, setSemester] = useState<string>('')
   const [periode, setPeriode] = useState<string>('')
   const [tanggal, setTanggal] = useState<string>('')
@@ -54,12 +58,6 @@ export default function BuatTagihan() {
   const [error, setError] = useState<string>('')
   const [success, setSuccess] = useState<string>('')
   const [isLoading, setIsLoading] = useState<boolean>(false)
-
-  // State untuk autocomplete
-  const [searchQuery, setSearchQuery] = useState<string>('')
-  const [searchResults, setSearchResults] = useState<Siswa[]>([])
-  const [showDropdown, setShowDropdown] = useState<boolean>(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const [inputTagihan, setInputTagihan] = useState<InputTagihan>({
     kbm: '',
@@ -83,28 +81,23 @@ export default function BuatTagihan() {
     uang_belanja: 0
   })
 
-  // Fetch data autocomplete
+  // Fetch autocomplete siswa
   const fetchSearchResults = async (query: string) => {
     if (!query || query.length < 3) {
       setSearchResults([])
       return
     }
-
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/cari-siswa?query=${query}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       )
-      
       if (response.data.status === 'success') {
         setSearchResults(response.data.data)
         setShowDropdown(true)
       }
-    } catch (error) {
-      console.error('Error fetching search results:', error)
+    } catch {
       setSearchResults([])
     }
   }
@@ -114,7 +107,6 @@ export default function BuatTagihan() {
     const timer = setTimeout(() => {
       fetchSearchResults(searchQuery)
     }, 300)
-
     return () => clearTimeout(timer)
   }, [searchQuery])
 
@@ -125,11 +117,8 @@ export default function BuatTagihan() {
         setShowDropdown(false)
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   // Handle select siswa dari dropdown
@@ -138,76 +127,60 @@ export default function BuatTagihan() {
     setNamaSiswa(siswa.nama_siswa)
     setLevel(siswa.level)
     setAkademik(siswa.akademik)
-    setSearchQuery(`${siswa.nisn}`)
+    setSearchQuery(`${siswa.nisn} - ${siswa.nama_siswa}`)
     setShowDropdown(false)
-    
-    // Fetch data tagihan siswa
-    fetchTagihanByNisn(siswa.nisn)
   }
 
-  const fetchTagihanByNisn = async (nisn: string) => {
-    if (!nisn) {
-      // Reset data jika NISN kosong
-      setNamaSiswa('')
-      setLevel('')
-      setAkademik('')
-      setTotalTagihan({
-        kbm: 0,
-        spp: 0,
-        pemeliharaan: 0,
-        sumbangan: 0,
-        konsumsi: 0,
-        boarding: 0,
-        ekstra: 0,
-        uang_belanja: 0
-      })
-      return
+  // Fetch tagihan otomatis saat nisn valid
+  useEffect(() => {
+    const fetchTagihan = async () => {
+      if (!nisn || nisn.length < 5) {
+        setTotalTagihan({
+          kbm: 0, spp: 0, pemeliharaan: 0, sumbangan: 0,
+          konsumsi: 0, boarding: 0, ekstra: 0, uang_belanja: 0
+        })
+        return
+      }
+      try {
+        const token = localStorage.getItem('token')
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tagihan/${nisn}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const response = await res.json()
+        const data = response.data || {}
+        setTotalTagihan({
+          kbm: parseInt(data.tagihan_uang_kbm?.replace(/\./g, '') || '0') || 0,
+          spp: parseInt(data.tagihan_uang_spp?.replace(/\./g, '') || '0') || 0,
+          pemeliharaan: parseInt(data.tagihan_uang_pemeliharaan?.replace(/\./g, '') || '0') || 0,
+          sumbangan: parseInt(data.tagihan_uang_sumbangan?.replace(/\./g, '') || '0') || 0,
+          konsumsi: 0, boarding: 0, ekstra: 0, uang_belanja: 0
+        })
+      } catch {
+        setTotalTagihan({
+          kbm: 0, spp: 0, pemeliharaan: 0, sumbangan: 0,
+          konsumsi: 0, boarding: 0, ekstra: 0, uang_belanja: 0
+        })
+      }
     }
-
-    try {
-      const token = localStorage.getItem('token')
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tagihan/${nisn}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      const data = res.data
-      setNamaSiswa(data.nama_siswa)
-      setLevel(data.level)
-      setAkademik(data.akademik)
-      setTotalTagihan({
-        kbm: parseInt(data.tagihan_uang_kbm?.replace(/\./g, '') || '0') || 0,
-        spp: parseInt(data.tagihan_uang_spp?.replace(/\./g, '') || '0') || 0,
-        pemeliharaan: parseInt(data.tagihan_uang_pemeliharaan?.replace(/\./g, '') || '0') || 0,
-        sumbangan: parseInt(data.tagihan_uang_sumbangan?.replace(/\./g, '') || '0') || 0,
-        konsumsi: parseInt(data.tagihan_konsumsi?.replace(/\./g, '') || '0') || 0,
-        boarding: parseInt(data.tagihan_boarding?.replace(/\./g, '') || '0') || 0,
-        ekstra: parseInt(data.tagihan_ekstra?.replace(/\./g, '') || '0') || 0,
-        uang_belanja: parseInt(data.tagihan_uang_saku?.replace(/\./g, '') || '0') || 0
-      })
-    } catch (err) {
-      console.error(err)
-      setError('Gagal mengambil data tagihan. Pastikan NISN valid.')
-    }
-  }
+    fetchTagihan()
+  }, [nisn])
 
   const formatRupiah = (val: number | string) => 'Rp ' + (parseInt(val as string) || 0).toLocaleString('id-ID')
 
-  const handleGenerateAndUpload = async () => {
+  const handleGeneratePDF = async () => {
     setIsLoading(true)
     setError('')
     setSuccess('')
 
     try {
-      // Validasi data
-      if (!nisn || !namaSiswa) {
-        throw new Error('NISN dan Nama Siswa harus diisi')
-      }
+      if (!nisn) throw new Error('NISN harus diisi')
 
       // 1. Generate PDF sebagai Blob
       const pdfBlob = await pdf(
         <PDFTagihan
           data={{
-            namaSiswa,
             nisn,
+            namaSiswa,
             level,
             akademik,
             semester,
@@ -223,7 +196,7 @@ export default function BuatTagihan() {
       ).toBlob()
 
       // 2. Konversi Blob ke File
-      const pdfFile = new File([pdfBlob], `tagihan_${namaSiswa}_${Date.now()}.pdf`, {
+      const pdfFile = new File([pdfBlob], `tagihan_${nisn}_${Date.now()}.pdf`, {
         type: 'application/pdf'
       })
 
@@ -234,54 +207,64 @@ export default function BuatTagihan() {
 
       // 4. Kirim ke API
       const token = localStorage.getItem('token')
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/tagihan/create`,
-        formData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      )
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tagihan/create`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      })
 
-      // 5. Tampilkan pesan sukses
-      setSuccess('Tagihan berhasil dibuat dan disimpan!')
-      
-      // 6. Download PDF otomatis
+      const resJson = await response.json()
+      if (!response.ok) {
+        throw new Error(resJson.message || 'Gagal menyimpan tagihan.')
+      }
+
+      setSuccess('Tagihan berhasil dibuat dan diunggah!')
+
+      // 5. Download PDF otomatis
       const url = URL.createObjectURL(pdfBlob)
       const a = document.createElement('a')
       a.href = url
       a.download = `tagihan_${namaSiswa}.pdf`
       a.click()
-
     } catch (error: unknown) {
-      console.error('Error:', error)
       if (error instanceof Error) {
-        setError(error.message || 'Gagal menyimpan tagihan. Silakan coba lagi.')
+        setError(error.message || 'Gagal membuat tagihan. Silakan coba lagi.')
       } else {
-        setError('Gagal menyimpan tagihan. Silakan coba lagi.')
+        setError('Gagal membuat tagihan. Silakan coba lagi.')
       }
     } finally {
       setIsLoading(false)
     }
   }
 
-  const renderInputField = (label: string, key: keyof InputTagihan) => (
-    <div>
-      <label className="text-sm font-medium">{label}</label>
-      <p className="text-xs text-gray-500 mb-1">
-        Total Tagihan: {formatRupiah(totalTagihan[key])}
-      </p>
-      <input
-        type="number"
-        value={inputTagihan[key]}
-        onChange={(e) => setInputTagihan({ ...inputTagihan, [key]: e.target.value })}
-        className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
-        placeholder={`Jumlah ${label}`}
-      />
-    </div>
-  )
+  const renderInputField = (label: string, key: keyof InputTagihan) => {
+    // Ambil nilai input dan konversi ke format rupiah
+    const value = inputTagihan[key];
+    const formatted = value ? formatRupiah(value) : 'Rp 0';
+
+    return (
+      <div key={key}>
+        <label className="text-sm font-medium">{label}</label>
+        <p className="text-xs text-gray-500 mb-1">
+          Total Tagihan: {formatRupiah(totalTagihan[key])}
+        </p>
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => setInputTagihan({ ...inputTagihan, [key]: e.target.value })}
+          className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
+          placeholder={`Jumlah ${label}`}
+          min={0}
+          step={1000}
+        />
+        <div className="text-xs text-blue-700 mt-1">
+          {formatted}
+        </div>
+      </div>
+    );
+  }
 
   const tagihanPokok = [
     { label: 'KBM', key: 'kbm' as const },
@@ -297,11 +280,6 @@ export default function BuatTagihan() {
     { label: 'Uang Belanja', key: 'uang_belanja' as const }
   ]
 
-  const sisaTagihan = [...tagihanPokok, ...tagihanBulanan].map(item => ({
-    label: item.label,
-    jumlah: totalTagihan[item.key] - parseInt(inputTagihan[item.key] || '0')
-  }))
-
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="overflow-x-auto">
@@ -315,9 +293,10 @@ export default function BuatTagihan() {
 
           <form onSubmit={(e) => {
             e.preventDefault()
-            handleGenerateAndUpload()
+            handleGeneratePDF()
           }} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Field NISN dengan autocomplete */}
+
+            {/* Autocomplete NISN/Nama Siswa */}
             <div className="col-span-2 relative" ref={dropdownRef}>
               <label className="text-sm font-medium">Cari Siswa (NISN/Nama)</label>
               <input
@@ -334,19 +313,20 @@ export default function BuatTagihan() {
                 }}
                 className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
                 placeholder="Masukkan NISN atau Nama Siswa"
+                autoComplete="off"
               />
-              
               {showDropdown && searchResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                <div
+                  className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                >
                   {searchResults.map((siswa) => (
                     <div
                       key={siswa.id_siswa}
                       className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                       onClick={() => handleSelectSiswa(siswa)}
                     >
-                      <div className="font-medium">{siswa.nisn}</div>
-                      <div className="text-sm">{siswa.nama_siswa}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="font-medium">{siswa.nisn} - {siswa.nama_siswa}</div>
+                      <div className="text-sm text-gray-500">
                         {siswa.level} - {siswa.akademik}
                       </div>
                     </div>
@@ -355,13 +335,67 @@ export default function BuatTagihan() {
               )}
             </div>
 
-            <div><label>Nama Siswa</label><p className="mt-1 bg-gray-100 px-3 py-2 rounded">{namaSiswa}</p></div>
-            <div><label>Level</label><p className="mt-1 bg-gray-100 px-3 py-2 rounded">{level}</p></div>
-            <div><label>Akademik</label><p className="mt-1 bg-gray-100 px-3 py-2 rounded">{akademik}</p></div>
-            <div><label>Semester</label><input value={semester} onChange={(e) => setSemester(e.target.value)} className="w-full mt-1 border px-3 py-2 rounded" /></div>
-            <div><label>Periode</label><input value={periode} onChange={(e) => setPeriode(e.target.value)} className="w-full mt-1 border px-3 py-2 rounded" /></div>
-            <div><label>Tanggal Tagihan</label><input type="date" value={tanggal} onChange={(e) => setTanggal(e.target.value)} className="w-full mt-1 border px-3 py-2 rounded" /></div>
-            <div><label>Jatuh Tempo</label><input type="date" value={jatuhTempo} onChange={(e) => setJatuhTempo(e.target.value)} className="w-full mt-1 border px-3 py-2 rounded" /></div>
+            {/* Info siswa */}
+            <div className="col-span-2">
+              <div className="bg-gray-50 p-3 rounded-md">
+                <h4 className="font-medium text-sm mb-1">Informasi Siswa</h4>
+                {nisn ? (
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-gray-500">NISN:</span> {nisn}
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Nama:</span> {namaSiswa}
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Level:</span> {level}
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Akademik:</span> {akademik}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Silakan cari dan pilih siswa</p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Semester</label>
+              <input
+                value={semester}
+                onChange={(e) => setSemester(e.target.value)}
+                className="w-full mt-1 border px-3 py-2 rounded"
+                placeholder="Semester"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Periode</label>
+              <input
+                value={periode}
+                onChange={(e) => setPeriode(e.target.value)}
+                className="w-full mt-1 border px-3 py-2 rounded"
+                placeholder="Periode"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Tanggal Tagihan</label>
+              <input
+                type="date"
+                value={tanggal}
+                onChange={(e) => setTanggal(e.target.value)}
+                className="w-full mt-1 border px-3 py-2 rounded"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Jatuh Tempo</label>
+              <input
+                type="date"
+                value={jatuhTempo}
+                onChange={(e) => setJatuhTempo(e.target.value)}
+                className="w-full mt-1 border px-3 py-2 rounded"
+              />
+            </div>
 
             <h3 className="col-span-2 mt-4 font-bold border-b pb-1">Tagihan Pokok</h3>
             {tagihanPokok.map(item => renderInputField(item.label, item.key))}
@@ -383,6 +417,7 @@ export default function BuatTagihan() {
               <label className="text-sm font-medium">Catatan</label>
               <textarea
                 value={catatan}
+                placeholder='Masukkan catatan atau keterangan tambahan'
                 onChange={(e) => setCatatan(e.target.value)}
                 className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
                 rows={3}
