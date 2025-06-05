@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import { Search, FileSignature, CreditCard } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -23,12 +23,14 @@ export default function PendapatanPraxis() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLevel, setSelectedLevel] = useState(() => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('selectedLevel') || 'X'
+    return localStorage.getItem('selectedLevel') || ''
   }
-  return 'X'
+  return ''
 })
 
   const [data, setData] = useState<Siswa[]>([])
+  const [highlightNama, setHighlightNama] = useState<string | null>(null)
+  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const router = useRouter()
 
   // Konversi "1.000.000" ke 1000000
@@ -52,16 +54,28 @@ export default function PendapatanPraxis() {
           },
         });
 
-        // Ambil array siswa dari response.data.data.data
+        // Ambil array siswa dari response.data.data
         const siswaArray = response.data.data?.data || [];
 
         const fetchedData = siswaArray.map((item: any) => {
-          const tagihan = item.tagihan || {};
+          const tagihan = item.tagihan;
 
-          const kbm = parseFormattedNumber(tagihan.tagihan_uang_kbm);
-          const spp = parseFormattedNumber(tagihan.tagihan_uang_spp);
-          const pemeliharaan = parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan);
-          const sumbanganVal = parseFormattedNumber(tagihan.tagihan_uang_sumbangan);
+          // Pastikan tagihan bisa undefined/null
+          const kbm = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_kbm) : 0;
+          const spp = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_spp) : 0;
+          const pemeliharaan = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan) : 0;
+          const sumbanganVal = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_sumbangan) : 0;
+
+          // Helper untuk tampilkan 'Lunas' jika 0, '-' jika tidak ada tagihan
+          const displayTagihan = (val: any) => {
+            if (val === undefined || val === null) return '-'
+            if (val === 0 || val === '0') return 'Lunas'
+            return val
+          }
+
+          // Total juga 'Lunas' jika semua tagihan 0 dan tagihan ada
+          const total = kbm + spp + pemeliharaan + sumbanganVal
+          const isAllLunas = tagihan && kbm === 0 && spp === 0 && pemeliharaan === 0 && sumbanganVal === 0
 
           return {
             nama_siswa: item.nama_siswa,
@@ -69,14 +83,15 @@ export default function PendapatanPraxis() {
             level: item.level,
             akademik: item.akademik,
             id_siswa: item.id_siswa,
-            tagihan_uang_kbm: kbm,
-            tagihan_uang_spp: spp,
-            tagihan_uang_pemeliharaan: pemeliharaan,
-            tagihan_uang_sumbangan: tagihan.tagihan_uang_sumbangan === '0' ? 'Lunas' : tagihan.tagihan_uang_sumbangan,
-            total: kbm + spp + pemeliharaan + sumbanganVal,
+            tagihan_uang_kbm: tagihan ? displayTagihan(kbm) : '-',
+            tagihan_uang_spp: tagihan ? displayTagihan(spp) : '-',
+            tagihan_uang_pemeliharaan: tagihan ? displayTagihan(pemeliharaan) : '-',
+            tagihan_uang_sumbangan: tagihan
+              ? (tagihan.tagihan_uang_sumbangan === '0' || sumbanganVal === 0 ? 'Lunas' : tagihan.tagihan_uang_sumbangan)
+              : '-',
+            total: tagihan ? (isAllLunas ? 'Lunas' : total) : '-',
           };
         });
-
         setData(fetchedData);
       } catch (error: any) {
         console.error('Failed to fetch data:', error);
@@ -105,29 +120,77 @@ export default function PendapatanPraxis() {
       {
         accessorKey: 'tagihan_uang_kbm',
         header: 'KBM',
-        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+        cell: ({ getValue }: any) => {
+          const val = getValue()
+          return (
+            <span className={
+              val === 'Lunas' ? 'text-green-600 font-bold' :
+              val === '-' ? 'text-gray-400 italic' : ''
+            }>
+              {val === '-' ? '-' : val === 'Lunas' ? 'Lunas' : Number(val).toLocaleString('id-ID')}
+            </span>
+          )
+        }
       },
       {
         accessorKey: 'tagihan_uang_spp',
         header: 'SPP',
-        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+        cell: ({ getValue }: any) => {
+          const val = getValue()
+          return (
+            <span className={
+              val === 'Lunas' ? 'text-green-600 font-bold' :
+              val === '-' ? 'text-gray-400 italic' : ''
+            }>
+              {val === '-' ? '-' : val === 'Lunas' ? 'Lunas' : Number(val).toLocaleString('id-ID')}
+            </span>
+          )
+        }
       },
       {
         accessorKey: 'tagihan_uang_pemeliharaan',
         header: 'Pemeliharaan',
-        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+        cell: ({ getValue }: any) => {
+          const val = getValue()
+          return (
+            <span className={
+              val === 'Lunas' ? 'text-green-600 font-bold' :
+              val === '-' ? 'text-gray-400 italic' : ''
+            }>
+              {val === '-' ? '-' : val === 'Lunas' ? 'Lunas' : Number(val).toLocaleString('id-ID')}
+            </span>
+          )
+        }
       },
       {
         accessorKey: 'tagihan_uang_sumbangan',
         header: 'Sumbangan',
-        cell: ({ getValue }: any) => (
-          <span className={getValue() === 'Lunas' ? 'text-green-600 font-bold' : ''}>{getValue()}</span>
-        )
+        cell: ({ getValue }: any) => {
+          const val = getValue()
+          return (
+            <span className={
+              val === 'Lunas' ? 'text-green-600 font-bold' :
+              val === '-' ? 'text-gray-400 italic' : ''
+            }>
+              {val === '-' ? '-' : val}
+            </span>
+          )
+        }
       },
       {
         accessorKey: 'total',
         header: 'Total',
-        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+        cell: ({ getValue }: any) => {
+          const val = getValue()
+          return (
+            <span className={
+              val === 'Lunas' ? 'text-green-600 font-bold' :
+              val === '-' ? 'text-gray-400 italic' : ''
+            }>
+              {val === '-' ? '-' : val === 'Lunas' ? 'Lunas' : Number(val).toLocaleString('id-ID')}
+            </span>
+          )
+        }
       },
       {
         accessorKey: 'kontrak',
@@ -163,6 +226,21 @@ export default function PendapatanPraxis() {
 
   const table = useReactTable({ data: filteredData, columns, getCoreRowModel: getCoreRowModel() })
 
+  // Highlight data terbaru
+  useEffect(() => {
+    const lastNama = localStorage.getItem('praxis_last_nama')
+    if (lastNama) {
+      setHighlightNama(lastNama)
+      highlightTimeoutRef.current = setTimeout(() => {
+        setHighlightNama(null)
+        localStorage.removeItem('praxis_last_nama')
+      }, 3000)
+    }
+    return () => {
+      if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current)
+    }
+  }, [data])
+
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="text-center mb-6">
@@ -192,7 +270,10 @@ export default function PendapatanPraxis() {
             />
             <Search size={14} className="absolute left-2 top-2 text-gray-700" />
           </div>
-          <button className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm" onClick={() => router.push('/pendapatan/praxis/tambah-kontrak')}> + Tambah Kontrak</button>
+          <button 
+          id='tambah-kontrak-praxis'
+          type='button'
+          className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm" onClick={() => router.push('/pendapatan/praxis/tambah-kontrak')}> + Tambah Kontrak</button>
         </div>
       </div>
 
@@ -211,7 +292,14 @@ export default function PendapatanPraxis() {
           </thead>
           <tbody>
             {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="border">
+              <tr
+                key={row.id}
+                className={`border transition-colors duration-500 ${
+                  highlightNama && row.original.nama_siswa === highlightNama
+                    ? 'bg-yellow-200'
+                    : ''
+                }`}
+              >
                 {row.getVisibleCells().map(cell => (
                   <td key={cell.id} className="p-2 border">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

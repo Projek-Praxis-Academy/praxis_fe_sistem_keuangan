@@ -1,9 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { FilePlus2 } from 'lucide-react'
 import axios from 'axios'
+
+interface Siswa {
+  id_siswa: number
+  nisn: string
+  nama_siswa: string
+  level: string
+  akademik: string
+}
 
 export default function TambahSiswaEkstra() {
   const router = useRouter()
@@ -17,6 +25,15 @@ export default function TambahSiswaEkstra() {
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Tambahkan state dan ref di dalam komponen
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [searchResults, setSearchResults] = useState<Siswa[]>([])
+  const [showDropdown, setShowDropdown] = useState<boolean>(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [namaSiswa, setNamaSiswa] = useState('')
+  const [level, setLevel] = useState('')
+  const [akademik, setAkademik] = useState('')
 
   useEffect(() => {
     const fetchEkstraList = async () => {
@@ -35,6 +52,61 @@ export default function TambahSiswaEkstra() {
     }
     fetchEkstraList()
   }, [])
+
+  // Fetch data autocomplete
+  const fetchSearchResults = async (query: string) => {
+    if (!query || query.length < 3) {
+      setSearchResults([])
+      return
+    }
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/cari-siswa?query=${query}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      if (response.data.status === 'success') {
+        setSearchResults(response.data.data)
+        setShowDropdown(true)
+      }
+    } catch {
+      setSearchResults([])
+    }
+  }
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchSearchResults(searchQuery)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Handle click outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  // Handle select siswa dari dropdown
+  const handleSelectSiswa = (siswa: Siswa) => {
+    setNisn(siswa.nisn)
+    setNamaSiswa(siswa.nama_siswa)
+    setLevel(siswa.level)
+    setAkademik(siswa.akademik)
+    setSearchQuery(`${siswa.nisn} - ${siswa.nama_siswa}`)
+    setShowDropdown(false)
+    // Simpan level ke localStorage agar halaman /ekstra bisa membaca
+    localStorage.setItem('selectedLevel', siswa.level)
+    localStorage.setItem('selectedNamaSiswa', siswa.nama_siswa)
+  }
 
   const handleAddEkstra = () => {
     setSelectedEkstra((prev) => [...prev, ''])
@@ -73,6 +145,7 @@ export default function TambahSiswaEkstra() {
 
       if (response.data.status === 'success') {
         setSuccessMessage('Data ekstra siswa berhasil disimpan!')
+        localStorage.setItem('ekstra_last_nama', namaSiswa) // simpan nama siswa
         setTimeout(() => {
           router.push('/ekstra')
           router.refresh()
@@ -108,15 +181,57 @@ export default function TambahSiswaEkstra() {
         <form onSubmit={handleSubmit}>
           {/* NISN Input */}
           <div className="mb-4">
-            <input
-              id='nisn'
-              type="text"
-              value={nisn}
-              onChange={(e) => setNisn(e.target.value)}
-              placeholder="Masukkan NISN"
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
+            <div className="col-span-2 relative">
+              <label className="text-sm font-medium">NISN Siswa</label>
+              <input
+                type="text"
+                value={searchQuery || nisn}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setNisn(e.target.value)
+                  setNamaSiswa('')
+                  setLevel('')
+                  setAkademik('')
+                }}
+                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
+                placeholder="Masukkan NISN atau Nama Siswa"
+                autoComplete="off"
+              />
+              {showDropdown && searchResults.length > 0 && (
+                <div
+                  ref={dropdownRef}
+                  className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                >
+                  {searchResults.map((siswa) => (
+                    <div
+                      key={siswa.id_siswa}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => handleSelectSiswa(siswa)}
+                    >
+                      <div className="font-medium">{siswa.nisn} - {siswa.nama_siswa}</div>
+                      <div className="text-sm text-gray-500">
+                        {siswa.level} - {siswa.akademik}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Tampilkan info siswa jika sudah dipilih */}
+          {nisn && namaSiswa && (
+            <div className="col-span-2">
+              <div className="bg-gray-50 p-3 rounded-md mb-2">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div><span className="text-gray-500">NISN:</span> {nisn}</div>
+                  <div><span className="text-gray-500">Nama:</span> {namaSiswa}</div>
+                  <div><span className="text-gray-500">Level:</span> {level}</div>
+                  <div><span className="text-gray-500">Akademik:</span> {akademik}</div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <hr className="border-t-2 border-blue-800 mb-6" />
 

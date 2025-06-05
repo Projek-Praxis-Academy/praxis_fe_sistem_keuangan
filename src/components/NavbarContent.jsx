@@ -74,7 +74,8 @@ const SidebarContent = () => {
 
         <ul className="space-y-2">
           <li>
-            <Link 
+            <Link
+              id="dashboard-link"
               href="/dashboard" 
               className={`flex items-center p-2 text-left text-black bg-white hover:bg-gray-200 rounded ${isCollapsed ? 'justify-center' : ''}`}
             >
@@ -85,6 +86,8 @@ const SidebarContent = () => {
           {/* Pendapatan */}
           <li>
             <button
+              type='button'
+              id="pendapatan-button"
               onClick={() => setOpenTagihin(!openTagihin)}
               className={`flex items-center p-2 w-full text-left text-black bg-white hover:bg-gray-200 rounded ${isCollapsed ? 'justify-center' : 'justify-between'}`}
             >
@@ -95,19 +98,25 @@ const SidebarContent = () => {
             {openTagihin && !isCollapsed && (
               <ul className="ml-4 mt-2 space-y-2">
                 <li>
-                  <Link href="/pendapatan/praxis" className="block p-2 text-left text-black bg-white hover:bg-gray-200 rounded">
+                  <Link
+                  id='pendapatan-praxis-link'
+                  href="/pendapatan/praxis" className="block p-2 text-left text-black bg-white hover:bg-gray-200 rounded">
                     Praxis Academy
                   </Link>
                 </li>
 
                 <li>
-                  <Link href="/pendapatan/techno" className="block p-2 text-left text-black bg-white hover:bg-gray-200 rounded">
+                  <Link
+                  id='pendapatan-techno-link'
+                  href="/pendapatan/techno" className="block p-2 text-left text-black bg-white hover:bg-gray-200 rounded">
                     TechnoNatura
                   </Link>
                 </li>
 
                 <li>
-                  <Link href="/pendapatan/boarding-konsumsi" className="block p-2 text-left text-black bg-white hover:bg-gray-200 rounded">
+                  <Link 
+                  id='pendapatan-boarding-konsumsi-link'
+                  href="/pendapatan/boarding-konsumsi" className="block p-2 text-left text-black bg-white hover:bg-gray-200 rounded">
                     Boarding & Konsumsi
                   </Link>
                 </li>
@@ -117,6 +126,7 @@ const SidebarContent = () => {
           
           <li>
             <Link 
+              id="uang-saku-link"
               href="/uang-saku" 
               className={`flex items-center p-2 text-left text-black bg-white hover:bg-gray-200 rounded ${isCollapsed ? 'justify-center' : ''}`}
             >
@@ -126,6 +136,7 @@ const SidebarContent = () => {
           
           <li>
             <Link 
+              id="ekstra-link"
               href="/ekstra" 
               className={`flex items-center p-2 text-left text-black bg-white hover:bg-gray-200 rounded ${isCollapsed ? 'justify-center' : ''}`}
             >
@@ -135,6 +146,7 @@ const SidebarContent = () => {
           
           <li>
             <Link 
+              id="pengeluaran-link"
               href="/pengeluaran" 
               className={`flex items-center p-2 text-left text-black bg-white hover:bg-gray-200 rounded ${isCollapsed ? 'justify-center' : ''}`}
             >
@@ -144,6 +156,7 @@ const SidebarContent = () => {
           
           <li>
             <Link 
+              id="tagihan-link"
               href="/tagihan" 
               className={`flex items-center p-2 text-left text-black bg-white hover:bg-gray-200 rounded ${isCollapsed ? 'justify-center' : ''}`}
             >
@@ -156,6 +169,8 @@ const SidebarContent = () => {
       {/* Bottom section with logout and copyright */}
       <div className="p-4 border-t border-white/10">
         <button
+          id="logout-button"
+          type="button"
           onClick={handleLogout}
           disabled={isLoggingOut}
           className={`w-full p-2 bg-red-500 text-white font-semibold rounded hover:bg-red-600 transition duration-200 flex items-center justify-center gap-2 ${isCollapsed ? 'px-0' : ''}`}

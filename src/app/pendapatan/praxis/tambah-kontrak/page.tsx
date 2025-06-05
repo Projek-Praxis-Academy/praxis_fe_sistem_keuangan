@@ -14,6 +14,13 @@ interface Siswa {
   akademik: string
 }
 
+function formatRupiah(angka: string) {
+  if (!angka) return '';
+  const num = Number(angka.replace(/\D/g, ''));
+  if (isNaN(num)) return '';
+  return num.toLocaleString('id-ID');
+}
+
 export default function TambahKontrak() {
   const router = useRouter()
 
@@ -151,6 +158,9 @@ export default function TambahKontrak() {
       const response = await axios(config)
       if (response.data.status === 'success') {
         setSuccess('Kontrak berhasil ditambahkan.')
+        // Simpan level dan nama siswa ke localStorage
+        localStorage.setItem('selectedLevel', level)
+        localStorage.setItem('praxis_last_nama', namaSiswa)
         setTimeout(() => {
           router.push('/pendapatan/praxis')
         }, 1500)
@@ -264,6 +274,11 @@ export default function TambahKontrak() {
                   placeholder="Jumlah KBM"
                 />
               </div>
+              {uangKBM && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {`Rp ${formatRupiah(uangKBM)}`}
+                </div>
+              )}
             </div>
 
             <div>
@@ -279,6 +294,11 @@ export default function TambahKontrak() {
                   placeholder="Jumlah SPP"
                 />
               </div>
+              {uangSPP && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {`Rp ${formatRupiah(uangSPP)}`}
+                </div>
+              )}
             </div>
 
             <div>
@@ -294,6 +314,11 @@ export default function TambahKontrak() {
                   placeholder="Jumlah Pemeliharaan"
                 />
               </div>
+              {uangPemeliharaan && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {`Rp ${formatRupiah(uangPemeliharaan)}`}
+                </div>
+              )}
             </div>
 
             <div>
@@ -309,6 +334,11 @@ export default function TambahKontrak() {
                   placeholder="Jumlah Sumbangan"
                 />
               </div>
+              {uangSumbangan && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {`Rp ${formatRupiah(uangSumbangan)}`}
+                </div>
+              )}
             </div>
 
             <div className="col-span-2">

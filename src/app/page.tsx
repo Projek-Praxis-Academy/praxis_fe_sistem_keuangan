@@ -83,14 +83,14 @@ export default function HomePage() {
             </button>
           </div>
 
-          <div className="text-right">
+          {/* <div className="text-right">
             <a
               href="auth/forget-password"
               className="text-white text-sm hover:text-blue-300 transition duration-200"
             >
               Lupa Kata Sandi?
             </a>
-          </div>
+          </div> */}
 
           <button
             id="loginButton"

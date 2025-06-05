@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import { Search, FileSignature, CreditCard } from 'lucide-react'
@@ -19,7 +19,9 @@ export default function Ekstra() {
       }
       return 'I'
     });
-  
+  const [highlightNisn, setHighlightNisn] = useState<string | null>(null)
+  const [highlightNama, setHighlightNama] = useState<string | null>(null)
+  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Simpan level yang dipilih ke localStorage
   useEffect(() => {
@@ -37,10 +39,10 @@ export default function Ekstra() {
             Authorization: `Bearer ${token}`,
           },
         })
-  
+
         if (response.data.status === 'success') {
           const siswaList = response.data.data.data
-  
+
           const formattedData = siswaList.map((item: any, index: number) => ({
             no: index + 1,
             id_siswa: item.id_siswa,
@@ -50,17 +52,20 @@ export default function Ekstra() {
             level: item.level ?? '',
             ekstra: item.ekstra || []
           }))
-  
+
           // Tetapkan level I hingga XII secara manual
           const levels = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
           setLevelOptions(levels)
-  
-          // Cari level pertama yang ada dalam data, fallback ke "I"
-          const firstAvailableLevel = levels.find(level =>
-            formattedData.some((item: { level: string }) => item.level === level)
-          ) || "I"
-          setSelectedLevel(firstAvailableLevel) // Setel level pertama
-  
+
+          // Cek localStorage, jika belum ada baru set ke level pertama yang tersedia
+          const storedLevel = localStorage.getItem('selectedLevel')
+          if (!storedLevel) {
+            const firstAvailableLevel = levels.find(level =>
+              formattedData.some((item: { level: string }) => item.level === level)
+            ) || "I"
+            setSelectedLevel(firstAvailableLevel)
+          }
+
           setData(formattedData)
         }
       } catch (error) {
@@ -69,9 +74,32 @@ export default function Ekstra() {
         setIsLoading(false)
       }
     }
-  
+
     fetchData()
   }, [])
+
+  // Highlight data terbaru
+  useEffect(() => {
+    const lastNisn = localStorage.getItem('ekstra_last_nisn')
+    const lastNama = localStorage.getItem('ekstra_last_nama')
+    if (lastNisn) {
+      setHighlightNisn(lastNisn)
+      highlightTimeoutRef.current = setTimeout(() => {
+        setHighlightNisn(null)
+        localStorage.removeItem('ekstra_last_nisn')
+      }, 3000)
+    }
+    if (lastNama) {
+      setHighlightNama(lastNama)
+      highlightTimeoutRef.current = setTimeout(() => {
+        setHighlightNama(null)
+        localStorage.removeItem('ekstra_last_nama')
+      }, 3000)
+    }
+    return () => {
+      if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current)
+    }
+  }, [data])
 
   const filteredData = useMemo(() => {
     return data
@@ -238,7 +266,7 @@ export default function Ekstra() {
             href="/ekstra/tambah-siswa"
             className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
           >
-           + Tambah Kontrak
+            Tambah Kontrak
           </Link>
           <Link
             id='biaya-ekstra'
@@ -270,7 +298,14 @@ export default function Ekstra() {
               </tr>
             ) : (
               table.getRowModel().rows.map(row => (
-                <tr key={row.id} className="border">
+                <tr
+                  key={row.id}
+                  className={`border transition-colors duration-500 ${
+                    highlightNama && row.original.nama_siswa === highlightNama
+                      ? 'bg-yellow-200'
+                      : ''
+                  }`}
+                >
                   {row.getVisibleCells().map(cell => (
                     <td key={cell.id} className="p-2 border">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

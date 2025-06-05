@@ -26,6 +26,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   headerText: {
+    textAlign: 'center',
     fontSize: 25,
     fontWeight: 'bold',
   },
