@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import { Search, FileSignature, CreditCard } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -12,24 +12,27 @@ interface Siswa {
   level: string
   akademik: string
   id_siswa: number
-  tagihan_uang_kbm: number
-  tagihan_uang_spp: number
-  tagihan_uang_pemeliharaan: number
+  tagihan_uang_kbm: number | string
+  tagihan_uang_spp: number | string
+  tagihan_uang_pemeliharaan: number | string
   tagihan_uang_sumbangan: string | null
-  total: number
+  total: number | string
 }
 
-export default function PendapatanPraxis() {
+export default function PendapatanTechno() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLevel, setSelectedLevel] = useState(() => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('selectedLevel') || ''
+    return localStorage.getItem('selectedLevelTechno') || ''
   }
   return ''
 })
 
   const [data, setData] = useState<Siswa[]>([])
   const router = useRouter()
+
+  const [highlightNama, setHighlightNama] = useState<string | null>(null)
+  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Konversi "1.000.000" ke 1000000
   const parseFormattedNumber = (value: string | null | undefined): number => {
@@ -39,7 +42,7 @@ export default function PendapatanPraxis() {
 
   // Simpan level yang dipilih ke localStorage
   useEffect(() => {
-    localStorage.setItem('selectedLevel', selectedLevel)
+    localStorage.setItem('selectedLevelTechno', selectedLevel)
   }, [selectedLevel])
 
   useEffect(() => {
@@ -52,16 +55,26 @@ export default function PendapatanPraxis() {
           },
         });
 
-        // Ambil array siswa dari response.data.data.data
         const siswaArray = response.data.data?.data || [];
 
         const fetchedData = siswaArray.map((item: any) => {
-          const tagihan = item.tagihan || {};
+          const tagihan = item.tagihan
 
-          const kbm = parseFormattedNumber(tagihan.tagihan_uang_kbm);
-          const spp = parseFormattedNumber(tagihan.tagihan_uang_spp);
-          const pemeliharaan = parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan);
-          const sumbanganVal = parseFormattedNumber(tagihan.tagihan_uang_sumbangan);
+          const kbm = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_kbm) : 0
+          const spp = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_spp) : 0
+          const pemeliharaan = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan) : 0
+          const sumbanganVal = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_sumbangan) : 0
+
+          // Helper untuk tampilkan 'Lunas' jika 0, '-' jika tidak ada tagihan
+          const displayTagihan = (val: any) => {
+            if (val === undefined || val === null) return '-'
+            if (val === 0 || val === '0') return 'Lunas'
+            return val
+          }
+
+          // Total juga 'Lunas' jika semua tagihan 0 dan tagihan ada
+          const total = kbm + spp + pemeliharaan + sumbanganVal
+          const isAllLunas = tagihan && kbm === 0 && spp === 0 && pemeliharaan === 0 && sumbanganVal === 0
 
           return {
             nama_siswa: item.nama_siswa,
@@ -69,24 +82,56 @@ export default function PendapatanPraxis() {
             level: item.level,
             akademik: item.akademik,
             id_siswa: item.id_siswa,
-            tagihan_uang_kbm: kbm,
-            tagihan_uang_spp: spp,
-            tagihan_uang_pemeliharaan: pemeliharaan,
-            tagihan_uang_sumbangan: tagihan.tagihan_uang_sumbangan === '0' ? 'Lunas' : tagihan.tagihan_uang_sumbangan,
-            total: kbm + spp + pemeliharaan + sumbanganVal,
-          };
-        });
+            tagihan_uang_kbm: tagihan ? displayTagihan(kbm) : '-',
+            tagihan_uang_spp: tagihan ? displayTagihan(spp) : '-',
+            tagihan_uang_pemeliharaan: tagihan ? displayTagihan(pemeliharaan) : '-',
+            tagihan_uang_sumbangan: tagihan
+              ? (tagihan.tagihan_uang_sumbangan === '0' || sumbanganVal === 0 ? 'Lunas' : tagihan.tagihan_uang_sumbangan)
+              : '-',
+            total: tagihan ? (isAllLunas ? 'Lunas' : total) : '-',
+          }
+        })
 
-        setData(fetchedData);
+        // --- Tambahkan logic ini ---
+        const lastNama = localStorage.getItem('techno_last_nama')
+        let sortedData = fetchedData
+        if (lastNama) {
+          const idx = fetchedData.findIndex((d: Siswa) => d.nama_siswa === lastNama)
+          if (idx > -1) {
+            const [item] = fetchedData.splice(idx, 1)
+            sortedData = [item, ...fetchedData]
+          }
+        }
+        setData(sortedData)
+        // --- End logic ---
+
       } catch (error: any) {
         console.error('Failed to fetch data:', error);
         console.error('Error response:', error.response?.data);
       }
-    };
+    }
+    fetchData()
+  }, [])
 
-    fetchData();
-  }, []);
-  
+  useEffect(() => {
+    const lastNama = localStorage.getItem('techno_last_nama')
+    if (lastNama) {
+      setHighlightNama(lastNama)
+      highlightTimeoutRef.current = setTimeout(() => {
+        setHighlightNama(null)
+        localStorage.removeItem('techno_last_nama')
+      }, 3000)
+    }
+    return () => {
+      if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current)
+    }
+  }, [data])
+
+  useEffect(() => {
+    if (highlightNama) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [highlightNama])
 
   const filteredData = useMemo(() => {
     return data
@@ -105,29 +150,77 @@ export default function PendapatanPraxis() {
       {
         accessorKey: 'tagihan_uang_kbm',
         header: 'KBM',
-        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+        cell: ({ getValue }: any) => {
+          const val = getValue()
+          return (
+            <span className={
+              val === 'Lunas' ? 'text-green-600 font-bold' :
+              val === '-' ? 'text-gray-400 italic' : ''
+            }>
+              {val === '-' ? '-' : val === 'Lunas' ? 'Lunas' : Number(val).toLocaleString('id-ID')}
+            </span>
+          )
+        }
       },
       {
         accessorKey: 'tagihan_uang_spp',
         header: 'SPP',
-        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+        cell: ({ getValue }: any) => {
+          const val = getValue()
+          return (
+            <span className={
+              val === 'Lunas' ? 'text-green-600 font-bold' :
+              val === '-' ? 'text-gray-400 italic' : ''
+            }>
+              {val === '-' ? '-' : val === 'Lunas' ? 'Lunas' : Number(val).toLocaleString('id-ID')}
+            </span>
+          )
+        }
       },
       {
         accessorKey: 'tagihan_uang_pemeliharaan',
         header: 'Pemeliharaan',
-        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+        cell: ({ getValue }: any) => {
+          const val = getValue()
+          return (
+            <span className={
+              val === 'Lunas' ? 'text-green-600 font-bold' :
+              val === '-' ? 'text-gray-400 italic' : ''
+            }>
+              {val === '-' ? '-' : val === 'Lunas' ? 'Lunas' : Number(val).toLocaleString('id-ID')}
+            </span>
+          )
+        }
       },
       {
         accessorKey: 'tagihan_uang_sumbangan',
         header: 'Sumbangan',
-        cell: ({ getValue }: any) => (
-          <span className={getValue() === 'Lunas' ? 'text-green-600 font-bold' : ''}>{getValue()}</span>
-        )
+        cell: ({ getValue }: any) => {
+          const val = getValue()
+          return (
+            <span className={
+              val === 'Lunas' ? 'text-green-600 font-bold' :
+              val === '-' ? 'text-gray-400 italic' : ''
+            }>
+              {val === '-' ? '-' : val}
+            </span>
+          )
+        }
       },
       {
         accessorKey: 'total',
         header: 'Total',
-        cell: ({ getValue }: any) => <span>{getValue().toLocaleString('id-ID')}</span>
+        cell: ({ getValue }: any) => {
+          const val = getValue()
+          return (
+            <span className={
+              val === 'Lunas' ? 'text-green-600 font-bold' :
+              val === '-' ? 'text-gray-400 italic' : ''
+            }>
+              {val === '-' ? '-' : val === 'Lunas' ? 'Lunas' : Number(val).toLocaleString('id-ID')}
+            </span>
+          )
+        }
       },
       {
         accessorKey: 'kontrak',
@@ -217,7 +310,14 @@ export default function PendapatanPraxis() {
           </thead>
           <tbody>
             {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="border">
+              <tr
+                key={row.id}
+                className={`border transition-colors duration-500 ${
+                  highlightNama && row.original.nama_siswa === highlightNama
+                    ? 'bg-yellow-200'
+                    : ''
+                }`}
+              >
                 {row.getVisibleCells().map(cell => (
                   <td key={cell.id} className="p-2 border">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

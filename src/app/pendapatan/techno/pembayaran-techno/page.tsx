@@ -146,6 +146,13 @@ function PembayaranSiswaInner() {
     }
   }
 
+  function formatRupiah(angka: string) {
+    if (!angka) return ''
+    const num = Number(angka.replace(/\D/g, ''))
+    if (isNaN(num)) return ''
+    return num.toLocaleString('id-ID')
+  }
+
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="overflow-x-auto">
@@ -201,6 +208,11 @@ function PembayaranSiswaInner() {
                         className="px-2 py-2 w-full focus:outline-none"
                       />
                     </div>
+                    {value && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {`Rp ${formatRupiah(value)}`}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

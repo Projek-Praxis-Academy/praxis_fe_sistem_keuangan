@@ -138,6 +138,8 @@ export default function TambahSiswa() {
       })
 
       setSuccess('Data Siswa berhasil ditambahkan!')
+      localStorage.setItem('selectedLevel', level)
+      localStorage.setItem('bk_last_nama', namaSiswa)
       router.push('/pendapatan/boarding-konsumsi')
     } catch (err: any) {
       console.error(err)

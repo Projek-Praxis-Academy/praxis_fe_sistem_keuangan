@@ -107,6 +107,15 @@ function PembayaranEkstraInner() {
       return
     }
 
+    // --- Validasi nominal tidak boleh melebihi tagihan ---
+    const tagihan = detailSiswa.tagihan_ekstra ? parseInt(detailSiswa.tagihan_ekstra.replace(/\D/g, '')) : 0
+    const nominal = parseInt(formData.nominal)
+    if (tagihan > 0 && nominal > tagihan) {
+      setError('Nominal pembayaran melebihi tagihan.')
+      return
+    }
+    // --- End validasi ---
+
     const payload: PembayaranPayload = {
       id_siswa: detailSiswa.id_siswa.toString(),
       nama_siswa: detailSiswa.nama_siswa,
@@ -144,6 +153,13 @@ function PembayaranEkstraInner() {
         'Terjadi kesalahan saat menyimpan data'
       )
     }
+  }
+
+  function formatRupiah(angka: string) {
+    if (!angka) return ''
+    const num = Number(angka.replace(/\D/g, ''))
+    if (isNaN(num)) return ''
+    return num.toLocaleString('id-ID')
   }
 
   return (
@@ -252,6 +268,11 @@ function PembayaranEkstraInner() {
                     placeholder="Masukkan nominal"
                   />
                 </div>
+                {formData.nominal && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    {`Rp ${formatRupiah(formData.nominal)}`}
+                  </div>
+                )}
               </div>
 
               <div>

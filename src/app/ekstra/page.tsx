@@ -66,7 +66,19 @@ export default function Ekstra() {
             setSelectedLevel(firstAvailableLevel)
           }
 
-          setData(formattedData)
+          // --- Tambahkan logic siswa terbaru di paling atas ---
+          const lastNama = localStorage.getItem('ekstra_last_nama')
+          let sortedData = formattedData
+          if (lastNama) {
+            const idx = formattedData.findIndex((d: any) => d.nama_siswa === lastNama)
+            if (idx > -1) {
+              const [item] = formattedData.splice(idx, 1)
+              sortedData = [item, ...formattedData]
+            }
+          }
+          setData(sortedData)
+          // --- End logic ---
+
         }
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -80,15 +92,7 @@ export default function Ekstra() {
 
   // Highlight data terbaru
   useEffect(() => {
-    const lastNisn = localStorage.getItem('ekstra_last_nisn')
     const lastNama = localStorage.getItem('ekstra_last_nama')
-    if (lastNisn) {
-      setHighlightNisn(lastNisn)
-      highlightTimeoutRef.current = setTimeout(() => {
-        setHighlightNisn(null)
-        localStorage.removeItem('ekstra_last_nisn')
-      }, 3000)
-    }
     if (lastNama) {
       setHighlightNama(lastNama)
       highlightTimeoutRef.current = setTimeout(() => {
@@ -100,6 +104,13 @@ export default function Ekstra() {
       if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current)
     }
   }, [data])
+
+  // Scroll otomatis ke atas saat highlightNama aktif
+  useEffect(() => {
+    if (highlightNama) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [highlightNama])
 
   const filteredData = useMemo(() => {
     return data
@@ -140,13 +151,22 @@ export default function Ekstra() {
           return (
             <div className="flex flex-col pl-2">
               {ekstraList.length > 0 ? (
-                ekstraList.map((e: any, index: number) => (
-                  <div key={index} className="border-b last:border-b-0 py-1">
-                  <span key={index}>
-                    Rp{parseInt((e.tagihan_ekstra || '0').replace(/\D/g, '')).toLocaleString('id-ID')}
-                  </span>
-                  </div>
-                ))
+                ekstraList.map((e: any, index: number) => {
+                  // Ambil nominal tagihan, jika 0 atau '0' atau 'Lunas' tampilkan Lunas hijau
+                  const nominal = parseInt((e.tagihan_ekstra || '0').replace(/\D/g, ''))
+                  const isLunas = e.tagihan_ekstra === 'Lunas' || nominal === 0 || e.tagihan_ekstra === '0'
+                  return (
+                    <div key={index} className="border-b last:border-b-0 py-1">
+                      {isLunas ? (
+                        <span className="text-green-600 font-bold">Lunas</span>
+                      ) : (
+                        <span>
+                          Rp{nominal.toLocaleString('id-ID')}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })
               ) : (
                 <span className="text-gray-500 italic">-</span>
               )}

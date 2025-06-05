@@ -54,26 +54,22 @@ export default function PendapatanPraxis() {
           },
         });
 
-        // Ambil array siswa dari response.data.data
         const siswaArray = response.data.data?.data || [];
 
         const fetchedData = siswaArray.map((item: any) => {
           const tagihan = item.tagihan;
 
-          // Pastikan tagihan bisa undefined/null
           const kbm = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_kbm) : 0;
           const spp = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_spp) : 0;
           const pemeliharaan = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan) : 0;
           const sumbanganVal = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_sumbangan) : 0;
 
-          // Helper untuk tampilkan 'Lunas' jika 0, '-' jika tidak ada tagihan
           const displayTagihan = (val: any) => {
             if (val === undefined || val === null) return '-'
             if (val === 0 || val === '0') return 'Lunas'
             return val
           }
 
-          // Total juga 'Lunas' jika semua tagihan 0 dan tagihan ada
           const total = kbm + spp + pemeliharaan + sumbanganVal
           const isAllLunas = tagihan && kbm === 0 && spp === 0 && pemeliharaan === 0 && sumbanganVal === 0
 
@@ -90,16 +86,28 @@ export default function PendapatanPraxis() {
               ? (tagihan.tagihan_uang_sumbangan === '0' || sumbanganVal === 0 ? 'Lunas' : tagihan.tagihan_uang_sumbangan)
               : '-',
             total: tagihan ? (isAllLunas ? 'Lunas' : total) : '-',
-          };
-        });
-        setData(fetchedData);
+          }
+        })
+
+        // --- Logic siswa terbaru di paling atas ---
+        const lastNama = localStorage.getItem('praxis_last_nama')
+        let sortedData = fetchedData
+        if (lastNama) {
+          const idx = fetchedData.findIndex((d: Siswa) => d.nama_siswa === lastNama)
+          if (idx > -1) {
+            const [item] = fetchedData.splice(idx, 1)
+            sortedData = [item, ...fetchedData]
+          }
+        }
+        setData(sortedData)
+        // --- End logic ---
+
       } catch (error: any) {
         console.error('Failed to fetch data:', error);
         console.error('Error response:', error.response?.data);
       }
-    };
-
-    fetchData();
+    }
+    fetchData()
   }, []);
   
 
@@ -240,6 +248,13 @@ export default function PendapatanPraxis() {
       if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current)
     }
   }, [data])
+
+  // Scroll otomatis ke atas saat highlightNama aktif
+  useEffect(() => {
+    if (highlightNama) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [highlightNama])
 
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">

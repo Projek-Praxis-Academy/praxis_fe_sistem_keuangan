@@ -14,6 +14,13 @@ interface Siswa {
   akademik: string
 }
 
+function formatRupiah(angka: string) {
+  if (!angka) return ''
+  const num = Number(angka.replace(/\D/g, ''))
+  if (isNaN(num)) return ''
+  return num.toLocaleString('id-ID')
+}
+
 export default function TambahKontrakTechno() {
   const router = useRouter()
 
@@ -151,6 +158,9 @@ export default function TambahKontrakTechno() {
       const response = await axios(config)
       if (response.data.status === 'success') {
         setSuccess('Kontrak berhasil ditambahkan.')
+        // Simpan level dan nama siswa ke localStorage
+        localStorage.setItem('selectedLevelTechno', level)
+        localStorage.setItem('techno_last_nama', namaSiswa)
         setTimeout(() => {
           router.push('/pendapatan/techno')
         }, 1500)
@@ -253,62 +263,66 @@ export default function TambahKontrakTechno() {
 
             <div>
               <label className="text-sm font-medium">KBM</label>
-              <div className="flex items-center border rounded px-2 bg-white">
-                <span className="text-gray-500 text-sm mr-1">Rp</span>
-                <input
-                  id='uang_kbm'
-                  type="number"
-                  value={uangKBM}
-                  onChange={(e) => setUangKBM(e.target.value)}
-                  className="mt-1 w-full rounded-md px-3 py-2"
-                  placeholder="Jumlah KBM"
-                />
-              </div>
+              <input
+                type="number"
+                value={uangKBM}
+                onChange={(e) => setUangKBM(e.target.value)}
+                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
+                placeholder="Nominal KBM"
+              />
+              {uangKBM && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {`Rp ${formatRupiah(uangKBM)}`}
+                </div>
+              )}
             </div>
 
             <div>
               <label className="text-sm font-medium">SPP</label>
-              <div className="flex items-center border rounded px-2 bg-white">
-                <span className="text-gray-500 text-sm mr-1">Rp</span>
-                <input
-                  id='uang_spp'
-                  type="number"
-                  value={uangSPP}
-                  onChange={(e) => setUangSPP(e.target.value)}
-                  className="mt-1 w-full rounded-md px-3 py-2"
-                  placeholder="Jumlah SPP"
-                />
-              </div>
+              <input
+                type="number"
+                value={uangSPP}
+                onChange={(e) => setUangSPP(e.target.value)}
+                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
+                placeholder="Nominal SPP"
+              />
+              {uangSPP && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {`Rp ${formatRupiah(uangSPP)}`}
+                </div>
+              )}
             </div>
 
             <div>
               <label className="text-sm font-medium">Pemeliharaan</label>
-              <div className="flex items-center border rounded px-2 bg-white">
-                <span className="text-gray-500 text-sm mr-1">Rp</span>
-                <input
-                  id='uang_pemeliharaan'
-                  type="number"
-                  value={uangPemeliharaan}
-                  onChange={(e) => setUangPemeliharaan(e.target.value)}
-                  className="mt-1 w-full rounded-md px-3 py-2"
-                  placeholder="Jumlah Pemeliharaan"
-                />
-              </div>
+              <input
+                type="number"
+                value={uangPemeliharaan}
+                onChange={(e) => setUangPemeliharaan(e.target.value)}
+                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
+                placeholder="Nominal Pemeliharaan"
+              />
+              {uangPemeliharaan && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {`Rp ${formatRupiah(uangPemeliharaan)}`}
+                </div>
+              )}
             </div>
 
             <div>
               <label className="text-sm font-medium">Sumbangan</label>
-              <div className="flex items-center border rounded px-2 bg-white">
-                <span className="text-gray-500 text-sm mr-1">Rp</span>
-                <input
-                  id='uang_sumbangan'
-                  type="number"
-                  value={uangSumbangan}
-                  onChange={(e) => setUangSumbangan(e.target.value)}
-                  className="mt-1 w-full rounded-md px-3 py-2"
-                  placeholder="Jumlah Sumbangan"
-                />
-              </div>
+              <input
+                type="number"
+                value={uangSumbangan}
+                onChange={(e) => setUangSumbangan(e.target.value)}
+                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2"
+                placeholder="Nominal Sumbangan"
+              />
+              {uangSumbangan && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {`Rp ${formatRupiah(uangSumbangan)}`}
+                </div>
+              )}
             </div>
 
             <div className="col-span-2">

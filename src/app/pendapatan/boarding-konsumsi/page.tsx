@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import { Search, CreditCard, FileSignature } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -26,6 +26,8 @@ export default function BoardingKonsumsi() {
   return 'I'
 });
   const [data, setData] = useState<Siswa[]>([]);
+  const [highlightNama, setHighlightNama] = useState<string | null>(null)
+  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const router = useRouter();
 
   useEffect(() => {
@@ -52,8 +54,20 @@ export default function BoardingKonsumsi() {
             tagihan_konsumsi: item.tagihan_konsumsi || '0',
             id_siswa: item.id_siswa,
             level: item.level || '',
-          }));
-          setData(fetchedData);
+          }))
+
+          // --- Logic siswa terbaru di paling atas ---
+          const lastNama = localStorage.getItem('bk_last_nama')
+          let sortedData = fetchedData
+          if (lastNama) {
+            const idx = fetchedData.findIndex((d: Siswa) => d.nama_siswa === lastNama)
+            if (idx > -1) {
+              const [item] = fetchedData.splice(idx, 1)
+              sortedData = [item, ...fetchedData]
+            }
+          }
+          setData(sortedData)
+          // --- End logic ---
         } else {
           console.error('Data tidak dalam format yang diharapkan:', response.data.data);
           setData([]);
@@ -65,7 +79,7 @@ export default function BoardingKonsumsi() {
     };
   
     fetchData();
-  }, []);  
+  }, [])  
   
 
   const filteredData = useMemo(() => {
@@ -120,6 +134,28 @@ export default function BoardingKonsumsi() {
   );
 
   const table = useReactTable({ data: filteredData, columns, getCoreRowModel: getCoreRowModel() });
+
+  // Highlight data terbaru
+  useEffect(() => {
+    const lastNama = localStorage.getItem('bk_last_nama')
+    if (lastNama) {
+      setHighlightNama(lastNama)
+      highlightTimeoutRef.current = setTimeout(() => {
+        setHighlightNama(null)
+        localStorage.removeItem('bk_last_nama')
+      }, 3000)
+    }
+    return () => {
+      if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current)
+    }
+  }, [data])
+
+  // Scroll otomatis ke atas saat highlightNama aktif
+  useEffect(() => {
+    if (highlightNama) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [highlightNama])
 
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
@@ -177,7 +213,14 @@ export default function BoardingKonsumsi() {
           </thead>
           <tbody>
             {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="border">
+              <tr
+                key={row.id}
+                className={`border transition-colors duration-500 ${
+                  highlightNama && row.original.nama_siswa === highlightNama
+                    ? 'bg-yellow-200'
+                    : ''
+                }`}
+              >
                 {row.getVisibleCells().map(cell => (
                   <td key={cell.id} className="p-2 border">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
