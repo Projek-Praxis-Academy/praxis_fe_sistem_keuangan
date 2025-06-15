@@ -15,6 +15,13 @@ interface Siswa {
   no_hp_wali: string
 }
 
+function formatRupiah(angka: string) {
+  if (!angka) return ''
+  const num = Number(angka.replace(/\D/g, ''))
+  if (isNaN(num)) return ''
+  return num.toLocaleString('id-ID')
+}
+
 function TopUpUangSakuInner() {
   const searchParams = useSearchParams()
   const id_siswa_query = searchParams.get('id_siswa') || ''
@@ -175,6 +182,11 @@ function TopUpUangSakuInner() {
                   onChange={(e) => setNominal(e.target.value.replace(/\D/g, ''))}
                   className="w-full border px-3 py-2 rounded"
                 />
+                {nominal && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    {`Rp ${formatRupiah(nominal)}`}
+                  </div>
+                )}
               </div>
 
               <div>

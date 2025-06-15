@@ -15,6 +15,13 @@ interface Siswa {
   no_hp_wali: string
 }
 
+function formatRupiah(angka: string) {
+  if (!angka) return ''
+  const num = Number(angka.replace(/\D/g, ''))
+  if (isNaN(num)) return ''
+  return num.toLocaleString('id-ID')
+}
+
 function PengeluaranUangSakuInner() {
   const searchParams = useSearchParams()
   const id_siswa_query = searchParams.get('id_siswa') || ''
@@ -178,6 +185,11 @@ function PengeluaranUangSakuInner() {
                         className="w-full px-3 py-2 rounded"
                       />
                 </div>
+                {nominal && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    {`Rp ${formatRupiah(nominal)}`}
+                  </div>
+                )}
               </div>
 
               <div>
