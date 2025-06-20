@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
-import { Search, CreditCard, FileSignature } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Search, CreditCard, FileSignature, X } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 
 interface Siswa {
@@ -17,7 +17,7 @@ const levelOptions = [
 "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"
  ];
 
-export default function BoardingKonsumsi() {
+function BoardingKonsumsiInner() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState(() => {
   if (typeof window !== 'undefined') {
@@ -27,8 +27,10 @@ export default function BoardingKonsumsi() {
 });
   const [data, setData] = useState<Siswa[]>([]);
   const [highlightNama, setHighlightNama] = useState<string | null>(null)
+  const [showAlert, setShowAlert] = useState(false)
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
         localStorage.setItem('selectedLevel', selectedLevel)
@@ -157,6 +159,22 @@ export default function BoardingKonsumsi() {
     }
   }, [highlightNama])
 
+  // Success alert logic
+  useEffect(() => {
+    const successParam = searchParams.get('success');
+    const isTambah = successParam && successParam.toLowerCase().includes('tambah');
+    const isBayar = successParam && successParam.toLowerCase().includes('pembayar');
+
+    if (isTambah || isBayar) {
+      setShowAlert(true);
+      const timeout = setTimeout(() => {
+        setShowAlert(false);
+        router.replace('/pendapatan/boarding-konsumsi');
+      }, 25000);
+      return () => clearTimeout(timeout);
+    }
+  }, [searchParams, router]);
+
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="text-center mb-6">
@@ -197,6 +215,32 @@ export default function BoardingKonsumsi() {
         </button>
       </div>
 
+      {/* ALERT SUCCESS */}
+      <Suspense fallback={null}>
+        {showAlert && (
+          <div className="relative text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500 flex items-center">
+            <p className="font-medium flex-1">
+              {searchParams.get('success')?.toLowerCase().includes('tambah')
+                ? 'Data siswa berhasil ditambahkan!'
+                : searchParams.get('success')?.toLowerCase().includes('pembayar')
+                ? 'Pembayaran siswa berhasil dilakukan!'
+                : ''}
+            </p>
+            <button
+              onClick={() => {
+                setShowAlert(false);
+                router.replace('/pendapatan/boarding-konsumsi');
+              }}
+              className="absolute right-3 top-3 text-green-700 hover:text-green-900"
+              aria-label="Tutup"
+              type="button"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        )}
+      </Suspense>
+
       {/* TABEL */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300 text-left text-sm text-black">
@@ -232,5 +276,13 @@ export default function BoardingKonsumsi() {
         </table>
       </div>
     </div>
+  );
+}
+
+export default function BoardingKonsumsi() {
+  return (
+    <Suspense fallback={<div className="ml-64 p-8">Loading...</div>}>
+      <BoardingKonsumsiInner />
+    </Suspense>
   );
 }

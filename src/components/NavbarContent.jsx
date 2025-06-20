@@ -191,7 +191,7 @@ const SidebarContent = () => {
           )}
         </button>
         <p className={`text-center text-sm text-white opacity-75 mt-2 ${isCollapsed ? 'text-xs' : ''}`}>
-            <span className="block">version 2.0</span>
+            <span className="block">version 2.0.1</span>
             <span className="block">© 2025 fintrack-team</span>
           </p>
       </div>

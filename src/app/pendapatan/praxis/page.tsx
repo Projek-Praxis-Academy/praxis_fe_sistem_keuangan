@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState, useRef } from 'react'
+import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
-import { Search, FileSignature, CreditCard } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Search, FileSignature, CreditCard, X } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import axios from 'axios'
 
 interface Siswa {
@@ -19,7 +19,7 @@ interface Siswa {
   total: number
 }
 
-export default function PendapatanPraxis() {
+function PendapatanPraxisInner() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLevel, setSelectedLevel] = useState(() => {
   if (typeof window !== 'undefined') {
@@ -31,7 +31,9 @@ export default function PendapatanPraxis() {
   const [data, setData] = useState<Siswa[]>([])
   const [highlightNama, setHighlightNama] = useState<string | null>(null)
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [showAlert, setShowAlert] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   // Konversi "1.000.000" ke 1000000
   const parseFormattedNumber = (value: string | null | undefined): number => {
@@ -256,8 +258,50 @@ export default function PendapatanPraxis() {
     }
   }, [highlightNama])
 
+  // // Success alert logic
+  // useEffect(() => {
+  //   const successParam = searchParams.get('success');
+  //   const isTambah = successParam && successParam.toLowerCase().includes('tambah');
+  //   const isBayar = successParam && successParam.toLowerCase().includes('pembayar');
+
+  //   if (isTambah || isBayar) {
+  //     setShowAlert(true);
+  //     const timeout = setTimeout(() => {
+  //       setShowAlert(false);
+  //       router.replace('/pendapatan/praxis');
+  //     }, 25000);
+  //     return () => clearTimeout(timeout);
+  //   }
+  // }, [searchParams, router]);
+
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
+      {/* ALERT SUCCESS */}
+      <Suspense fallback={null}>
+        {showAlert && (
+          <div className="relative text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500 flex items-center">
+            <p className="font-medium flex-1">
+              {searchParams.get('success')?.toLowerCase().includes('tambah')
+                ? 'Data siswa berhasil ditambahkan!'
+                : searchParams.get('success')?.toLowerCase().includes('pembayar')
+                ? 'Pembayaran siswa berhasil dilakukan!'
+                : ''}
+            </p>
+            <button
+              onClick={() => {
+                setShowAlert(false);
+                router.replace('/pendapatan/praxis');
+              }}
+              className="absolute right-3 top-3 text-green-700 hover:text-green-900"
+              aria-label="Tutup"
+              type="button"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        )}
+      </Suspense>
+
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold">Monitoring Praxis Academy</h2>
       </div>
@@ -326,5 +370,14 @@ export default function PendapatanPraxis() {
         </table>
       </div>
     </div>
+  )
+}
+
+// Suspense wrapper
+export default function PendapatanPraxis() {
+  return (
+    <Suspense fallback={<div className="ml-64 p-8">Loading...</div>}>
+      <PendapatanPraxisInner />
+    </Suspense>
   )
 }

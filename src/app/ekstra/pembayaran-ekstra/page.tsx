@@ -138,10 +138,8 @@ function PembayaranEkstraInner() {
       )
 
       if (response.data.status === 'success') {
-        setSuccess('Pembayaran berhasil disimpan')
-        setTimeout(() => {
-          router.push(`/ekstra`)
-        }, 1500)
+        // setSuccess('Pembayaran berhasil disimpan')
+        router.push('/ekstra?success=pembayaran')
       } else {
         setError(response.data.message || 'Gagal menyimpan pembayaran')
       }

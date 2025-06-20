@@ -137,10 +137,10 @@ export default function TambahSiswa() {
         },
       })
 
-      setSuccess('Data Siswa berhasil ditambahkan!')
+      // setSuccess('Data Siswa berhasil ditambahkan!')
       localStorage.setItem('selectedLevel', level)
       localStorage.setItem('bk_last_nama', namaSiswa)
-      router.push('/pendapatan/boarding-konsumsi')
+      router.push('/pendapatan/boarding-konsumsi?success=tambah')
     } catch (err: any) {
       console.error(err)
       const msg = err.response?.data?.message || 'Terjadi kesalahan saat mengirim data. Silakan coba lagi.'

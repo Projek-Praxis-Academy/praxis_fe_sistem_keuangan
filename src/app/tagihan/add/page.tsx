@@ -1,6 +1,7 @@
 'use client'
-import { useState, useRef, useEffect } from 'react'
-import { FilePlus2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { FilePlus2, X } from 'lucide-react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import { pdf } from '@react-pdf/renderer'
 import PDFTagihan from '@/components/PDFTagihan'
 import axios from 'axios'
@@ -35,8 +36,53 @@ interface TotalTagihan {
   uang_belanja: number
 }
 
+function SuccessAlertTagihan() {
+  const searchParams = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search)
+    : null;
+  const router = useRouter();
+  const [show, setShow] = useState(true);
+
+  const successParam = searchParams?.get('success');
+  const isTambah = successParam && successParam.toLowerCase().includes('tambah');
+
+  let alertMsg = '';
+  if (isTambah) alertMsg = 'Tagihan siswa berhasil ditambahkan!';
+
+  useEffect(() => {
+    if (alertMsg) {
+      setShow(true);
+      const timeout = setTimeout(() => {
+        setShow(false);
+        router.replace('/tagihan');
+      }, 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [alertMsg, router]);
+
+  if (!alertMsg || !show) return null;
+
+  return (
+    <div className="relative text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500 flex items-center">
+      <p className="font-medium flex-1">{alertMsg}</p>
+      <button
+        onClick={() => {
+          setShow(false);
+          router.replace('/tagihan');
+        }}
+        className="absolute right-3 top-3 text-green-700 hover:text-green-900"
+        aria-label="Tutup"
+        type="button"
+      >
+        <X size={18} />
+      </button>
+    </div>
+  );
+}
+
 export default function BuatTagihan() {
   // Autocomplete state
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [searchResults, setSearchResults] = useState<Siswa[]>([])
   const [showDropdown, setShowDropdown] = useState<boolean>(false)
@@ -221,6 +267,9 @@ export default function BuatTagihan() {
       }
 
       setSuccess('Tagihan berhasil dibuat dan diunggah!')
+      localStorage.setItem('selectedLevel', level)
+      localStorage.setItem('tagihan_last_nama', namaSiswa) // pastikan variabel namaSiswa berisi nama siswa yang ditagihkan
+      router.push('/tagihan?success=tambah')
 
       // 5. Download PDF otomatis
       const url = URL.createObjectURL(pdfBlob)
@@ -276,7 +325,7 @@ export default function BuatTagihan() {
   const tagihanBulanan = [
     { label: 'Konsumsi', key: 'konsumsi' as const },
     { label: 'Boarding', key: 'boarding' as const },
-    { label: 'Ekstra Kurikuler', key: 'ekstra' as const },
+    { label: 'Ekstrakurikuler', key: 'ekstra' as const },
     { label: 'Uang Belanja', key: 'uang_belanja' as const }
   ]
 
@@ -288,8 +337,24 @@ export default function BuatTagihan() {
           <p className="text-sm text-gray-500 mb-4">Lengkapi form tagihan siswa berikut ini.</p>
           <hr className="border-t-3 border-blue-900 mb-5" />
 
-          {error && <div className="text-red-600 mb-4 font-medium">{error}</div>}
-          {success && <div className="text-green-600 mb-4 font-medium">{success}</div>}
+          {/* ALERT ERROR */}
+          {error && (
+            <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+              <p className="font-medium">{error}</p>
+            </div>
+          )}
+
+          {/* ALERT SUCCESS */}
+          {success && (
+            <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+              <p className="font-medium">{success}</p>
+            </div>
+          )}
+
+          {/* ALERT SUCCESS REDIRECT */}
+          <Suspense fallback={null}>
+            <SuccessAlertTagihan />
+          </Suspense>
 
           <form onSubmit={(e) => {
             e.preventDefault()

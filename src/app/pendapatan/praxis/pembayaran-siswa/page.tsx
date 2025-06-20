@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import axios from 'axios'
 
 interface Kontrak {
@@ -26,6 +26,7 @@ interface Siswa {
 }
 
 function PembayaranSiswaInner() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const id_siswa_query = searchParams.get('id_siswa') || ''
 
@@ -126,14 +127,18 @@ function PembayaranSiswaInner() {
       })
 
       if (response.data.status === 'success') {
-        setSuccess(response.data.message || 'Pembayaran berhasil.')
+        setSuccess('Pembayaran berhasil dilakukan.')
+        localStorage.setItem('praxis_last_nama', siswaDetail.nama_siswa)
         setTanggalPembayaran('')
         setKbm('')
         setSpp('')
         setPemeliharaan('')
         setSumbangan('')
         setCatatan('')
-        window.location.href = '/pendapatan/praxis'
+        setTimeout(() => {
+          setSuccess('')
+          router.push('/pendapatan/praxis')
+        }, 1200)
       } else {
         setError(response.data.message || 'Gagal menyimpan pembayaran.')
       }

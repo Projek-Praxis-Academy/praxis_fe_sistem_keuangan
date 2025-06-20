@@ -1,11 +1,55 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
-import { Search, FileSignature, CreditCard } from 'lucide-react'
+import { Search, FileSignature, CreditCard, X } from 'lucide-react'
 import axios from 'axios'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+
+function SuccessAlertEkstra() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const [show, setShow] = useState(true)
+
+  const successParam = searchParams.get('success')
+  const isTambah = successParam && successParam.toLowerCase().includes('tambah')
+  const isBayar = successParam && successParam.toLowerCase().includes('pembayar')
+
+  let alertMsg = ''
+  if (isTambah) alertMsg = 'Data siswa berhasil ditambahkan!'
+  if (isBayar) alertMsg = 'Pembayaran siswa berhasil dilakukan!'
+
+  useEffect(() => {
+    if (alertMsg) {
+      setShow(true)
+      const timeout = setTimeout(() => {
+        setShow(false)
+        router.replace('/ekstra')
+      }, 25000)
+      return () => clearTimeout(timeout)
+    }
+  }, [alertMsg, router])
+
+  if (!alertMsg || !show) return null
+
+  return (
+    <div className="relative text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500 flex items-center">
+      <p className="font-medium flex-1">{alertMsg}</p>
+      <button
+        onClick={() => {
+          setShow(false)
+          router.replace('/ekstra')
+        }}
+        className="absolute right-3 top-3 text-green-700 hover:text-green-900"
+        aria-label="Tutup"
+        type="button"
+      >
+        <X size={18} />
+      </button>
+    </div>
+  )
+}
 
 export default function Ekstra() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -255,6 +299,11 @@ export default function Ekstra() {
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold">Monitoring Ekstrakurikuler</h2>
       </div>
+
+      {/* ALERT SUCCESS */}
+      <Suspense fallback={null}>
+        <SuccessAlertEkstra />
+      </Suspense>
 
       <div className="flex justify-start gap-2 items-center mb-4">
         <select

@@ -144,12 +144,9 @@ export default function TambahSiswaEkstra() {
       )
 
       if (response.data.status === 'success') {
-        setSuccessMessage('Data ekstra siswa berhasil disimpan!')
+        // setSuccessMessage('Data ekstra siswa berhasil disimpan!')
         localStorage.setItem('ekstra_last_nama', namaSiswa) // simpan nama siswa
-        setTimeout(() => {
-          router.push('/ekstra')
-          router.refresh()
-        }, 1500)
+        router.push('/ekstra?success=tambah')
       }
     } catch (err: any) {
       console.error(err)

@@ -69,6 +69,7 @@ function DetailPengeluaranInner() {
   const [selectedRow, setSelectedRow] = useState<SubPengeluaran | null>(null)
   const [kategoriList, setKategoriList] = useState<Kategori[]>([])
   const [modalOpen, setModalOpen] = useState(false)
+  const [deleteMessage, setDeleteMessage] = useState<string>('')
 
   const handleUpdate = async ({ id_sub_pengeluaran, formData }: { id_sub_pengeluaran: string, formData: FormData }) => {
     try {
@@ -188,6 +189,7 @@ function DetailPengeluaranInner() {
   }, [id_pengeluaran_query])
 
   const handleDelete = async (id: string) => {
+    setDeleteMessage('') // reset pesan sebelumnya
     if (!confirm('Yakin ingin menghapus sub pengeluaran ini?')) return
     try {
       const token = localStorage.getItem('token') || ''
@@ -197,9 +199,15 @@ function DetailPengeluaranInner() {
           headers: { Authorization: `Bearer ${token}` },
         }
       )
+      setDeleteMessage('Sub pengeluaran berhasil dihapus.')
       fetchDetail()
-    } catch (error) {
-      console.error('Gagal menghapus:', error)
+      setTimeout(() => setDeleteMessage(''), 2500)
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.message ||
+        'Gagal menghapus sub pengeluaran.'
+      setDeleteMessage(msg)
+      setTimeout(() => setDeleteMessage(''), 2500)
     }
   }
 
@@ -303,6 +311,13 @@ function DetailPengeluaranInner() {
       </div>
 
       <h3 className="text-xl font-semibold mb-2">Sub Pengeluaran</h3>
+      
+      {/* Alert Delete Message */}
+      {deleteMessage && (
+        <div className="text-yellow-700 mb-4 p-3 rounded bg-yellow-100 border border-yellow-500">
+          <p className="font-medium">{deleteMessage}</p>
+        </div>
+      )}
       <div className="overflow-x-auto border rounded">
         <table className="w-full border-collapse text-sm">
           <thead className="bg-blue-900 text-white">

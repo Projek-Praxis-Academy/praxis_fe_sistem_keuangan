@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
+import { useRouter } from 'next/navigation'
 
 interface Siswa {
   id_siswa: number
@@ -29,6 +30,8 @@ function PembayaranBoardingKonsumsiInner() {
   const [konsumsi, setKonsumsi] = useState('')
   const [catatan, setCatatan] = useState('')
   const [totalPembayaran, setTotalPembayaran] = useState(0)
+
+  const router = useRouter()
 
   useEffect(() => {
     const fetchSiswaDetail = async () => {
@@ -93,12 +96,12 @@ function PembayaranBoardingKonsumsiInner() {
       })
 
       if (response.data.status === 'success') {
-        setSuccess(response.data.message || 'Pembayaran berhasil.')
+        // setSuccess(response.data.message || 'Pembayaran berhasil.')
         setTanggalPembayaran('')
         setBoarding('')
         setKonsumsi('')
         setCatatan('')
-        window.location.href = '/pendapatan/boarding-konsumsi'
+        router.push('/pendapatan/boarding-konsumsi?success=pembayar')
       } else {
         setError(response.data.message || 'Gagal menyimpan pembayaran.')
       }

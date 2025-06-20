@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import axios from 'axios'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import { Search, FileText, Plus } from 'lucide-react'
@@ -28,10 +28,14 @@ export default function RiwayatTagihan() {
     }
     return 'I'
   })
+  const [highlightNama, setHighlightNama] = useState<string | null>(null)
+  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Simpan level yang dipilih ke localStorage
   useEffect(() => {
     localStorage.setItem('selectedLevel', selectedLevel)
   }, [selectedLevel])
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,6 +55,21 @@ export default function RiwayatTagihan() {
 
     fetchData()
   }, [])
+
+  // Highlight data terbaru
+  useEffect(() => {
+    const lastNama = localStorage.getItem('tagihan_last_nama')
+    if (lastNama) {
+      setHighlightNama(lastNama)
+      highlightTimeoutRef.current = setTimeout(() => {
+        setHighlightNama(null)
+        localStorage.removeItem('tagihan_last_nama')
+      }, 3000)
+    }
+    return () => {
+      if (highlightTimeoutRef.current) clearTimeout(highlightTimeoutRef.current)
+    }
+  }, [data]) // data: array siswa/tagihan yang ditampilkan di tabel
 
   const filteredData = useMemo(() => {
     return data
@@ -150,7 +169,14 @@ export default function RiwayatTagihan() {
           </thead>
           <tbody>
             {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className="border">
+              <tr
+                key={row.id}
+                className={`border transition-colors duration-500 ${
+                  highlightNama && row.original.nama_siswa === highlightNama
+                    ? 'bg-yellow-200'
+                    : ''
+                }`}
+              >
                 {row.getVisibleCells().map(cell => (
                   <td key={cell.id} className="p-2 border">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

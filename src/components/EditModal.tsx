@@ -22,8 +22,18 @@ export default function EditSubPengeluaranModal({
   onSave,
   jenisPengeluaran,
 }: EditSubPengeluaranModalProps) {
-  const defaultForm = {
-     id_sub_pengeluaran: '',
+  interface FormState {
+    id_sub_pengeluaran: string;
+    nama_sub_pengeluaran: string;
+    id_kategori_pengeluaran: string;
+    nominal: string;
+    jumlah_item: string;
+    tanggal_pengeluaran: string;
+    file_nota: File | null;
+  }
+
+  const defaultForm: FormState = {
+    id_sub_pengeluaran: '',
     nama_sub_pengeluaran: '',
     id_kategori_pengeluaran: '',
     nominal: '',
@@ -32,7 +42,7 @@ export default function EditSubPengeluaranModal({
     file_nota: null,
   }
 
-  const [form, setForm] = useState(defaultForm)
+  const [form, setForm] = useState<FormState>(defaultForm)
   const [kategoriList, setKategoriList] = useState<Kategori[]>([])
   const [loadingKategori, setLoadingKategori] = useState(false)
   useEffect(() => {
@@ -175,11 +185,27 @@ export default function EditSubPengeluaranModal({
               required
             />
 
-            <input
-              type="file"
-              accept=".jpg,.jpeg,.png,.pdf"
-              onChange={(e) => handleChange('file_nota', e.target.files?.[0] || null)}
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Upload Nota</label>
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="file_nota"
+                  className="bg-blue-600 text-white px-3 py-2 rounded cursor-pointer hover:bg-blue-700 transition"
+                >
+                  Pilih File
+                </label>
+                <input
+                  id="file_nota"
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.pdf"
+                  onChange={(e) => handleChange('file_nota', e.target.files?.[0] || null)}
+                  className="hidden"
+                />
+                {form.file_nota && (
+                  <span className="text-xs text-gray-600">{form.file_nota.name}</span>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="mt-5 flex justify-end gap-3">

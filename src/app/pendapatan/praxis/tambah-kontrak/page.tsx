@@ -158,12 +158,12 @@ export default function TambahKontrak() {
       const response = await axios(config)
       if (response.data.status === 'success') {
         setSuccess('Kontrak berhasil ditambahkan.')
-        // Simpan level dan nama siswa ke localStorage
         localStorage.setItem('selectedLevel', level)
         localStorage.setItem('praxis_last_nama', namaSiswa)
+        // Redirect ke monitoring praxis setelah sukses
         setTimeout(() => {
           router.push('/pendapatan/praxis')
-        }, 1500)
+        }, 1200)
       }
     } catch (err: any) {
       console.error(err)
