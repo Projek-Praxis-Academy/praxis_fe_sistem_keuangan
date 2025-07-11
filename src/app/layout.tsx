@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const excludedPaths = ["/", "/auth/forget-password", "/auth/reset-password"];
+  const excludedPaths = ["/", "/auth/forget-password", "/auth/register", "/auth/reset-password"];
 
   return (
     <html lang="id">

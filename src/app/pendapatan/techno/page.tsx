@@ -292,6 +292,7 @@ export default function PendapatanTechno() {
             <Search size={14} className="absolute left-2 top-2 text-gray-700" />
           </div>
           <button className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm" onClick={() => router.push('/pendapatan/techno/add-kontrak-techno')}> + Tambah Kontrak</button>
+          <button className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm" onClick={() => router.push('/pendapatan/techno/siswa-techno')}>Data Siswa</button>
         </div>
       </div>
 

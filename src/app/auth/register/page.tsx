@@ -1,78 +1,87 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 
-export default function HomePage() {
+export default function RegisterPage() {
   const router = useRouter();
+  const [nama, setNama] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
-  
+//     myHeaders.append("Authorization", "Bearer your_api_key_if_needed"); // Ganti jika butuh
+
     const raw = JSON.stringify({
+      nama: nama.trim(),
       email: email.trim(),
       password: password.trim(),
+      password_confirmation: passwordConfirmation.trim(),
     });
-  
+
     const requestOptions: RequestInit = {
       method: "POST",
       headers: myHeaders,
       body: raw,
       redirect: "follow",
     };
-  
+
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, requestOptions);
-      const data = await response.json(); // Ini ambil body JSON
-  
+      const response = await fetch("http://127.0.0.1:8000/api/auth/register", requestOptions);
+      const result = await response.json();
+
       if (response.ok) {
-        const token = data.access_token; // ambil dari data.access_token (bukan data.token)
-        localStorage.setItem("token", token); // Simpan ke localStorage
-        router.push("/dashboard"); // Ganti ke path, jangan ke URL full
+        alert("Registrasi berhasil! Silakan login.");
+        router.push("/"); // redirect ke halaman login
       } else {
-        alert(data.message || "Login gagal. Cek email dan password!");
+        alert(result.message || "Registrasi gagal. Periksa kembali isian Anda.");
       }
     } catch (error) {
-      console.error("Error login:", error);
-      alert("Terjadi kesalahan. Coba lagi nanti.");
+      console.error("Error:", error);
+      alert("Terjadi kesalahan saat registrasi.");
     }
   };
-  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-blue-900 p-8 rounded-xl shadow-lg border-4 w-[400px] text-center">
         <img src="/logo.png" alt="Praxis Academy" className="mx-auto w-20 mb-4" />
-        <h2 className="text-xl font-semibold text-white mb-4">Masuk</h2>
+        <h2 className="text-xl font-semibold text-white mb-4">Daftar Akun</h2>
 
-        <form className="flex flex-col gap-4" onSubmit={handleLogin}>
+        <form className="flex flex-col gap-4" onSubmit={handleRegister}>
           <input
-            id="email"
+            type="text"
+            placeholder="Nama Lengkap"
+            className="border bg-white p-2 rounded-md w-full text-blue-900"
+            value={nama}
+            onChange={(e) => setNama(e.target.value)}
+            required
+          />
+
+          <input
             type="email"
             placeholder="example@mail.com"
-            autoCorrect="off"
-            autoCapitalize="none"
-            spellCheck="false"
             className="border bg-white p-2 rounded-md w-full text-blue-900"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
           <div className="relative">
             <input
-              id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="password"
+              placeholder="Password"
               className="border bg-white p-2 rounded-md w-full text-blue-900 pr-10"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
             />
             <button
               type="button"
@@ -83,40 +92,21 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* <div className="text-right">
-            <a
-              href="auth/forget-password"
-              className="text-white text-sm hover:text-blue-300 transition duration-200"
-            >
-              Lupa Kata Sandi?
-            </a>
-          </div> */}
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Konfirmasi Password"
+            className="border bg-white p-2 rounded-md w-full text-blue-900"
+            value={passwordConfirmation}
+            onChange={(e) => setPasswordConfirmation(e.target.value)}
+            required
+          />
 
-          {/* <button
-            id="loginButton"
-            type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded-md w-full hover:bg-blue-600 active:bg-blue-700 transition duration-200"
-          >
-            Masuk
-          </button> */}
           <button
-            id="loginButton"
             type="submit"
             className="bg-blue-500 text-white px-4 py-2 rounded-md w-full hover:bg-blue-600 active:bg-blue-700 transition duration-200"
           >
-            Masuk
+            Daftar
           </button>
-
-          <div className="mt-4 text-sm text-white">
-            Belum punya akun?{" "}
-            <a
-              href="/auth/register"
-              className="underline hover:text-blue-300 transition duration-200"
-            >
-              Daftar
-            </a>
-          </div>
-
         </form>
       </div>
     </div>
