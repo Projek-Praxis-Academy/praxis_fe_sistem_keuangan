@@ -223,7 +223,7 @@ export default function TambahSiswaEkstra() {
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div><span className="text-gray-500">NISN:</span> {nisn}</div>
                   <div><span className="text-gray-500">Nama:</span> {namaSiswa}</div>
-                  <div><span className="text-gray-500">Level:</span> {level}</div>
+                  <div><span className="text-gray-500"></span> {level}</div>
                   <div><span className="text-gray-500">Akademik:</span> {akademik}</div>
                 </div>
               </div>

@@ -66,9 +66,9 @@ const SidebarContent = () => {
         {/* Logo */}
         <div className="flex items-center justify-center mb-4">
           {isCollapsed ? (
-            <Image src="/logo.png" alt="Praxis Academy" width={40} height={40} />
+            <Image src="/steam.png" alt="Praxis Academy" width={150} height={100} />
           ) : (
-            <Image src="/logo.png" alt="Praxis Academy" width={80} height={80} />
+            <Image src="/steam.png" alt="Praxis Academy" width={150} height={100} />
           )}
         </div>
 

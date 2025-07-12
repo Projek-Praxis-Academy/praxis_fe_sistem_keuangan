@@ -4,6 +4,8 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
+import PDFKwitansiBorkum from '@/components/PDFKwitansiBorkum';
+import { pdf } from '@react-pdf/renderer';
 
 interface Siswa {
   id_siswa: number
@@ -87,25 +89,74 @@ function PembayaranBoardingKonsumsiInner() {
       catatan: catatan.trim() !== '' ? catatan : null
     }
 
+    // try {
+    //   const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-bk/pembayaran`, data, {
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //       Authorization: `Bearer ${localStorage.getItem('token')}`
+    //     }
+    //   })
+
+    //   if (response.data.status === 'success') {
+    //     // setSuccess(response.data.message || 'Pembayaran berhasil.')
+    //     setTanggalPembayaran('')
+    //     setBoarding('')
+    //     setKonsumsi('')
+    //     setCatatan('')
+    //     router.push('/pendapatan/boarding-konsumsi?success=pembayar')
+    //   } else {
+    //     setError(response.data.message || 'Gagal menyimpan pembayaran.')
+    //   }
+    // } catch (error: any) {
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-bk/pembayaran`, data, {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/monitoring-bk/pembayaran`,
+      data,
+      {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
-      })
-
-      if (response.data.status === 'success') {
-        // setSuccess(response.data.message || 'Pembayaran berhasil.')
-        setTanggalPembayaran('')
-        setBoarding('')
-        setKonsumsi('')
-        setCatatan('')
-        router.push('/pendapatan/boarding-konsumsi?success=pembayar')
-      } else {
-        setError(response.data.message || 'Gagal menyimpan pembayaran.')
       }
-    } catch (error: any) {
+    )
+
+    if (response.data.status === 'success') {
+      // Generate PDF kwitansi setelah pembayaran sukses
+      const kwitansiData = {
+        namaSiswa: siswaDetail.nama_siswa,
+        nisn: siswaDetail.nisn,
+        level: `Level ${siswaDetail.level}`,
+        akademik: siswaDetail.akademik,
+        tanggalPembayaran: tanggalPembayaran,
+        pembayaran: {
+          boarding: boarding ? parseInt(boarding) : 0,
+          konsumsi: konsumsi ? parseInt(konsumsi) : 0,
+          total: totalPembayaran,
+        },
+        catatan: catatan || undefined,
+      };
+
+      // Generate dan download PDF
+      const pdfBlob = await pdf(<PDFKwitansiBorkum data={kwitansiData} />).toBlob();
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kwitansi_borkum_${siswaDetail.nama_siswa}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // Reset form dan redirect
+      setTanggalPembayaran('')
+      setBoarding('')
+      setKonsumsi('')
+      setCatatan('')
+      router.push('/pendapatan/boarding-konsumsi?success=pembayar')
+    } else {
+      setError(response.data.message || 'Gagal menyimpan pembayaran.')
+    }
+  } catch (error: any) {
       if (error.response && error.response.data) {
         setError(error.response.data.message || 'Gagal menyimpan pembayaran.')
       } else {

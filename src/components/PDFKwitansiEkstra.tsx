@@ -1,4 +1,4 @@
-// components/PDFKwitansi.tsx
+// components/PDFKwitansiEkstra.tsx
 import {
   Document,
   Page,
@@ -12,34 +12,42 @@ import { id } from 'date-fns/locale';
 
 const styles = StyleSheet.create({
   page: {
-    padding: 20, // Padding lebih kecil untuk A5
-    fontSize: 9, // Ukuran font lebih kecil
+    padding: 20,
+    fontSize: 9,
     fontFamily: 'Helvetica',
     lineHeight: 1.3,
   },
-  header: {
-    textAlign: 'center',
-    marginBottom: 10, // Margin lebih kecil
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  logoContainer: {
+    width: '25%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logo: {
+    width: 60,
+    height: 60,
+  },
+  headerTextContainer: {
+    width: '75%',
+    paddingLeft: 10,
   },
   title: {
-    fontSize: 14, // Ukuran lebih kecil
+    fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 3,
   },
   subtitle: {
-    fontSize: 10, // Ukuran lebih kecil
+    fontSize: 10,
     marginBottom: 2,
   },
-  logo: {
-    width: 50, // Ukuran lebih kecil
-    height: 50, // Ukuran lebih kecil
-    alignSelf: 'center',
-    marginBottom: 10,
-  },
   divider: {
-    height: 1, // Garis lebih tipis
+    height: 1,
     backgroundColor: '#000',
-    marginVertical: 10, // Margin lebih kecil
+    marginVertical: 10,
   },
   section: {
     marginBottom: 8,
@@ -47,16 +55,16 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4, // Margin lebih kecil
+    marginBottom: 4,
   },
   label: {
     fontWeight: 'bold',
     width: '40%',
-    fontSize: 9, // Ukuran lebih kecil
+    fontSize: 9,
   },
   value: {
     width: '60%',
-    fontSize: 9, // Ukuran lebih kecil
+    fontSize: 9,
   },
   table: {
     width: '100%',
@@ -75,11 +83,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   cell: {
-    padding: 5, // Padding lebih kecil
+    padding: 5,
     flex: 1,
     borderRightWidth: 1,
     borderRightColor: '#000',
-    fontSize: 8, // Ukuran lebih kecil
+    fontSize: 8,
   },
   cell1: {
     flex: 2,
@@ -94,26 +102,26 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: 'absolute',
-    bottom: 15, // Posisi lebih dekat ke bawah
+    bottom: 15,
     left: 0,
     right: 0,
     textAlign: 'center',
-    fontSize: 8, // Ukuran lebih kecil
+    fontSize: 8,
     color: '#666',
-    paddingHorizontal: 20, // Padding horizontal
+    paddingHorizontal: 20,
   },
   signature: {
-    marginTop: 20, // Margin lebih kecil
+    marginTop: 20,
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
   signatureLine: {
     borderTopWidth: 1,
     borderTopColor: '#000',
-    width: 150, // Lebar lebih kecil
+    width: 150,
     textAlign: 'center',
     paddingTop: 3,
-    fontSize: 9, // Ukuran lebih kecil
+    fontSize: 9,
   },
 });
 
@@ -136,43 +144,35 @@ const formatDate = (dateString: string) => {
   }
 };
 
-interface KwitansiData {
+interface KwitansiEkstraData {
   namaSiswa: string;
+  nisn: string;
   level: string;
   akademik: string;
-  nisn: string;
+  ekstra: string;
   tanggalPembayaran: string;
-  pembayaran: {
-    kbm: number;
-    spp: number;
-    pemeliharaan: number;
-    sumbangan: number;
-    total: number;
-  };
+  nominal: number;
   catatan?: string;
 }
 
-export default function PDFKwitansi({ data }: { data: KwitansiData }) {
-  const items = [
-    { label: 'KBM', value: data.pembayaran.kbm },
-    { label: 'SPP', value: data.pembayaran.spp },
-    { label: 'Pemeliharaan', value: data.pembayaran.pemeliharaan },
-    { label: 'Sumbangan', value: data.pembayaran.sumbangan },
-  ];
-
+export default function PDFKwitansiEkstra({ data }: { data: KwitansiEkstraData }) {
   return (
     <Document>
-      {/* Ubah size menjadi A5 */}
       <Page size="A5" style={styles.page}>
-        <View style={styles.header}>
-          {/* Gunakan path /logo.png */}
-          <Image src="/logo.png" style={styles.logo} />
-          <Text style={styles.title}>KWITANSI PEMBAYARAN</Text>
-          <Text style={styles.subtitle}>PRAXIS ACADEMY</Text>
-          <Text style={styles.subtitle}>
-            Jl. Contoh No. 123, Jakarta - Indonesia
-          </Text>
-          <Text style={styles.subtitle}>Telp: (021) 123-4567</Text>
+        {/* Header dengan logo di kiri dan teks di kanan */}
+        <View style={styles.headerContainer}>
+          <View style={styles.logoContainer}>
+            <Image src="/logo.png" style={styles.logo} />
+          </View>
+          
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.title}>KWITANSI PEMBAYARAN EKSTRAKURIKULER</Text>
+            <Text style={styles.subtitle}>PRAXIS ACADEMY</Text>
+            <Text style={styles.subtitle}>
+              Jl. Contoh No. 123, Jakarta - Indonesia
+            </Text>
+            <Text style={styles.subtitle}>Telp: (021) 123-4567</Text>
+          </View>
         </View>
 
         <View style={styles.divider} />
@@ -180,7 +180,7 @@ export default function PDFKwitansi({ data }: { data: KwitansiData }) {
         <View style={styles.section}>
           <View style={styles.grid}>
             <Text style={styles.label}>Nomor Kwitansi</Text>
-            <Text style={styles.value}>PA/{format(new Date(), 'yyyyMMdd')}/001</Text>
+            <Text style={styles.value}>EK/{format(new Date(), 'yyyyMMdd')}/001</Text>
           </View>
           <View style={styles.grid}>
             <Text style={styles.label}>Tanggal Pembayaran</Text>
@@ -205,7 +205,7 @@ export default function PDFKwitansi({ data }: { data: KwitansiData }) {
             <Text style={styles.value}>{data.level || '-'}</Text>
           </View>
           <View style={styles.grid}>
-            <Text style={styles.label}>Akademik</Text>
+            <Text style={styles.label}>Kelas</Text>
             <Text style={styles.value}>{data.akademik || '-'}</Text>
           </View>
         </View>
@@ -219,21 +219,19 @@ export default function PDFKwitansi({ data }: { data: KwitansiData }) {
             <Text style={[styles.cell, styles.cell2]}>Jumlah</Text>
           </View>
           
-          {items.map((item, index) => (
-            <View style={styles.tableRow} key={index}>
-              <Text style={[styles.cell, styles.cell1]}>{item.label}</Text>
-              <Text style={[styles.cell, styles.cell2]}>
-                {formatRupiah(item.value)}
-              </Text>
-            </View>
-          ))}
+          <View style={styles.tableRow}>
+            <Text style={[styles.cell, styles.cell1]}>{data.ekstra || 'Ekstrakurikuler'}</Text>
+            <Text style={[styles.cell, styles.cell2]}>
+              {formatRupiah(data.nominal)}
+            </Text>
+          </View>
           
           <View style={[styles.tableRow, styles.totalRow]}>
             <Text style={[styles.cell, styles.cell1, { fontWeight: 'bold' }]}>
               TOTAL
             </Text>
             <Text style={[styles.cell, styles.cell2, { fontWeight: 'bold' }]}>
-              {formatRupiah(data.pembayaran.total)}
+              {formatRupiah(data.nominal)}
             </Text>
           </View>
         </View>

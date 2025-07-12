@@ -3,6 +3,8 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import axios from 'axios'
+import PDFKwitansiEkstra from '@/components/PDFKwitansiEkstra';
+import { pdf } from '@react-pdf/renderer';
 
 // Gunakan interface yang sama dengan DetailSiswaEkstra
 interface DetailSiswaEkstra {
@@ -125,25 +127,65 @@ function PembayaranEkstraInner() {
       catatan: formData.catatan || null
     }
 
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/pembayaran`,
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      )
+    // try {
+    //   const response = await axios.post(
+    //     `${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/pembayaran`,
+    //     payload,
+    //     {
+    //       headers: {
+    //         'Content-Type': 'application/json',
+    //         Authorization: `Bearer ${localStorage.getItem('token')}`,
+    //       },
+    //     }
+    //   )
 
-      if (response.data.status === 'success') {
-        // setSuccess('Pembayaran berhasil disimpan')
-        router.push('/ekstra?success=pembayaran')
-      } else {
-        setError(response.data.message || 'Gagal menyimpan pembayaran')
+    //   if (response.data.status === 'success') {
+    //     // setSuccess('Pembayaran berhasil disimpan')
+    //     router.push('/ekstra?success=pembayaran')
+    //   } else {
+    //     setError(response.data.message || 'Gagal menyimpan pembayaran')
+    //   }
+    try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/pembayaran`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
       }
-    } catch (error: any) {
+    )
+
+    if (response.data.status === 'success') {
+      // Generate PDF kwitansi setelah pembayaran sukses
+      const kwitansiData = {
+        namaSiswa: detailSiswa.nama_siswa,
+        nisn: detailSiswa.nisn,
+        level: detailSiswa.level,
+        akademik: detailSiswa.akademik,
+        ekstra: detailSiswa.nama_ekstra,
+        tanggalPembayaran: formData.tanggal_pembayaran,
+        nominal: parseInt(formData.nominal),
+        catatan: formData.catatan || undefined,
+      };
+
+      // Generate dan download PDF
+      const pdfBlob = await pdf(<PDFKwitansiEkstra data={kwitansiData} />).toBlob();
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kwitansi_ekstra_${detailSiswa.nama_siswa}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      router.push('/ekstra?success=pembayaran')
+    } else {
+      setError(response.data.message || 'Gagal menyimpan pembayaran')
+    }
+   } catch (error: any) {
       console.error('Submit error:', error)
       setError(
         error.response?.data?.message || 
@@ -209,7 +251,7 @@ function PembayaranEkstraInner() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
                   <input 
-                    value={`Level ${detailSiswa.level}`} 
+                    value={`${detailSiswa.level}`} 
                     readOnly 
                     className="w-full border px-3 py-2 rounded bg-gray-100" 
                   />

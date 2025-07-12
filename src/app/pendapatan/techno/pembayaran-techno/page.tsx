@@ -3,6 +3,8 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
+import PDFKwitansiTechno from '@/components/PDFKwitansiTechno';
+import { pdf } from '@react-pdf/renderer';
 
 interface Kontrak {
   uang_kbm: number | null
@@ -117,27 +119,80 @@ function PembayaranSiswaInner() {
       catatan: catatan.trim() !== '' ? catatan : null
     }
 
+    // try {
+    //   const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/pembayaran`, data, {
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //       Authorization: `Bearer ${localStorage.getItem('token')}`
+    //     }
+    //   })
+
+    //   if (response.data.status === 'success') {
+    //     setSuccess(response.data.message || 'Pembayaran berhasil.')
+    //     setTanggalPembayaran('')
+    //     setKbm('')
+    //     setSpp('')
+    //     setPemeliharaan('')
+    //     setSumbangan('')
+    //     setCatatan('')
+    //     window.location.href = '/pendapatan/techno'
+    //   } else {
+    //     setError(response.data.message || 'Gagal menyimpan pembayaran.')
+    //   }
+    // } catch (error: any) {
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/pembayaran`, data, {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/pembayaran`,
+      data,
+      {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
-      })
-
-      if (response.data.status === 'success') {
-        setSuccess(response.data.message || 'Pembayaran berhasil.')
-        setTanggalPembayaran('')
-        setKbm('')
-        setSpp('')
-        setPemeliharaan('')
-        setSumbangan('')
-        setCatatan('')
-        window.location.href = '/pendapatan/techno'
-      } else {
-        setError(response.data.message || 'Gagal menyimpan pembayaran.')
       }
-    } catch (error: any) {
+    )
+
+    if (response.data.status === 'success') {
+      // Generate PDF kwitansi setelah pembayaran sukses
+      const kwitansiData = {
+        namaSiswa: siswaDetail.nama_siswa,
+        nisn: siswaDetail.nisn,
+        level: `Level ${siswaDetail.level}`,
+        akademik: siswaDetail.akademik,
+        tanggalPembayaran: tanggalPembayaran,
+        pembayaran: {
+          kbm: uang_kbm || 0,
+          spp: uang_spp || 0,
+          pemeliharaan: uang_pemeliharaan || 0,
+          sumbangan: uang_sumbangan || 0,
+          total: totalPembayaran,
+        },
+        catatan: catatan || undefined,
+      };
+
+      // Generate dan download PDF
+      const pdfBlob = await pdf(<PDFKwitansiTechno data={kwitansiData} />).toBlob();
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kwitansi_techno_${siswaDetail.nama_siswa}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // Reset form dan redirect
+      setTanggalPembayaran('')
+      setKbm('')
+      setSpp('')
+      setPemeliharaan('')
+      setSumbangan('')
+      setCatatan('')
+      window.location.href = '/pendapatan/techno'
+    } else {
+      setError(response.data.message || 'Gagal menyimpan pembayaran.')
+    }
+  } catch (error: any) {
       if (error.response && error.response.data) {
         setError(error.response.data.message || 'Gagal menyimpan pembayaran.')
       } else {

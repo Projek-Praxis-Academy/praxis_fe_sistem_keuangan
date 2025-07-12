@@ -105,7 +105,7 @@ function DetailPraxisInner() {
                 />
                 <input
                   id="id_siswa"
-                  value={`Level ${siswaDetail.level}`}
+                  value={`Level${siswaDetail.level}`}
                   readOnly
                   className="w-full border px-3 py-2 rounded bg-gray-100 "
                 />

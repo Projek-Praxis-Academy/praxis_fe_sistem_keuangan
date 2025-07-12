@@ -3,6 +3,8 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import axios from 'axios'
+import PDFKwitansi from '@/components/PDFKwitansi';
+import { pdf } from '@react-pdf/renderer';
 
 interface Kontrak {
   uang_kbm: number | null
@@ -34,6 +36,7 @@ function PembayaranSiswaInner() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false) // State untuk loading submit
 
   const [tanggalPembayaran, setTanggalPembayaran] = useState('')
   const [kbm, setKbm] = useState('')
@@ -119,6 +122,10 @@ function PembayaranSiswaInner() {
     }
 
     try {
+      setIsSubmitting(true) // Tampilkan loading saat proses submit
+      setError('')
+      setSuccess('')
+
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/pembayaran`, data, {
         headers: {
           'Content-Type': 'application/json',
@@ -127,14 +134,45 @@ function PembayaranSiswaInner() {
       })
 
       if (response.data.status === 'success') {
-        setSuccess('Pembayaran berhasil dilakukan.')
+        setSuccess('Pembayaran berhasil dilakukan. Membuat kwitansi...')
         localStorage.setItem('praxis_last_nama', siswaDetail.nama_siswa)
+        
+        // Generate PDF kwitansi setelah pembayaran sukses
+        const kwitansiData = {
+          namaSiswa: siswaDetail.nama_siswa,
+          level: siswaDetail.level,
+          akademik: siswaDetail.akademik,
+          nisn: siswaDetail.nisn,
+          tanggalPembayaran: tanggalPembayaran,
+          pembayaran: {
+            kbm: uang_kbm || 0,
+            spp: uang_spp || 0,
+            pemeliharaan: uang_pemeliharaan || 0,
+            sumbangan: uang_sumbangan || 0,
+            total: totalPembayaran,
+          },
+          catatan: catatan || undefined,
+        };
+
+        // Tunggu PDF selesai dibuat lalu unduh otomatis
+        const pdfBlob = await pdf(<PDFKwitansi data={kwitansiData} />).toBlob();
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kwitansi_${siswaDetail.nama_siswa}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Reset form setelah berhasil
         setTanggalPembayaran('')
         setKbm('')
         setSpp('')
         setPemeliharaan('')
         setSumbangan('')
         setCatatan('')
+        
         setTimeout(() => {
           setSuccess('')
           router.push('/pendapatan/praxis')
@@ -148,6 +186,8 @@ function PembayaranSiswaInner() {
       } else {
         setError('Terjadi kesalahan saat mengirim data.')
       }
+    } finally {
+      setIsSubmitting(false) // Sembunyikan loading setelah proses selesai
     }
   }
 
@@ -158,32 +198,69 @@ function PembayaranSiswaInner() {
           <h2 className="text-2xl font-bold text-center text-blue-900 mb-5">PEMBAYARAN PRAXIS ACADEMY</h2>
           <hr className="border-t-2 border-blue-900 mb-5" />
 
-          {loading && <p>Loading...</p>}
+          {/* Loading spinner untuk data siswa */}
+          {loading && (
+            <div className="flex flex-col items-center justify-center py-10">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-900 mb-4"></div>
+              <p className="text-gray-600">Memuat data siswa...</p>
+            </div>
+          )}
+
           {error && (
             <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
               <p className="font-medium">{error}</p>
             </div>
           )}
+          
           {success && (
-            <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+            <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500 flex items-center">
+              <div className="mr-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-green-600"></div>
+              </div>
               <p className="font-medium">{success}</p>
             </div>
           )}
 
-          {siswaDetail && (
+          {siswaDetail && !loading && (
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
-                <input value={siswaDetail.nama_siswa} readOnly className="border px-3 py-2 rounded bg-gray-100" />
-                <input value={`Level ${siswaDetail.level}`} readOnly className="border px-3 py-2 rounded bg-gray-100" />
-                <input value={siswaDetail.akademik} readOnly className="border px-3 py-2 rounded bg-gray-100" />
+                <input 
+                  value={siswaDetail.nama_siswa} 
+                  readOnly 
+                  className="border px-3 py-2 rounded bg-gray-100" 
+                />
+                <input 
+                  value={`Level ${siswaDetail.level}`} 
+                  readOnly 
+                  className="border px-3 py-2 rounded bg-gray-100" 
+                />
+                <input 
+                  value={siswaDetail.akademik} 
+                  readOnly 
+                  className="border px-3 py-2 rounded bg-gray-100" 
+                />
               </div>
 
-              <input value={`NISN: ${siswaDetail.nisn}`} readOnly className="w-full border px-3 py-2 rounded bg-gray-100" />
-              <input type="hidden" value={siswaDetail.id_siswa} readOnly name="id_siswa" />
+              <input 
+                value={`NISN: ${siswaDetail.nisn}`} 
+                readOnly 
+                className="w-full border px-3 py-2 rounded bg-gray-100" 
+              />
+              <input 
+                type="hidden" 
+                value={siswaDetail.id_siswa} 
+                readOnly 
+                name="id_siswa" 
+              />
 
               <div>
                 <label className="block text-sm font-medium mb-1">Tanggal Pembayaran</label>
-                <input type="date" value={tanggalPembayaran} onChange={(e) => setTanggalPembayaran(e.target.value)} className="w-full border px-3 py-2 rounded" />
+                <input 
+                  type="date" 
+                  value={tanggalPembayaran} 
+                  onChange={(e) => setTanggalPembayaran(e.target.value)} 
+                  className="w-full border px-3 py-2 rounded" 
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -223,7 +300,7 @@ function PembayaranSiswaInner() {
                     type="text"
                     value={totalPembayaran.toLocaleString('id-ID')}
                     readOnly
-                    className="px-2 py-2 w-full bg-gray-100"
+                    className="px-2 py-2 w-full bg-gray-100 font-medium"
                   />
                 </div>
               </div>
@@ -243,9 +320,19 @@ function PembayaranSiswaInner() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="w-full py-2 px-4 bg-blue-900 text-white rounded hover:bg-blue-800 transition"
+                disabled={isSubmitting}
+                className={`w-full py-2 px-4 bg-blue-900 text-white rounded hover:bg-blue-800 transition flex items-center justify-center ${
+                  isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
+                }`}
               >
-                Simpan Pembayaran
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                    Memproses...
+                  </>
+                ) : (
+                  'Simpan Pembayaran'
+                )}
               </button>
             </div>
           )}
@@ -257,7 +344,11 @@ function PembayaranSiswaInner() {
 
 function PembayaranSiswaPage() {
   return (
-    <Suspense fallback={<div className="ml-64 p-8">Loading...</div>}>
+    <Suspense fallback={
+      <div className="ml-64 flex-1 bg-white min-h-screen p-6 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-900"></div>
+      </div>
+    }>
       <PembayaranSiswaInner />
     </Suspense>
   )

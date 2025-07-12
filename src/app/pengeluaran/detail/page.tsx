@@ -310,7 +310,21 @@ function DetailPengeluaranInner() {
         </p>
       </div>
 
-      <h3 className="text-xl font-semibold mb-2">Sub Pengeluaran</h3>
+      {/* <h3 className="text-xl font-semibold mb-2">Sub Pengeluaran</h3> */}
+
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-xl font-semibold">Sub Pengeluaran</h3>
+        <button
+          onClick={() => {
+            setSelectedRow(null)  // kosongkan selectedRow agar form kosong
+            setModalOpen(true)    // buka modal
+          }}
+          className="bg-green-600 text-white px-2 py-1.5 rounded hover:bg-green-700 transition"
+        >
+          + Add
+        </button>
+      </div>
+
       
       {/* Alert Delete Message */}
       {deleteMessage && (

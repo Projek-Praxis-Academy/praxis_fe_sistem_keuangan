@@ -58,37 +58,50 @@ export default function PendapatanTechno() {
         const siswaArray = response.data.data?.data || [];
 
         const fetchedData = siswaArray.map((item: any) => {
-          const tagihan = item.tagihan
-
-          const kbm = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_kbm) : 0
-          const spp = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_spp) : 0
-          const pemeliharaan = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan) : 0
-          const sumbanganVal = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_sumbangan) : 0
-
-          // Helper untuk tampilkan 'Lunas' jika 0, '-' jika tidak ada tagihan
-          const displayTagihan = (val: any) => {
-            if (val === undefined || val === null) return '-'
-            if (val === 0 || val === '0') return 'Lunas'
-            return val
+          // Jika tagihan kosong (array kosong), tampilkan '-'
+          if (!item.tagihan || item.tagihan.length === 0) {
+            return {
+              nama_siswa: item.nama_siswa,
+              // nisn: item.nisn || '-',
+              level: item.level,
+              akademik: item.akademik || '-',
+              id_siswa: item.id_siswa,
+              tagihan_uang_kbm: '-',
+              tagihan_uang_spp: '-',
+              tagihan_uang_pemeliharaan: '-',
+              tagihan_uang_sumbangan: '-',
+              total: '-',
+            }
           }
 
-          // Total juga 'Lunas' jika semua tagihan 0 dan tagihan ada
+          // Jika tagihan ada, mapping nominal
+          let kbm = 0, spp = 0, pemeliharaan = 0, sumbanganVal = 0
+          item.tagihan.forEach((tagih: any) => {
+            const nominal = typeof tagih.nominal === 'number' ? tagih.nominal : 0
+            const nama = tagih.nama_tagihan?.toLowerCase()
+            if (nama === 'kbm') kbm = nominal
+            if (nama === 'spp') spp = nominal
+            if (nama === 'pemeliharaan') pemeliharaan = nominal
+            if (nama === 'sumbangan') sumbanganVal = nominal
+          })
+
           const total = kbm + spp + pemeliharaan + sumbanganVal
-          const isAllLunas = tagihan && kbm === 0 && spp === 0 && pemeliharaan === 0 && sumbanganVal === 0
+          const isAllLunas = kbm === 0 && spp === 0 && pemeliharaan === 0 && sumbanganVal === 0
+
+          // Helper untuk tampilkan 'Lunas' jika 0
+          const displayTagihan = (val: number) => (val === 0 ? 'Lunas' : val)
 
           return {
             nama_siswa: item.nama_siswa,
-            nisn: item.nisn,
+            // nisn: item.nisn || '-',
             level: item.level,
-            akademik: item.akademik,
+            akademik: item.akademik || '-',
             id_siswa: item.id_siswa,
-            tagihan_uang_kbm: tagihan ? displayTagihan(kbm) : '-',
-            tagihan_uang_spp: tagihan ? displayTagihan(spp) : '-',
-            tagihan_uang_pemeliharaan: tagihan ? displayTagihan(pemeliharaan) : '-',
-            tagihan_uang_sumbangan: tagihan
-              ? (tagihan.tagihan_uang_sumbangan === '0' || sumbanganVal === 0 ? 'Lunas' : tagihan.tagihan_uang_sumbangan)
-              : '-',
-            total: tagihan ? (isAllLunas ? 'Lunas' : total) : '-',
+            tagihan_uang_kbm: displayTagihan(kbm),
+            tagihan_uang_spp: displayTagihan(spp),
+            tagihan_uang_pemeliharaan: displayTagihan(pemeliharaan),
+            tagihan_uang_sumbangan: displayTagihan(sumbanganVal),
+            total: isAllLunas ? 'Lunas' : total,
           }
         })
 
@@ -146,7 +159,7 @@ export default function PendapatanTechno() {
   const columns = useMemo(
     () => [
       { accessorKey: 'nama_siswa', header: 'Nama Siswa' },
-      { accessorKey: 'nisn', header: 'NISN' },
+      // { accessorKey: 'nisn', header: 'NISN' },
       {
         accessorKey: 'tagihan_uang_kbm',
         header: 'KBM',

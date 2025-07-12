@@ -34,7 +34,7 @@ export default function RegisterPage() {
     };
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/auth/register", requestOptions);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, requestOptions);
       const result = await response.json();
 
       if (response.ok) {
@@ -107,6 +107,16 @@ export default function RegisterPage() {
           >
             Daftar
           </button>
+
+          <div className="mt-4 text-sm text-white">
+            Sudah punya akun?{" "}
+            <a
+              href="/"
+              className="underline hover:text-blue-300 transition duration-200"
+            >
+              Login
+            </a>
+          </div>
         </form>
       </div>
     </div>

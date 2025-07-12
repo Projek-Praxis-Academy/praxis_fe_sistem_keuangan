@@ -8,90 +8,126 @@ import axios from 'axios'
 
 interface Siswa {
   nama_siswa: string
-  nisn: string
   level: string
-  akademik: string
   id_siswa: number
   tagihan_uang_kbm: number
   tagihan_uang_spp: number
   tagihan_uang_pemeliharaan: number
-  tagihan_uang_sumbangan: string | null
+  tagihan_uang_sumbangan: number
   total: number
 }
 
 function PendapatanPraxisInner() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLevel, setSelectedLevel] = useState(() => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('selectedLevel') || ''
-  }
-  return ''
-})
-
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('selectedLevel') || ''
+    }
+    return ''
+  })
   const [data, setData] = useState<Siswa[]>([])
+  const highlightRowRef = useRef<HTMLTableRowElement | null>(null)
   const [highlightNama, setHighlightNama] = useState<string | null>(null)
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [showAlert, setShowAlert] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const searchParams = useSearchParams()
-
-  // Konversi "1.000.000" ke 1000000
-  const parseFormattedNumber = (value: string | null | undefined): number => {
-    if (!value || value === 'Lunas') return 0
-    return Number(value.replace(/\./g, ''))
-  }
 
   // Simpan level yang dipilih ke localStorage
   useEffect(() => {
     localStorage.setItem('selectedLevel', selectedLevel)
   }, [selectedLevel])
 
+  // Fungsi untuk mengambil semua data dari semua halaman
+  const fetchAllData = async (token: string) => {
+    let allData: any[] = []
+    let currentPage = 1
+    let lastPage = 1
+
+    try {
+      // Request pertama untuk mendapatkan metadata pagination
+      const firstResponse = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/monitoring-praxis?page=1`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      
+      const firstData = firstResponse.data.data
+      lastPage = firstData.last_page
+      allData = [...firstData.data]
+
+      // Jika ada halaman tambahan, ambil semua
+      if (lastPage > 1) {
+        const requests = []
+        for (let page = 2; page <= lastPage; page++) {
+          requests.push(
+            axios.get(
+              `${process.env.NEXT_PUBLIC_API_URL}/monitoring-praxis?page=${page}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            )
+          )
+        }
+
+        // Eksekusi semua request secara paralel
+        const responses = await Promise.all(requests)
+        responses.forEach(response => {
+          const pageData = response.data.data.data
+          allData = [...allData, ...pageData]
+        })
+      }
+
+      return allData
+    } catch (error) {
+      console.error('Error fetching all pages:', error)
+      throw error
+    }
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token') || '';
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-praxis`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const siswaArray = response.data.data?.data || [];
+        setIsLoading(true)
+        const token = localStorage.getItem('token') || ''
+        
+        // Ambil semua data dari semua halaman
+        const siswaArray = await fetchAllData(token)
 
         const fetchedData = siswaArray.map((item: any) => {
-          const tagihan = item.tagihan;
+          // Inisialisasi nilai default
+          let kbm = 0
+          let spp = 0
+          let pemeliharaan = 0
+          let sumbanganVal = 0
 
-          const kbm = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_kbm) : 0;
-          const spp = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_spp) : 0;
-          const pemeliharaan = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_pemeliharaan) : 0;
-          const sumbanganVal = tagihan ? parseFormattedNumber(tagihan.tagihan_uang_sumbangan) : 0;
-
-          const displayTagihan = (val: any) => {
-            if (val === undefined || val === null) return '-'
-            if (val === 0 || val === '0') return 'Lunas'
-            return val
+          // Proses tagihan jika ada
+          if (Array.isArray(item.tagihan) && item.tagihan.length > 0) {
+            item.tagihan.forEach((tagih: any) => {
+              const nominal = tagih.nominal || 0
+              const nama = tagih.nama_tagihan?.toLowerCase()
+              
+              if (nama === 'kbm') kbm = nominal
+              if (nama === 'spp') spp = nominal
+              if (nama === 'pemeliharaan') pemeliharaan = nominal
+              if (nama === 'sumbangan') sumbanganVal = nominal
+            })
           }
 
+          // Hitung total tagihan
           const total = kbm + spp + pemeliharaan + sumbanganVal
-          const isAllLunas = tagihan && kbm === 0 && spp === 0 && pemeliharaan === 0 && sumbanganVal === 0
 
           return {
             nama_siswa: item.nama_siswa,
-            nisn: item.nisn,
-            level: item.level,
-            akademik: item.akademik,
+            level: item.level || '-',
             id_siswa: item.id_siswa,
-            tagihan_uang_kbm: tagihan ? displayTagihan(kbm) : '-',
-            tagihan_uang_spp: tagihan ? displayTagihan(spp) : '-',
-            tagihan_uang_pemeliharaan: tagihan ? displayTagihan(pemeliharaan) : '-',
-            tagihan_uang_sumbangan: tagihan
-              ? (tagihan.tagihan_uang_sumbangan === '0' || sumbanganVal === 0 ? 'Lunas' : tagihan.tagihan_uang_sumbangan)
-              : '-',
-            total: tagihan ? (isAllLunas ? 'Lunas' : total) : '-',
+            tagihan_uang_kbm: kbm,
+            tagihan_uang_spp: spp,
+            tagihan_uang_pemeliharaan: pemeliharaan,
+            tagihan_uang_sumbangan: sumbanganVal,
+            total: total,
           }
         })
 
-        // --- Logic siswa terbaru di paling atas ---
+        // Urutkan berdasarkan siswa terbaru di atas
         const lastNama = localStorage.getItem('praxis_last_nama')
         let sortedData = fetchedData
         if (lastNama) {
@@ -101,44 +137,39 @@ function PendapatanPraxisInner() {
             sortedData = [item, ...fetchedData]
           }
         }
-        setData(sortedData)
-        // --- End logic ---
 
+        setData(sortedData)
       } catch (error: any) {
-        console.error('Failed to fetch data:', error);
-        console.error('Error response:', error.response?.data);
+        console.error('Failed to fetch data:', error)
+        console.error('Error response:', error.response?.data)
+      } finally {
+        setIsLoading(false)
       }
     }
+
     fetchData()
-  }, []);
-  
+  }, [])
 
   const filteredData = useMemo(() => {
     return data
-      .filter((item) => item.level === selectedLevel)
+      .filter((item) => selectedLevel === '' || item.level === selectedLevel)
       .filter((item) =>
-        item.nama_siswa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.nisn.includes(searchTerm) ||
-        item.akademik.toLowerCase().includes(searchTerm.toLowerCase())
+        item.nama_siswa.toLowerCase().includes(searchTerm.toLowerCase())
       )
   }, [searchTerm, selectedLevel, data])
 
   const columns = useMemo(
     () => [
       { accessorKey: 'nama_siswa', header: 'Nama Siswa' },
-      { accessorKey: 'nisn', header: 'NISN' },
       {
         accessorKey: 'tagihan_uang_kbm',
         header: 'KBM',
         cell: ({ getValue }: any) => {
           const val = getValue()
-          return (
-            <span className={
-              val === 'Lunas' ? 'text-green-600 font-bold' :
-              val === '-' ? 'text-gray-400 italic' : ''
-            }>
-              {val === '-' ? '-' : val === 'Lunas' ? 'Lunas' : Number(val).toLocaleString('id-ID')}
-            </span>
+          return val ? (
+            <span>{Number(val).toLocaleString('id-ID')}</span>
+          ) : (
+            <span>-</span>
           )
         }
       },
@@ -147,13 +178,10 @@ function PendapatanPraxisInner() {
         header: 'SPP',
         cell: ({ getValue }: any) => {
           const val = getValue()
-          return (
-            <span className={
-              val === 'Lunas' ? 'text-green-600 font-bold' :
-              val === '-' ? 'text-gray-400 italic' : ''
-            }>
-              {val === '-' ? '-' : val === 'Lunas' ? 'Lunas' : Number(val).toLocaleString('id-ID')}
-            </span>
+          return val ? (
+            <span>{Number(val).toLocaleString('id-ID')}</span>
+          ) : (
+            <span>-</span>
           )
         }
       },
@@ -162,13 +190,10 @@ function PendapatanPraxisInner() {
         header: 'Pemeliharaan',
         cell: ({ getValue }: any) => {
           const val = getValue()
-          return (
-            <span className={
-              val === 'Lunas' ? 'text-green-600 font-bold' :
-              val === '-' ? 'text-gray-400 italic' : ''
-            }>
-              {val === '-' ? '-' : val === 'Lunas' ? 'Lunas' : Number(val).toLocaleString('id-ID')}
-            </span>
+          return val ? (
+            <span>{Number(val).toLocaleString('id-ID')}</span>
+          ) : (
+            <span>-</span>
           )
         }
       },
@@ -177,13 +202,10 @@ function PendapatanPraxisInner() {
         header: 'Sumbangan',
         cell: ({ getValue }: any) => {
           const val = getValue()
-          return (
-            <span className={
-              val === 'Lunas' ? 'text-green-600 font-bold' :
-              val === '-' ? 'text-gray-400 italic' : ''
-            }>
-              {val === '-' ? '-' : val}
-            </span>
+          return val ? (
+            <span>{Number(val).toLocaleString('id-ID')}</span>
+          ) : (
+            <span>-</span>
           )
         }
       },
@@ -192,13 +214,12 @@ function PendapatanPraxisInner() {
         header: 'Total',
         cell: ({ getValue }: any) => {
           const val = getValue()
-          return (
-            <span className={
-              val === 'Lunas' ? 'text-green-600 font-bold' :
-              val === '-' ? 'text-gray-400 italic' : ''
-            }>
-              {val === '-' ? '-' : val === 'Lunas' ? 'Lunas' : Number(val).toLocaleString('id-ID')}
+          return val ? (
+            <span className="font-semibold">
+              {Number(val).toLocaleString('id-ID')}
             </span>
+          ) : (
+            <span>-</span>
           )
         }
       },
@@ -234,13 +255,22 @@ function PendapatanPraxisInner() {
     [router]
   )
 
-  const table = useReactTable({ data: filteredData, columns, getCoreRowModel: getCoreRowModel() })
+  const table = useReactTable({ 
+    data: filteredData, 
+    columns, 
+    getCoreRowModel: getCoreRowModel() 
+  })
 
-  // Highlight data terbaru
+  // Highlight dan scroll ke nama siswa yang baru ditambahkan kontrak
   useEffect(() => {
     const lastNama = localStorage.getItem('praxis_last_nama')
     if (lastNama) {
       setHighlightNama(lastNama)
+      setTimeout(() => {
+        if (highlightRowRef.current) {
+          highlightRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 400)
       highlightTimeoutRef.current = setTimeout(() => {
         setHighlightNama(null)
         localStorage.removeItem('praxis_last_nama')
@@ -251,57 +281,20 @@ function PendapatanPraxisInner() {
     }
   }, [data])
 
-  // Scroll otomatis ke atas saat highlightNama aktif
-  useEffect(() => {
-    if (highlightNama) {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }, [highlightNama])
-
-  // // Success alert logic
-  // useEffect(() => {
-  //   const successParam = searchParams.get('success');
-  //   const isTambah = successParam && successParam.toLowerCase().includes('tambah');
-  //   const isBayar = successParam && successParam.toLowerCase().includes('pembayar');
-
-  //   if (isTambah || isBayar) {
-  //     setShowAlert(true);
-  //     const timeout = setTimeout(() => {
-  //       setShowAlert(false);
-  //       router.replace('/pendapatan/praxis');
-  //     }, 25000);
-  //     return () => clearTimeout(timeout);
-  //   }
-  // }, [searchParams, router]);
+  if (isLoading) {
+    return (
+      <div className="ml-64 flex-1 bg-white min-h-screen p-6 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 border-4 border-blue-900 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-lg text-blue-900 font-semibold">Memuat data siswa Praxis...</p>
+          <p className="text-sm text-gray-500 mt-2">Mohon tunggu, sedang mengambil data dari server.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
-      {/* ALERT SUCCESS */}
-      <Suspense fallback={null}>
-        {showAlert && (
-          <div className="relative text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500 flex items-center">
-            <p className="font-medium flex-1">
-              {searchParams.get('success')?.toLowerCase().includes('tambah')
-                ? 'Data siswa berhasil ditambahkan!'
-                : searchParams.get('success')?.toLowerCase().includes('pembayar')
-                ? 'Pembayaran siswa berhasil dilakukan!'
-                : ''}
-            </p>
-            <button
-              onClick={() => {
-                setShowAlert(false);
-                router.replace('/pendapatan/praxis');
-              }}
-              className="absolute right-3 top-3 text-green-700 hover:text-green-900"
-              aria-label="Tutup"
-              type="button"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        )}
-      </Suspense>
-
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold">Monitoring Praxis Academy</h2>
       </div>
@@ -314,6 +307,7 @@ function PendapatanPraxisInner() {
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
           >
+            <option value="">Semua Level</option>
             <option value="X">Level X</option>
             <option value="XI">Level XI</option>
             <option value="XII">Level XII</option>
@@ -322,7 +316,7 @@ function PendapatanPraxisInner() {
             <input
               id="search-praxis"
               type="text"
-              placeholder="Search..."
+              placeholder="Cari nama siswa..."
               className="px-2 py-1 pl-8 bg-gray-300 text-black rounded-md text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -330,9 +324,13 @@ function PendapatanPraxisInner() {
             <Search size={14} className="absolute left-2 top-2 text-gray-700" />
           </div>
           <button 
-          id='tambah-kontrak-praxis'
-          type='button'
-          className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm" onClick={() => router.push('/pendapatan/praxis/tambah-kontrak')}> + Tambah Kontrak</button>
+            id='tambah-kontrak-praxis'
+            type='button'
+            className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
+            onClick={() => router.push('/pendapatan/praxis/tambah-kontrak')}
+          >
+            + Tambah Kontrak
+          </button>
         </div>
       </div>
 
@@ -350,22 +348,32 @@ function PendapatanPraxisInner() {
             ))}
           </thead>
           <tbody>
-            {table.getRowModel().rows.map(row => (
-              <tr
-                key={row.id}
-                className={`border transition-colors duration-500 ${
-                  highlightNama && row.original.nama_siswa === highlightNama
-                    ? 'bg-yellow-200'
-                    : ''
-                }`}
-              >
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="p-2 border">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map(row => {
+                const isHighlight = highlightNama && row.original.nama_siswa === highlightNama
+                return (
+                  <tr
+                    key={row.id}
+                    ref={highlightNama && row.original.nama_siswa === highlightNama ? highlightRowRef : null}
+                      className={`border transition-colors duration-500 ${
+                        highlightNama && row.original.nama_siswa === highlightNama ? 'bg-yellow-200' : ''
+                      }`}
+                  >
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id} className="p-2 border">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                )
+              })
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className="p-4 text-center text-gray-500">
+                  Tidak ada data yang ditemukan
+                </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
