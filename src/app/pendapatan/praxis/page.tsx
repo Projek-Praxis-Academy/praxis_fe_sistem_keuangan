@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useRef, Suspense } from 'react'
+import { useEffect, useMemo, useState, useRef, Suspense, useCallback } from 'react'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import { Search, FileSignature, CreditCard, X } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -15,6 +15,7 @@ interface Siswa {
   tagihan_uang_pemeliharaan: number
   tagihan_uang_sumbangan: number
   total: number
+  nisn: string // Tambahkan nisn untuk kebutuhan tunggakan
 }
 
 function PendapatanPraxisInner() {
@@ -31,6 +32,9 @@ function PendapatanPraxisInner() {
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [showAlert, setShowAlert] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isCreatingTunggakan, setIsCreatingTunggakan] = useState(false)
+  const [tunggakanSuccess, setTunggakanSuccess] = useState('')
+  const [tunggakanError, setTunggakanError] = useState('')
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -83,72 +87,167 @@ function PendapatanPraxisInner() {
     }
   }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        const token = localStorage.getItem('token') || ''
-        
-        // Ambil semua data dari semua halaman
-        const siswaArray = await fetchAllData(token)
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const token = localStorage.getItem('token') || ''
+      
+      // Ambil semua data dari semua halaman
+      const siswaArray = await fetchAllData(token)
 
-        const fetchedData = siswaArray.map((item: any) => {
-          // Inisialisasi nilai default
-          let kbm = 0
-          let spp = 0
-          let pemeliharaan = 0
-          let sumbanganVal = 0
+      const fetchedData = siswaArray.map((item: any) => {
+        // Inisialisasi nilai default
+        let kbm = 0
+        let spp = 0
+        let pemeliharaan = 0
+        let sumbanganVal = 0
 
-          // Proses tagihan jika ada
-          if (Array.isArray(item.tagihan) && item.tagihan.length > 0) {
-            item.tagihan.forEach((tagih: any) => {
-              const nominal = tagih.nominal || 0
-              const nama = tagih.nama_tagihan?.toLowerCase()
-              
-              if (nama === 'kbm') kbm = nominal
-              if (nama === 'spp') spp = nominal
-              if (nama === 'pemeliharaan') pemeliharaan = nominal
-              if (nama === 'sumbangan') sumbanganVal = nominal
-            })
-          }
-
-          // Hitung total tagihan
-          const total = kbm + spp + pemeliharaan + sumbanganVal
-
-          return {
-            nama_siswa: item.nama_siswa,
-            level: item.level || '-',
-            id_siswa: item.id_siswa,
-            tagihan_uang_kbm: kbm,
-            tagihan_uang_spp: spp,
-            tagihan_uang_pemeliharaan: pemeliharaan,
-            tagihan_uang_sumbangan: sumbanganVal,
-            total: total,
-          }
-        })
-
-        // Urutkan berdasarkan siswa terbaru di atas
-        const lastNama = localStorage.getItem('praxis_last_nama')
-        let sortedData = fetchedData
-        if (lastNama) {
-          const idx = fetchedData.findIndex((d: Siswa) => d.nama_siswa === lastNama)
-          if (idx > -1) {
-            const [item] = fetchedData.splice(idx, 1)
-            sortedData = [item, ...fetchedData]
-          }
+        // Proses tagihan jika ada
+        if (Array.isArray(item.tagihan) && item.tagihan.length > 0) {
+          item.tagihan.forEach((tagih: any) => {
+            const nominal = tagih.nominal || 0
+            const nama = tagih.nama_tagihan?.toLowerCase()
+            
+            if (nama === 'kbm') kbm = nominal
+            if (nama === 'spp') spp = nominal
+            if (nama === 'pemeliharaan') pemeliharaan = nominal
+            if (nama === 'sumbangan') sumbanganVal = nominal
+          })
         }
 
-        setData(sortedData)
-      } catch (error: any) {
-        console.error('Failed to fetch data:', error)
-        console.error('Error response:', error.response?.data)
-      } finally {
-        setIsLoading(false)
+        // Hitung total tagihan
+        const total = kbm + spp + pemeliharaan + sumbanganVal
+
+        return {
+          nama_siswa: item.nama_siswa,
+          level: item.level || '-',
+          id_siswa: item.id_siswa,
+          nisn: item.nisn, // Pastikan nisn disertakan
+          tagihan_uang_kbm: kbm,
+          tagihan_uang_spp: spp,
+          tagihan_uang_pemeliharaan: pemeliharaan,
+          tagihan_uang_sumbangan: sumbanganVal,
+          total: total,
+        }
+      })
+
+      // Urutkan berdasarkan siswa terbaru di atas
+      const lastNama = localStorage.getItem('praxis_last_nama')
+      let sortedData = fetchedData
+      if (lastNama) {
+        const idx = fetchedData.findIndex((d: Siswa) => d.nama_siswa === lastNama)
+        if (idx > -1) {
+          const [item] = fetchedData.splice(idx, 1)
+          sortedData = [item, ...fetchedData]
+        }
       }
+
+      setData(sortedData)
+    } catch (error: any) {
+      console.error('Failed to fetch data:', error)
+      console.error('Error response:', error.response?.data)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  // Fungsi untuk membuat tunggakan dengan satu klik
+  const handleCreateTunggakan = useCallback(async (siswa: Siswa) => {
+    // Konfirmasi dengan pengguna
+    if (!confirm(`Buat tunggakan untuk ${siswa.nama_siswa}?`)) {
+      return
     }
 
-    fetchData()
-  }, [])
+    setIsCreatingTunggakan(true)
+    setTunggakanError('')
+    setTunggakanSuccess('')
+
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        setTunggakanError('Token tidak ditemukan, harap login ulang')
+        return
+      }
+
+      // Siapkan data tagihan
+      const tagihanItems = []
+      if (siswa.tagihan_uang_spp > 0) {
+        tagihanItems.push({
+          nama_tagihan: 'SPP',
+          nominal: siswa.tagihan_uang_spp
+        })
+      }
+      if (siswa.tagihan_uang_kbm > 0) {
+        tagihanItems.push({
+          nama_tagihan: 'KBM',
+          nominal: siswa.tagihan_uang_kbm
+        })
+      }
+      if (siswa.tagihan_uang_pemeliharaan > 0) {
+        tagihanItems.push({
+          nama_tagihan: 'Pemeliharaan',
+          nominal: siswa.tagihan_uang_pemeliharaan
+        })
+      }
+      if (siswa.tagihan_uang_sumbangan > 0) {
+        tagihanItems.push({
+          nama_tagihan: 'Sumbangan',
+          nominal: siswa.tagihan_uang_sumbangan
+        })
+      }
+
+      // Jika tidak ada tagihan, berhenti
+      if (tagihanItems.length === 0) {
+        setTunggakanError('Tidak ada tagihan untuk dibuatkan tunggakan')
+        return
+      }
+
+      // Dapatkan tahun periode
+      const currentYear = new Date().getFullYear()
+      const periode = `${currentYear}/${currentYear + 1}`
+
+      // Siapkan data untuk dikirim
+      const dataToSend = {
+        id_siswa: siswa.id_siswa.toString(),
+        nama_siswa: siswa.nama_siswa,
+        jenis_tagihan: 'Umum',
+        periode: periode,
+        tagihan: tagihanItems
+      }
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/tunggakan/create`,
+        dataToSend,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      if (response.data.status === 'success') {
+        setTunggakanSuccess(`Tunggakan berhasil dibuat untuk ${siswa.nama_siswa}!`)
+        
+        // Refresh data setelah beberapa detik
+        setTimeout(() => {
+          fetchData()
+          setTunggakanSuccess('')
+        }, 2000)
+      } else {
+        setTunggakanError(response.data.message || 'Gagal membuat tunggakan')
+      }
+    } catch (err: any) {
+      console.error(err)
+      setTunggakanError(err.response?.data?.message || 'Terjadi kesalahan saat membuat tunggakan')
+    } finally {
+      setIsCreatingTunggakan(false)
+    }
+  }, [fetchData])
 
   const filteredData = useMemo(() => {
     return data
@@ -250,9 +349,27 @@ function PendapatanPraxisInner() {
             />
           )
         }
+      },
+      {
+        accessorKey: 'tunggakan',
+        header: 'Tunggakan',
+        cell: ({ row }: any) => {
+          const siswa = row.original
+          return (
+            <FileSignature
+              id="tunggakan"
+              className={`text-gray-600 cursor-pointer hover:text-blue-600 ${
+                isCreatingTunggakan ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              onClick={() => {
+                if (!isCreatingTunggakan) handleCreateTunggakan(siswa)
+              }}
+            />
+          )
+        }
       }
     ],
-    [router]
+    [router, isCreatingTunggakan, handleCreateTunggakan]
   )
 
   const table = useReactTable({ 
@@ -299,6 +416,18 @@ function PendapatanPraxisInner() {
         <h2 className="text-3xl font-bold">Monitoring Praxis Academy</h2>
       </div>
 
+      {/* Alert untuk tunggakan */}
+      {tunggakanSuccess && (
+        <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+          <p className="font-medium">{tunggakanSuccess}</p>
+        </div>
+      )}
+      {tunggakanError && (
+        <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+          <p className="font-medium">{tunggakanError}</p>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-2">
         <div className="flex justify-start gap-2 items-center">
           <select
@@ -331,6 +460,14 @@ function PendapatanPraxisInner() {
           >
             + Tambah Kontrak
           </button>
+          {/* <button
+            id='tambah-tunggakan'
+            type='button'
+            className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
+            onClick={() => router.push('/tunggakan/tambah-tunggakan')}
+          >
+            + Tambah Tunggakan
+          </button> */}
         </div>
       </div>
 

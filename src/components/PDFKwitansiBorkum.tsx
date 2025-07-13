@@ -172,6 +172,7 @@ interface KwitansiBorkumData {
     total: number;
   };
   catatan?: string;
+  nomorUrut: number;
 }
 
 export default function PDFKwitansiBorkum({ data }: { data: KwitansiBorkumData }) {
@@ -184,8 +185,8 @@ export default function PDFKwitansiBorkum({ data }: { data: KwitansiBorkumData }
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>KWITANSI PEMBAYARAN</Text>
             <Text style={styles.subtitle}>PRAXIS ACADEMY</Text>
-            <Text style={styles.subtitle}>Jl. Contoh No. 123, Jakarta - Indonesia</Text>
-            <Text style={styles.subtitle}>Telp: (021) 123-4567</Text>
+            <Text style={styles.subtitle}>Jl. Pakem - Kalasan No.9, Area Sawah, Bimomartani, Kec. Ngemplak, Kabupaten Sleman, Daerah Istimewa Yogyakarta 55584</Text>
+            <Text style={styles.subtitle}>Telp: (081) 1-938-932</Text>
           </View>
         </View>
 
@@ -195,7 +196,9 @@ export default function PDFKwitansiBorkum({ data }: { data: KwitansiBorkumData }
         <View style={styles.section}>
           <View style={styles.grid}>
             <Text style={styles.label}>Nomor Kwitansi</Text>
-            <Text style={styles.value}>BK/{format(new Date(), 'yyyyMMdd')}/001</Text>
+            <Text style={styles.value}>
+              BK/{format(new Date(), 'yyyyMMdd')}/{String(new Date().getTime()).slice(-3)}
+            </Text>
           </View>
           <View style={styles.grid}>
             <Text style={styles.label}>Tanggal Pembayaran</Text>

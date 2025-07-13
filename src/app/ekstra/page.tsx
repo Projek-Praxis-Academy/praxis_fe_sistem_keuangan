@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef, Suspense } from 'react'
+import { useState, useMemo, useEffect, useRef, Suspense, useCallback } from 'react'
 import Link from 'next/link'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import { Search, FileSignature, CreditCard, X } from 'lucide-react'
@@ -58,81 +58,162 @@ export default function Ekstra() {
   const [levelOptions, setLevelOptions] = useState<string[]>([])
   const router = useRouter()
   const [selectedLevel, setSelectedLevel] = useState(() => {
-      if (typeof window !== 'undefined') {
-        return localStorage.getItem('selectedLevel') || 'I'
-      }
-      return 'I'
-    });
-  const [highlightNisn, setHighlightNisn] = useState<string | null>(null)
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('selectedLevel') || 'I'
+    }
+    return 'I'
+  });
   const [highlightNama, setHighlightNama] = useState<string | null>(null)
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [isCreatingTunggakan, setIsCreatingTunggakan] = useState(false)
+  const [tunggakanSuccess, setTunggakanSuccess] = useState('')
+  const [tunggakanError, setTunggakanError] = useState('')
 
   // Simpan level yang dipilih ke localStorage
   useEffect(() => {
-        localStorage.setItem('selectedLevel', selectedLevel)
-      }, [selectedLevel])
+    localStorage.setItem('selectedLevel', selectedLevel)
+  }, [selectedLevel])
 
-  // Fetch data from API
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true)
-      try {
-        const token = localStorage.getItem('token') || ''
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+  const fetchData = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const token = localStorage.getItem('token') || ''
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-ekstra/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
 
-        if (response.data.status === 'success') {
-          const siswaList = response.data.data.data
+      if (response.data.status === 'success') {
+        const siswaList = response.data.data.data
 
-          const formattedData = siswaList.map((item: any, index: number) => ({
-            no: index + 1,
-            id_siswa: item.id_siswa,
-            nama_siswa: item.nama_siswa,
-            nisn: item.nisn,
-            akademik: item.akademik,
-            level: item.level ?? '',
-            ekstra: item.ekstra || []
-          }))
+        const formattedData = siswaList.map((item: any, index: number) => ({
+          no: index + 1,
+          id_siswa: item.id_siswa,
+          nama_siswa: item.nama_siswa,
+          nisn: item.nisn,
+          akademik: item.akademik,
+          level: item.level ?? '',
+          ekstra: item.ekstra || []
+        }))
 
-          // Tetapkan level I hingga XII secara manual
-          const levels = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
-          setLevelOptions(levels)
+        // Tetapkan level I hingga XII secara manual
+        const levels = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
+        setLevelOptions(levels)
 
-          // Cek localStorage, jika belum ada baru set ke level pertama yang tersedia
-          const storedLevel = localStorage.getItem('selectedLevel')
-          if (!storedLevel) {
-            const firstAvailableLevel = levels.find(level =>
-              formattedData.some((item: { level: string }) => item.level === level)
-            ) || "I"
-            setSelectedLevel(firstAvailableLevel)
-          }
-
-          // --- Tambahkan logic siswa terbaru di paling atas ---
-          const lastNama = localStorage.getItem('ekstra_last_nama')
-          let sortedData = formattedData
-          if (lastNama) {
-            const idx = formattedData.findIndex((d: any) => d.nama_siswa === lastNama)
-            if (idx > -1) {
-              const [item] = formattedData.splice(idx, 1)
-              sortedData = [item, ...formattedData]
-            }
-          }
-          setData(sortedData)
-          // --- End logic ---
-
+        // Cek localStorage, jika belum ada baru set ke level pertama yang tersedia
+        const storedLevel = localStorage.getItem('selectedLevel')
+        if (!storedLevel) {
+          const firstAvailableLevel = levels.find(level =>
+            formattedData.some((item: { level: string }) => item.level === level)
+          ) || "I"
+          setSelectedLevel(firstAvailableLevel)
         }
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      } finally {
-        setIsLoading(false)
+
+        // Urutkan berdasarkan siswa terbaru di atas
+        const lastNama = localStorage.getItem('ekstra_last_nama')
+        let sortedData = formattedData
+        if (lastNama) {
+          const idx = formattedData.findIndex((d: any) => d.nama_siswa === lastNama)
+          if (idx > -1) {
+            const [item] = formattedData.splice(idx, 1)
+            sortedData = [item, ...formattedData]
+          }
+        }
+        setData(sortedData)
       }
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  // Fungsi untuk membuat tunggakan ekstra per siswa (semua ekstra sekaligus)
+  const handleCreateTunggakanEkstra = useCallback(async (siswa: any) => {
+    // Filter hanya ekstra yang belum lunas
+    const unpaidEkstra = siswa.ekstra.filter((e: any) => {
+      const isLunas = e.tagihan_ekstra === 'Lunas'
+      const isEmpty = e.tagihan_ekstra === '0' || e.tagihan_ekstra === '-' || e.tagihan_ekstra === ''
+      return !isLunas && !isEmpty
+    })
+
+    // Jika tidak ada ekstra yang belum lunas, berhenti
+    if (unpaidEkstra.length === 0) {
+      setTunggakanError(`Tidak ada ekstra yang belum lunas untuk ${siswa.nama_siswa}`)
+      setTimeout(() => setTunggakanError(''), 3000)
+      return
     }
 
-    fetchData()
-  }, [])
+    // Konfirmasi dengan pengguna
+    if (!confirm(`Buat tunggakan untuk semua ekstra ${siswa.nama_siswa}?`)) {
+      return
+    }
+
+    setIsCreatingTunggakan(true)
+    setTunggakanError('')
+    setTunggakanSuccess('')
+
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        setTunggakanError('Token tidak ditemukan, harap login ulang')
+        return
+      }
+
+      // Dapatkan tahun periode
+      const currentYear = new Date().getFullYear()
+      const periode = `${currentYear}/${currentYear + 1}`
+
+      // Format tagihan sesuai dengan yang diharapkan controller
+      const tagihanItems = unpaidEkstra.map((e: any) => ({
+        nama_tagihan: e.nama_ekstra,
+        nominal: parseInt((e.tagihan_ekstra || '0').replace(/\D/g, ''))
+      }))
+
+      // Siapkan data untuk dikirim sesuai format controller
+      const dataToSend = {
+        id_siswa: siswa.id_siswa.toString(),
+        nama_siswa: siswa.nama_siswa,
+        jenis_tagihan: 'Ekstra',
+        periode: periode,
+        tagihan: tagihanItems
+      }
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/tunggakan/create`,
+        dataToSend,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      if (response.data.status === 'success') {
+        setTunggakanSuccess(`Tunggakan ekstra berhasil dibuat untuk ${siswa.nama_siswa} (${unpaidEkstra.length} ekstra)!`)
+        setTimeout(() => {
+          fetchData()
+          setTunggakanSuccess('')
+        }, 2000)
+      } else {
+        setTunggakanError(response.data.message || 'Gagal membuat tunggakan ekstra')
+      }
+    } catch (err: any) {
+      console.error(err)
+      const errorMsg = err.response?.data?.message ||
+        err.response?.data?.errors?.join('\n') ||
+        'Terjadi kesalahan saat membuat tunggakan ekstra'
+      setTunggakanError(errorMsg)
+    } finally {
+      setIsCreatingTunggakan(false)
+    }
+  }, [fetchData])
 
   // Highlight data terbaru
   useEffect(() => {
@@ -166,7 +247,7 @@ export default function Ekstra() {
 
   const columns = useMemo(
     () => [
-      { accessorKey: 'nama_siswa', header: 'Nama Siswa' }, // Hanya tampilkan Nama Siswa
+      { accessorKey: 'nama_siswa', header: 'Nama Siswa' },
       {
         accessorKey: 'ekstra',
         header: 'Ekstra',
@@ -196,13 +277,16 @@ export default function Ekstra() {
             <div className="flex flex-col pl-2">
               {ekstraList.length > 0 ? (
                 ekstraList.map((e: any, index: number) => {
-                  // Ambil nominal tagihan, jika 0 atau '0' atau 'Lunas' tampilkan Lunas hijau
+                  const isLunas = e.tagihan_ekstra === 'Lunas'
+                  const isEmpty = e.tagihan_ekstra === '0' || e.tagihan_ekstra === '0' || e.tagihan_ekstra === '-'
                   const nominal = parseInt((e.tagihan_ekstra || '0').replace(/\D/g, ''))
-                  const isLunas = e.tagihan_ekstra === 'Lunas' || nominal === 0 || e.tagihan_ekstra === '0'
+                  
                   return (
                     <div key={index} className="border-b last:border-b-0 py-1">
                       {isLunas ? (
                         <span className="text-green-600 font-bold">Lunas</span>
+                      ) : isEmpty ? (
+                        <span className="text-gray-500">-</span>
                       ) : (
                         <span>
                           Rp{nominal.toLocaleString('id-ID')}
@@ -235,7 +319,6 @@ export default function Ekstra() {
                       title={`Bayar ${e.nama_ekstra}`}
                       className="text-gray-600 cursor-pointer"
                       onClick={() => {
-                        // Simpan data siswa ke localStorage
                         localStorage.setItem('ekstra_siswa_detail', JSON.stringify({
                           id_siswa,
                           nama_siswa: row.original.nama_siswa,
@@ -287,12 +370,64 @@ export default function Ekstra() {
             </div>
           )
         }
-      }            
+      },
+      {
+        accessorKey: 'tunggakan',
+        header: 'Tunggakan',
+        cell: ({ row }: any) => {
+          const siswa = row.original
+          const ekstraList = row.original.ekstra || []
+          
+          // Cek apakah ada ekstra yang belum lunas
+          const hasUnpaidEkstra = ekstraList.some((e: any) => {
+            const isLunas = e.tagihan_ekstra === 'Lunas'
+            const isEmpty = e.tagihan_ekstra === '0' || e.tagihan_ekstra === '0' || e.tagihan_ekstra === '-'
+            return !isLunas && !isEmpty
+          })
+          
+          return (
+            <div className="flex justify-center pl-2">
+              {hasUnpaidEkstra ? (
+                <span
+                  id="tunggakan-ekstra"
+                  title={`Buat tunggakan untuk semua ekstra ${siswa.nama_siswa}`}
+                  className={`text-gray-600 cursor-pointer ${
+                    isCreatingTunggakan ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  onClick={() => {
+                    if (!isCreatingTunggakan) handleCreateTunggakanEkstra(siswa)
+                  }}
+                >
+                  <FileSignature />
+                </span>
+              ) : (
+                <span className="text-gray-400">-</span>
+              )}
+            </div>
+          )
+        }
+      }
     ],
-    []
+    [router, isCreatingTunggakan, handleCreateTunggakanEkstra]
   )
 
-  const table = useReactTable({ data: filteredData, columns, getCoreRowModel: getCoreRowModel() })
+  const table = useReactTable({ 
+    data: filteredData, 
+    columns, 
+    getCoreRowModel: getCoreRowModel() 
+  })
+
+  if (isLoading) {
+    return (
+      <div className="ml-64 flex-1 bg-white min-h-screen p-6 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 border-4 border-blue-900 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-lg text-blue-900 font-semibold">Memuat data ekstrakurikuler...</p>
+          <p className="text-sm text-gray-500 mt-2">Mohon tunggu, sedang mengambil data dari server.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
@@ -304,6 +439,18 @@ export default function Ekstra() {
       <Suspense fallback={null}>
         <SuccessAlertEkstra />
       </Suspense>
+
+      {/* Alert untuk tunggakan */}
+      {tunggakanSuccess && (
+        <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+          <p className="font-medium">{tunggakanSuccess}</p>
+        </div>
+      )}
+      {tunggakanError && (
+        <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+          <p className="font-medium">{tunggakanError}</p>
+        </div>
+      )}
 
       <div className="flex justify-start gap-2 items-center mb-4">
         <select
@@ -344,6 +491,13 @@ export default function Ekstra() {
           >
             Biaya Ekstra
           </Link>
+          <Link
+            id='tambah-tunggakan'
+            href="/tunggakan/tambah-tunggakan"
+            className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
+          >
+            + Tambah Tunggakan
+          </Link>
         </div>
       </div>
 
@@ -361,11 +515,7 @@ export default function Ekstra() {
             </tr>
           </thead>
           <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={6} className="text-center p-4">Loading...</td>
-              </tr>
-            ) : (
+            {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map(row => (
                 <tr
                   key={row.id}
@@ -382,6 +532,12 @@ export default function Ekstra() {
                   ))}
                 </tr>
               ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className="p-4 text-center text-gray-500">
+                  Tidak ada data yang ditemukan
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

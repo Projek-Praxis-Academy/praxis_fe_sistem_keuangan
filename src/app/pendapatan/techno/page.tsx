@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useRef } from 'react'
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
 import { Search, FileSignature, CreditCard } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -22,17 +22,150 @@ interface Siswa {
 export default function PendapatanTechno() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedLevel, setSelectedLevel] = useState(() => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('selectedLevelTechno') || ''
-  }
-  return ''
-})
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('selectedLevelTechno') || ''
+    }
+    return ''
+  })
 
   const [data, setData] = useState<Siswa[]>([])
   const router = useRouter()
 
   const [highlightNama, setHighlightNama] = useState<string | null>(null)
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [isCreatingTunggakan, setIsCreatingTunggakan] = useState(false)
+  const [tunggakanSuccess, setTunggakanSuccess] = useState('')
+  const [tunggakanError, setTunggakanError] = useState('')
+
+  // Fungsi untuk membuat tunggakan dengan satu klik
+  const handleCreateTunggakan = useCallback(async (siswa: Siswa) => {
+    // Konfirmasi dengan pengguna
+    if (!confirm(`Buat tunggakan untuk ${siswa.nama_siswa}?`)) {
+      return
+    }
+
+    setIsCreatingTunggakan(true)
+    setTunggakanError('')
+    setTunggakanSuccess('')
+
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        setTunggakanError('Token tidak ditemukan, harap login ulang')
+        return
+      }
+
+      // Siapkan data tagihan
+      const tagihanItems = []
+      
+      // Tagihan KBM
+      if (siswa.tagihan_uang_kbm !== '-' && siswa.tagihan_uang_kbm !== 'Lunas' && siswa.tagihan_uang_kbm !== 0) {
+        const nominal = typeof siswa.tagihan_uang_kbm === 'string' 
+          ? parseInt(siswa.tagihan_uang_kbm.replace(/\./g, '')) 
+          : siswa.tagihan_uang_kbm
+        if (nominal > 0) {
+          tagihanItems.push({
+            nama_tagihan: 'KBM',
+            nominal: nominal
+          })
+        }
+      }
+      
+      // Tagihan SPP
+      if (siswa.tagihan_uang_spp !== '-' && siswa.tagihan_uang_spp !== 'Lunas' && siswa.tagihan_uang_spp !== 0) {
+        const nominal = typeof siswa.tagihan_uang_spp === 'string' 
+          ? parseInt(siswa.tagihan_uang_spp.replace(/\./g, '')) 
+          : siswa.tagihan_uang_spp
+        if (nominal > 0) {
+          tagihanItems.push({
+            nama_tagihan: 'SPP',
+            nominal: nominal
+          })
+        }
+      }
+      
+      // Tagihan Pemeliharaan
+      if (siswa.tagihan_uang_pemeliharaan !== '-' && siswa.tagihan_uang_pemeliharaan !== 'Lunas' && siswa.tagihan_uang_pemeliharaan !== 0) {
+        const nominal = typeof siswa.tagihan_uang_pemeliharaan === 'string' 
+          ? parseInt(siswa.tagihan_uang_pemeliharaan.replace(/\./g, '')) 
+          : siswa.tagihan_uang_pemeliharaan
+        if (nominal > 0) {
+          tagihanItems.push({
+            nama_tagihan: 'Pemeliharaan',
+            nominal: nominal
+          })
+        }
+      }
+      
+      // Tagihan Sumbangan
+      if (
+        siswa.tagihan_uang_sumbangan !== '-' &&
+        siswa.tagihan_uang_sumbangan !== 'Lunas' &&
+        siswa.tagihan_uang_sumbangan !== null &&
+        (
+          (typeof siswa.tagihan_uang_sumbangan === 'string' && parseInt(siswa.tagihan_uang_sumbangan.replace(/\./g, '')) !== 0) ||
+          (typeof siswa.tagihan_uang_sumbangan === 'number' && siswa.tagihan_uang_sumbangan !== 0)
+        )
+      ) {
+        const nominal = typeof siswa.tagihan_uang_sumbangan === 'string' 
+          ? parseInt(siswa.tagihan_uang_sumbangan.replace(/\./g, '')) 
+          : siswa.tagihan_uang_sumbangan
+        if (nominal > 0) {
+          tagihanItems.push({
+            nama_tagihan: 'Sumbangan',
+            nominal: nominal
+          })
+        }
+      }
+
+      // Jika tidak ada tagihan, berhenti
+      if (tagihanItems.length === 0) {
+        setTunggakanError('Tidak ada tagihan untuk dibuatkan tunggakan')
+        return
+      }
+
+      // Dapatkan tahun periode
+      const currentYear = new Date().getFullYear()
+      const periode = `${currentYear}/${currentYear + 1}`
+
+      // Siapkan data untuk dikirim
+      const dataToSend = {
+        id_siswa: siswa.id_siswa.toString(),
+        nama_siswa: siswa.nama_siswa,
+        jenis_tagihan: 'Umum',
+        periode: periode,
+        tagihan: tagihanItems
+      }
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/tunggakan/create`,
+        dataToSend,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      if (response.data.status === 'success') {
+        setTunggakanSuccess(`Tunggakan berhasil dibuat untuk ${siswa.nama_siswa}!`)
+        
+        // Refresh data setelah beberapa detik
+        setTimeout(() => {
+          fetchData()
+          setTunggakanSuccess('')
+        }, 2000)
+      } else {
+        setTunggakanError(response.data.message || 'Gagal membuat tunggakan')
+      }
+    } catch (err: any) {
+      console.error(err)
+      setTunggakanError(err.response?.data?.message || 'Terjadi kesalahan saat membuat tunggakan')
+    } finally {
+      setIsCreatingTunggakan(false)
+    }
+  }, [])
 
   // Konversi "1.000.000" ke 1000000
   const parseFormattedNumber = (value: string | null | undefined): number => {
@@ -45,86 +178,87 @@ export default function PendapatanTechno() {
     localStorage.setItem('selectedLevelTechno', selectedLevel)
   }, [selectedLevel])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token') || '';
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-techno`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+  const fetchData = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token') || '';
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-techno`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-        const siswaArray = response.data.data?.data || [];
+      const siswaArray = response.data.data?.data || [];
 
-        const fetchedData = siswaArray.map((item: any) => {
-          // Jika tagihan kosong (array kosong), tampilkan '-'
-          if (!item.tagihan || item.tagihan.length === 0) {
-            return {
-              nama_siswa: item.nama_siswa,
-              // nisn: item.nisn || '-',
-              level: item.level,
-              akademik: item.akademik || '-',
-              id_siswa: item.id_siswa,
-              tagihan_uang_kbm: '-',
-              tagihan_uang_spp: '-',
-              tagihan_uang_pemeliharaan: '-',
-              tagihan_uang_sumbangan: '-',
-              total: '-',
-            }
-          }
-
-          // Jika tagihan ada, mapping nominal
-          let kbm = 0, spp = 0, pemeliharaan = 0, sumbanganVal = 0
-          item.tagihan.forEach((tagih: any) => {
-            const nominal = typeof tagih.nominal === 'number' ? tagih.nominal : 0
-            const nama = tagih.nama_tagihan?.toLowerCase()
-            if (nama === 'kbm') kbm = nominal
-            if (nama === 'spp') spp = nominal
-            if (nama === 'pemeliharaan') pemeliharaan = nominal
-            if (nama === 'sumbangan') sumbanganVal = nominal
-          })
-
-          const total = kbm + spp + pemeliharaan + sumbanganVal
-          const isAllLunas = kbm === 0 && spp === 0 && pemeliharaan === 0 && sumbanganVal === 0
-
-          // Helper untuk tampilkan 'Lunas' jika 0
-          const displayTagihan = (val: number) => (val === 0 ? 'Lunas' : val)
-
+      const fetchedData = siswaArray.map((item: any) => {
+        // Jika tagihan kosong (array kosong), tampilkan '-'
+        if (!item.tagihan || item.tagihan.length === 0) {
           return {
             nama_siswa: item.nama_siswa,
-            // nisn: item.nisn || '-',
+            nisn: item.nisn || '-',
             level: item.level,
             akademik: item.akademik || '-',
             id_siswa: item.id_siswa,
-            tagihan_uang_kbm: displayTagihan(kbm),
-            tagihan_uang_spp: displayTagihan(spp),
-            tagihan_uang_pemeliharaan: displayTagihan(pemeliharaan),
-            tagihan_uang_sumbangan: displayTagihan(sumbanganVal),
-            total: isAllLunas ? 'Lunas' : total,
-          }
-        })
-
-        // --- Tambahkan logic ini ---
-        const lastNama = localStorage.getItem('techno_last_nama')
-        let sortedData = fetchedData
-        if (lastNama) {
-          const idx = fetchedData.findIndex((d: Siswa) => d.nama_siswa === lastNama)
-          if (idx > -1) {
-            const [item] = fetchedData.splice(idx, 1)
-            sortedData = [item, ...fetchedData]
+            tagihan_uang_kbm: '-',
+            tagihan_uang_spp: '-',
+            tagihan_uang_pemeliharaan: '-',
+            tagihan_uang_sumbangan: '-',
+            total: '-',
           }
         }
-        setData(sortedData)
-        // --- End logic ---
 
-      } catch (error: any) {
-        console.error('Failed to fetch data:', error);
-        console.error('Error response:', error.response?.data);
+        // Jika tagihan ada, mapping nominal
+        let kbm = 0, spp = 0, pemeliharaan = 0, sumbanganVal = 0
+        item.tagihan.forEach((tagih: any) => {
+          const nominal = typeof tagih.nominal === 'number' ? tagih.nominal : 0
+          const nama = tagih.nama_tagihan?.toLowerCase()
+          if (nama === 'kbm') kbm = nominal
+          if (nama === 'spp') spp = nominal
+          if (nama === 'pemeliharaan') pemeliharaan = nominal
+          if (nama === 'sumbangan') sumbanganVal = nominal
+        })
+
+        const total = kbm + spp + pemeliharaan + sumbanganVal
+        const isAllLunas = kbm === 0 && spp === 0 && pemeliharaan === 0 && sumbanganVal === 0
+
+        // Helper untuk tampilkan 'Lunas' jika 0
+        const displayTagihan = (val: number) => (val === 0 ? 'Lunas' : val)
+
+        return {
+          nama_siswa: item.nama_siswa,
+          nisn: item.nisn || '-',
+          level: item.level,
+          akademik: item.akademik || '-',
+          id_siswa: item.id_siswa,
+          tagihan_uang_kbm: displayTagihan(kbm),
+          tagihan_uang_spp: displayTagihan(spp),
+          tagihan_uang_pemeliharaan: displayTagihan(pemeliharaan),
+          tagihan_uang_sumbangan: displayTagihan(sumbanganVal),
+          total: isAllLunas ? 'Lunas' : total,
+        }
+      })
+
+      // --- Tambahkan logic ini ---
+      const lastNama = localStorage.getItem('techno_last_nama')
+      let sortedData = fetchedData
+      if (lastNama) {
+        const idx = fetchedData.findIndex((d: Siswa) => d.nama_siswa === lastNama)
+        if (idx > -1) {
+          const [item] = fetchedData.splice(idx, 1)
+          sortedData = [item, ...fetchedData]
+        }
       }
+      setData(sortedData)
+      // --- End logic ---
+
+    } catch (error: any) {
+      console.error('Failed to fetch data:', error);
+      console.error('Error response:', error.response?.data);
     }
-    fetchData()
   }, [])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   useEffect(() => {
     const lastNama = localStorage.getItem('techno_last_nama')
@@ -262,9 +396,27 @@ export default function PendapatanTechno() {
             />
           )
         }
+      },
+      {
+        accessorKey: 'tunggakan',
+        header: 'Tunggakan',
+        cell: ({ row }: any) => {
+          const siswa = row.original
+          return (
+            <FileSignature
+              id="tunggakan"
+              className={`text-gray-600 cursor-pointer hover:text-blue-600 ${
+                isCreatingTunggakan ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              onClick={() => {
+                if (!isCreatingTunggakan) handleCreateTunggakan(siswa)
+              }}
+            />
+          )
+        }
       }
     ],
-    [router]
+    [router, isCreatingTunggakan, handleCreateTunggakan]
   )
 
   const table = useReactTable({ data: filteredData, columns, getCoreRowModel: getCoreRowModel() })
@@ -274,6 +426,18 @@ export default function PendapatanTechno() {
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold">Monitoring TechnoNatura</h2>
       </div>
+
+      {/* Alert untuk tunggakan */}
+      {tunggakanSuccess && (
+        <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+          <p className="font-medium">{tunggakanSuccess}</p>
+        </div>
+      )}
+      {tunggakanError && (
+        <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+          <p className="font-medium">{tunggakanError}</p>
+        </div>
+      )}
 
       <div className="flex justify-between items-center mb-2">
         <div className="flex justify-start gap-2 items-center">
@@ -307,6 +471,14 @@ export default function PendapatanTechno() {
           <button className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm" onClick={() => router.push('/pendapatan/techno/add-kontrak-techno')}> + Tambah Kontrak</button>
           <button className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm" onClick={() => router.push('/pendapatan/techno/siswa-techno')}>Data Siswa</button>
         </div>
+        {/* <button
+            id='tambah-tunggakan'
+            type='button'
+            className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-sm"
+            onClick={() => router.push('/tunggakan/tambah-tunggakan')}
+          >
+            + Tambah Tunggakan
+          </button> */}
       </div>
 
       <div className="overflow-x-auto">

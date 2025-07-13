@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, Suspense, useCallback } from 'react';
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import { Search, CreditCard, FileSignature, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -13,76 +13,183 @@ interface Siswa {
   id_siswa: string;
   level: string;
 }
+
 const levelOptions = [
-"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"
- ];
+  "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"
+];
+
+function formatRupiah(angka: string) {
+  if (!angka) return '0';
+  const num = Number(angka.replace(/\D/g, ''));
+  if (isNaN(num)) return '0';
+  return num.toLocaleString('id-ID');
+}
+
+// Fungsi untuk mengubah string Rupiah menjadi angka
+function parseRupiah(rupiah: string): number {
+  if (!rupiah || rupiah === '-') return 0;
+  const cleanString = rupiah.replace('Rp ', '').replace(/\./g, '');
+  return parseInt(cleanString, 10) || 0;
+}
 
 function BoardingKonsumsiInner() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState(() => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('selectedLevel') || 'I'
-  }
-  return 'I'
-});
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('selectedLevel') || 'I'
+    }
+    return 'I'
+  });
   const [data, setData] = useState<Siswa[]>([]);
   const [highlightNama, setHighlightNama] = useState<string | null>(null)
   const [showAlert, setShowAlert] = useState(false)
+  const [isCreatingTunggakan, setIsCreatingTunggakan] = useState(false);
+  const [tunggakanSuccess, setTunggakanSuccess] = useState('');
+  const [tunggakanError, setTunggakanError] = useState('');
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-        localStorage.setItem('selectedLevel', selectedLevel)
-      }, [selectedLevel])
+    localStorage.setItem('selectedLevel', selectedLevel)
+  }, [selectedLevel])
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const token = localStorage.getItem('token') || '';
-      try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-bk/`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          params: {
-            level: selectedLevel,  // Kirim level sebagai parameter
-          },
-        });
-  
-        if (response.data && response.data.data && Array.isArray(response.data.data.data)) {
-          const fetchedData = response.data.data.data.map((item: any) => ({
-            nama_siswa: item.nama_siswa,
-            tagihan_boarding: item.tagihan_boarding || '0',
-            tagihan_konsumsi: item.tagihan_konsumsi || '0',
-            id_siswa: item.id_siswa,
-            level: item.level || '',
-          }))
+  const fetchData = useCallback(async () => {
+    const token = localStorage.getItem('token') || '';
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/monitoring-bk/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        params: {
+          level: selectedLevel,
+        },
+      });
 
-          // --- Logic siswa terbaru di paling atas ---
-          const lastNama = localStorage.getItem('bk_last_nama')
-          let sortedData = fetchedData
-          if (lastNama) {
-            const idx = fetchedData.findIndex((d: Siswa) => d.nama_siswa === lastNama)
-            if (idx > -1) {
-              const [item] = fetchedData.splice(idx, 1)
-              sortedData = [item, ...fetchedData]
-            }
+      if (response.data && response.data.data && Array.isArray(response.data.data.data)) {
+        const fetchedData = response.data.data.data.map((item: any) => ({
+          nama_siswa: item.nama_siswa,
+          tagihan_boarding: item.tagihan_boarding !== undefined && item.tagihan_boarding !== null
+            ? `Rp ${formatRupiah(item.tagihan_boarding.toString())}`
+            : '-',
+          tagihan_konsumsi: item.tagihan_konsumsi !== undefined && item.tagihan_konsumsi !== null
+            ? `Rp ${formatRupiah(item.tagihan_konsumsi.toString())}`
+            : '-',
+          id_siswa: item.id_siswa,
+          level: item.level || '',
+        }));
+
+        const lastNama = localStorage.getItem('bk_last_nama')
+        let sortedData = fetchedData
+        if (lastNama) {
+          const idx = fetchedData.findIndex((d: Siswa) => d.nama_siswa === lastNama)
+          if (idx > -1) {
+            const [item] = fetchedData.splice(idx, 1)
+            sortedData = [item, ...fetchedData]
           }
-          setData(sortedData)
-          // --- End logic ---
-        } else {
-          console.error('Data tidak dalam format yang diharapkan:', response.data.data);
-          setData([]);
         }
-      } catch (error) {
-        console.error('Gagal mengambil data:', error);
+        setData(sortedData)
+      } else {
+        console.error('Data tidak dalam format yang diharapkan:', response.data.data);
         setData([]);
       }
-    };
-  
+    } catch (error) {
+      console.error('Gagal mengambil data:', error);
+      setData([]);
+    }
+  }, [selectedLevel]);
+
+  useEffect(() => {
     fetchData();
-  }, [])  
-  
+  }, [fetchData])
+
+  // Fungsi untuk membuat tunggakan
+  const handleCreateTunggakan = useCallback(async (siswa: Siswa) => {
+    // Konfirmasi dengan pengguna
+    if (!confirm(`Buat tunggakan untuk ${siswa.nama_siswa}?`)) {
+      return;
+    }
+
+    setIsCreatingTunggakan(true);
+    setTunggakanError('');
+    setTunggakanSuccess('');
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setTunggakanError('Token tidak ditemukan, harap login ulang');
+        return;
+      }
+
+      // Siapkan data tagihan
+      const tagihanItems = [];
+      
+      // Proses tagihan boarding
+      const boardingValue = parseRupiah(siswa.tagihan_boarding);
+      if (boardingValue > 0) {
+        tagihanItems.push({
+          nama_tagihan: 'Boarding',
+          nominal: boardingValue
+        });
+      }
+
+      // Proses tagihan konsumsi
+      const konsumsiValue = parseRupiah(siswa.tagihan_konsumsi);
+      if (konsumsiValue > 0) {
+        tagihanItems.push({
+          nama_tagihan: 'Konsumsi',
+          nominal: konsumsiValue
+        });
+      }
+
+      // Jika tidak ada tagihan
+      if (tagihanItems.length === 0) {
+        setTunggakanError('Tidak ada tagihan untuk dibuatkan tunggakan');
+        return;
+      }
+
+      // Dapatkan tahun periode
+      const currentYear = new Date().getFullYear();
+      const periode = `${currentYear}/${currentYear + 1}`;
+
+      // Siapkan data untuk dikirim
+      const dataToSend = {
+        id_siswa: siswa.id_siswa.toString(),
+        nama_siswa: siswa.nama_siswa,
+        jenis_tagihan: 'Boarding & Konsumsi',
+        periode: periode,
+        tagihan: tagihanItems
+      };
+
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/tunggakan/create`,
+        dataToSend,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.status === 'success') {
+        setTunggakanSuccess(`Tunggakan berhasil dibuat untuk ${siswa.nama_siswa}!`);
+        
+        // Refresh data setelah beberapa detik
+        setTimeout(() => {
+          fetchData();
+          setTunggakanSuccess('');
+        }, 2000);
+      } else {
+        setTunggakanError(response.data.message || 'Gagal membuat tunggakan');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setTunggakanError(err.response?.data?.message || 'Terjadi kesalahan saat membuat tunggakan');
+    } finally {
+      setIsCreatingTunggakan(false);
+    }
+  }, [fetchData]);
 
   const filteredData = useMemo(() => {
     return data
@@ -130,9 +237,49 @@ function BoardingKonsumsiInner() {
             </a>
           );
         }
+      },
+      {
+        accessorKey: 'tunggakan',
+        header: 'Tunggakan',
+        cell: ({ row }: any) => {
+          const siswa = row.original;
+          return (
+            <FileSignature
+              id='tunggakan'
+              className={`text-gray-600 cursor-pointer hover:text-blue-600 ${
+                isCreatingTunggakan ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              onClick={() => {
+                if (!isCreatingTunggakan) handleCreateTunggakan(siswa)
+              }}
+            />
+          );
+        }
+      },
+      {
+        accessorKey: 'aksi',
+        header: 'Aksi',
+        cell: ({ row }: any) => {
+          const id_siswa = row.original.id_siswa;
+          return (
+            <div className="flex gap-2 justify-center">
+              <button
+                className="bg-blue-500 p-1 rounded hover:bg-blue-600 transition"
+                title="Edit"
+                onClick={() => {
+                  localStorage.setItem('bk_last_nama', row.original.nama_siswa);
+                  setHighlightNama(row.original.nama_siswa);
+                  router.push(`/pendapatan/boarding-konsumsi/edit/${row.original.id_siswa}`);
+                }}
+              >
+                <img src="/edit.svg" alt="Edit" className="w-5 h-5" />
+              </button>
+            </div>
+          );
+        }
       }
     ],
-    [router]
+    [router, isCreatingTunggakan, handleCreateTunggakan]
   );
 
   const table = useReactTable({ data: filteredData, columns, getCoreRowModel: getCoreRowModel() });
@@ -175,15 +322,37 @@ function BoardingKonsumsiInner() {
     }
   }, [searchParams, router]);
 
+  // Edit success logic
+  useEffect(() => {
+    const successParam = searchParams.get('success');
+    if (successParam && successParam.toLowerCase().includes('edit')) {
+      fetchData();
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [searchParams, fetchData]);
+
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold">Monitoring Boarding & Konsumsi</h2>
       </div>
 
+      {/* ALERT TUNGGAKAN */}
+      {tunggakanSuccess && (
+        <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+          <p className="font-medium">{tunggakanSuccess}</p>
+        </div>
+      )}
+      {tunggakanError && (
+        <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+          <p className="font-medium">{tunggakanError}</p>
+        </div>
+      )}
+
       {/* FILTER DAN TOMBOL */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
-       <select
+        <select
           className="px-2 py-1 bg-gray-300 text-black rounded-md text-sm"
           value={selectedLevel}
           onChange={(e) => setSelectedLevel(e.target.value)}
