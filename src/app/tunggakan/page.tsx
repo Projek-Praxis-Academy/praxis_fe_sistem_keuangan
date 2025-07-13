@@ -23,28 +23,37 @@ function TunggakanSiswaInner() {
   const [data, setData] = useState<Tunggakan[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [currentTunggakan, setCurrentTunggakan] = useState<Tunggakan | null>(null)
+  const [formData, setFormData] = useState({
+    nominal: 0,
+    status: 'Belum Lunas',
+    catatan: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        const token = localStorage.getItem('token') || ''
-        
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/tunggakan`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
+  // Move fetchData outside useEffect so it can be called elsewhere
+  const fetchData = async () => {
+    try {
+      setIsLoading(true)
+      const token = localStorage.getItem('token') || ''
+      
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/tunggakan`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
 
-        setData(response.data.data.data)
-      } catch (error: any) {
-        console.error('Failed to fetch data:', error)
-        setError('Gagal memuat data tunggakan. Silakan coba lagi.')
-      } finally {
-        setIsLoading(false)
-      }
+      setData(response.data.data.data)
+    } catch (error: any) {
+      console.error('Failed to fetch data:', error)
+      setError('Gagal memuat data tunggakan. Silakan coba lagi.')
+    } finally {
+      setIsLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchData()
   }, [])
 
@@ -73,6 +82,41 @@ function TunggakanSiswaInner() {
 
     return filteredGroups
   }, [searchTerm, groupedData])
+
+  // MODAL: buka modal edit
+  const handleUpdateClick = (tunggakan: Tunggakan) => {
+    setCurrentTunggakan(tunggakan)
+    setFormData({
+      nominal: tunggakan.nominal,
+      status: tunggakan.status,
+      catatan: tunggakan.catatan || ''
+    })
+    setIsModalOpen(true)
+  }
+
+  // MODAL: submit perubahan
+  const handleModalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!currentTunggakan) return
+
+    try {
+      setIsSubmitting(true)
+      const token = localStorage.getItem('token') || ''
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/tunggakan/update/${currentTunggakan.id_tunggakan}`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      await fetchData()
+      setIsModalOpen(false)
+      alert('Data tunggakan berhasil diperbarui!')
+    } catch (error) {
+      console.error('Failed to update tunggakan:', error)
+      alert('Gagal memperbarui data tunggakan')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const columns = useMemo(
     () => [
@@ -116,26 +160,26 @@ function TunggakanSiswaInner() {
           </span>
         )
       },
-     //  { 
-     //    accessorKey: 'aksi', 
-     //    header: 'AKSI',
-     //    cell: ({ row }: any) => (
-     //      <div className="flex gap-2">
-     //        <button 
-     //          onClick={() => handleUpdate(row.original.id_tunggakan)}
-     //          className="text-blue-600 hover:text-blue-800"
-     //        >
-     //          <Pencil size={16} />
-     //        </button>
-     //        <button 
-     //          onClick={() => handleDelete(row.original.id_tunggakan)}
-     //          className="text-red-600 hover:text-red-800"
-     //        >
-     //          <Trash2 size={16} />
-     //        </button>
-     //      </div>
-     //    )
-     //  }
+      { 
+        accessorKey: 'aksi', 
+        header: 'AKSI',
+        cell: ({ row }: any) => (
+          <div className="flex gap-2">
+            <button 
+              onClick={() => handleUpdateClick(row.original)}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              <Pencil size={16} />
+            </button>
+            <button 
+              onClick={() => handleDelete(row.original.id_tunggakan)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        )
+      }
     ],
     []
   )
@@ -162,25 +206,29 @@ function TunggakanSiswaInner() {
     getCoreRowModel: getCoreRowModel() 
   })
 
-  const handleUpdate = (id: string) => {
-    router.push(`/pendapatan/tunggakan/update?id=${id}`)
-  }
-
   const handleDelete = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus data tunggakan ini?')) {
       try {
         const token = localStorage.getItem('token') || ''
-        await axios.delete(
-          `${process.env.NEXT_PUBLIC_API_URL}/tunggakan/${id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        
-        // Refresh data after deletion
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/tunggakan`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        setData(response.data.data.data)
+        const myHeaders = new Headers()
+        myHeaders.append("Authorization", `Bearer ${token}`)
+
+        const requestOptions = {
+          method: "DELETE",
+          headers: myHeaders,
+          redirect: "follow" as RequestRedirect
+        }
+
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tunggakan/delete/${id}`, requestOptions)
+          .then((response) => response.text())
+          .then((result) => {
+            console.log(result)
+            fetchData() // Refresh data setelah hapus
+          })
+          .catch((error) => {
+            console.error(error)
+            alert('Gagal menghapus data tunggakan')
+          })
       } catch (error) {
         console.error('Failed to delete tunggakan:', error)
         alert('Gagal menghapus data tunggakan')
@@ -213,6 +261,99 @@ function TunggakanSiswaInner() {
 
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
+      {/* Modal Update Tunggakan */}
+      {isModalOpen && currentTunggakan && (
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Update Tunggakan</h3>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleModalSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Siswa</label>
+                <input
+                  type="text"
+                  value={currentTunggakan.nama_siswa}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Jenis Tagihan</label>
+                <input
+                  type="text"
+                  value={currentTunggakan.jenis_tagihan}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Nominal</label>
+                <input
+                  type="number"
+                  value={formData.nominal}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    nominal: parseInt(e.target.value) || 0
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    status: e.target.value
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="Belum Lunas">Belum Lunas</option>
+                  <option value="Lunas">Lunas</option>
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Catatan</label>
+                <textarea
+                  value={formData.catatan}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    catatan: e.target.value
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  disabled={isSubmitting}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold">Monitoring Tunggakan Siswa</h2>
       </div>
