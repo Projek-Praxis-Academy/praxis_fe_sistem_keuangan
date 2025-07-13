@@ -31,7 +31,8 @@ function TunggakanSiswaInner() {
     catatan: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const router = useRouter()
+  const [showConfirm, setShowConfirm] = useState<{ open: boolean, id: string | null }>({ open: false, id: null });
+  const [notif, setNotif] = useState<{ type: 'success' | 'error', message: string, open: boolean }>({ type: 'success', message: '', open: false });
 
   // Move fetchData outside useEffect so it can be called elsewhere
   const fetchData = async () => {
@@ -96,27 +97,64 @@ function TunggakanSiswaInner() {
 
   // MODAL: submit perubahan
   const handleModalSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!currentTunggakan) return
+    e.preventDefault();
+    if (!currentTunggakan) return;
 
     try {
-      setIsSubmitting(true)
-      const token = localStorage.getItem('token') || ''
+      setIsSubmitting(true);
+      const token = localStorage.getItem('token') || '';
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/tunggakan/update/${currentTunggakan.id_tunggakan}`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
-      )
-      await fetchData()
-      setIsModalOpen(false)
-      alert('Data tunggakan berhasil diperbarui!')
+      );
+      await fetchData();
+      setIsModalOpen(false);
+      setNotif({ type: 'success', message: 'Data tunggakan berhasil diperbarui!', open: true });
     } catch (error) {
-      console.error('Failed to update tunggakan:', error)
-      alert('Gagal memperbarui data tunggakan')
+      console.error('Failed to update tunggakan:', error);
+      setNotif({ type: 'error', message: 'Gagal memperbarui data tunggakan', open: true });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
+      setTimeout(() => setNotif({ ...notif, open: false }), 2500);
     }
   }
+
+  // Fungsi delete baru
+  const handleDelete = async (id: string) => {
+    setShowConfirm({ open: true, id });
+  };
+
+  // Fungsi untuk benar-benar menghapus
+  const confirmDelete = async () => {
+    if (!showConfirm.id) return;
+    try {
+      const token = localStorage.getItem('token') || '';
+      const myHeaders = new Headers();
+      myHeaders.append("Authorization", `Bearer ${token}`);
+
+      const requestOptions = {
+        method: "DELETE",
+        headers: myHeaders,
+        redirect: "follow" as RequestRedirect
+      };
+
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tunggakan/delete/${showConfirm.id}`, requestOptions)
+        .then((response) => response.text())
+        .then((result) => {
+          setNotif({ type: 'success', message: 'Data tunggakan berhasil dihapus!', open: true });
+          fetchData();
+        })
+        .catch((error) => {
+          setNotif({ type: 'error', message: 'Gagal menghapus data tunggakan', open: true });
+        });
+    } catch (error) {
+      setNotif({ type: 'error', message: 'Gagal menghapus data tunggakan', open: true });
+    } finally {
+      setShowConfirm({ open: false, id: null });
+      setTimeout(() => setNotif({ ...notif, open: false }), 2500);
+    }
+  };
 
   const columns = useMemo(
     () => [
@@ -205,36 +243,6 @@ function TunggakanSiswaInner() {
     columns, 
     getCoreRowModel: getCoreRowModel() 
   })
-
-  const handleDelete = async (id: string) => {
-    if (confirm('Apakah Anda yakin ingin menghapus data tunggakan ini?')) {
-      try {
-        const token = localStorage.getItem('token') || ''
-        const myHeaders = new Headers()
-        myHeaders.append("Authorization", `Bearer ${token}`)
-
-        const requestOptions = {
-          method: "DELETE",
-          headers: myHeaders,
-          redirect: "follow" as RequestRedirect
-        }
-
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tunggakan/delete/${id}`, requestOptions)
-          .then((response) => response.text())
-          .then((result) => {
-            console.log(result)
-            fetchData() // Refresh data setelah hapus
-          })
-          .catch((error) => {
-            console.error(error)
-            alert('Gagal menghapus data tunggakan')
-          })
-      } catch (error) {
-        console.error('Failed to delete tunggakan:', error)
-        alert('Gagal menghapus data tunggakan')
-      }
-    }
-  }
 
   if (isLoading) {
     return (
@@ -370,6 +378,42 @@ function TunggakanSiswaInner() {
           <Search size={18} className="absolute left-3 top-3 text-gray-500" />
         </div>
       </div>
+
+      {/* Konfirmasi Hapus */}
+      {showConfirm.open && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 border w-full max-w-sm">
+            <h3 className="text-lg font-bold mb-2 text-red-700">Konfirmasi Hapus</h3>
+            <p className="mb-4 text-sm text-gray-700">Apakah Anda yakin ingin menghapus data tunggakan ini?</p>
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+                onClick={() => setShowConfirm({ open: false, id: null })}
+              >
+                Batal
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                onClick={confirmDelete}
+              >
+                Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notifikasi */}
+      {notif.open && notif.type === 'success' && (
+        <div className="text-green-600 mb-4 p-3 rounded bg-green-100 border border-green-500">
+          <p className="font-medium">{notif.message}</p>
+        </div>
+      )}
+      {notif.open && notif.type === 'error' && (
+        <div className="text-red-600 mb-4 p-3 rounded bg-red-100 border border-red-500">
+          <p className="font-medium">{notif.message}</p>
+        </div>
+      )}
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-sm text-black">
