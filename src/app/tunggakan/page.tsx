@@ -85,14 +85,27 @@ function TunggakanSiswaInner() {
   }, [searchTerm, groupedData])
 
   // MODAL: buka modal edit
-  const handleUpdateClick = (tunggakan: Tunggakan) => {
-    setCurrentTunggakan(tunggakan)
-    setFormData({
-      nominal: tunggakan.nominal,
-      status: tunggakan.status,
-      catatan: tunggakan.catatan || ''
-    })
-    setIsModalOpen(true)
+  const handleUpdateClick = async (tunggakan: Tunggakan) => {
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token') || '';
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/tunggakan/detail/${tunggakan.id_tunggakan}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const detail = response.data.data;
+      setCurrentTunggakan(detail);
+      setFormData({
+        nominal: detail.nominal,
+        status: detail.status,
+        catatan: detail.catatan || ''
+      });
+      setIsModalOpen(true);
+    } catch (error) {
+      setNotif({ type: 'error', message: 'Gagal mengambil detail tunggakan', open: true });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   // MODAL: submit perubahan
@@ -270,7 +283,7 @@ function TunggakanSiswaInner() {
   return (
     <div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">
       {/* Modal Update Tunggakan */}
-      {isModalOpen && currentTunggakan && (
+      {/* {isModalOpen && currentTunggakan && (
           <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
@@ -360,7 +373,141 @@ function TunggakanSiswaInner() {
             </form>
           </div>
         </div>
-      )}
+      )} */}
+      {isModalOpen && currentTunggakan && (
+     <div className="fixed inset-0 flex items-center justify-center z-50">
+     <div className="bg-white rounded-lg p-6 w-full sm:max-w-2xl md:max-w-3xl">
+          <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold">Update Tunggakan</h3>
+          <button
+               onClick={() => setIsModalOpen(false)}
+               className="text-gray-500 hover:text-gray-700"
+          >
+               <X size={24} />
+          </button>
+          </div>
+
+          <form onSubmit={handleModalSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+               <label className="block text-sm font-medium mb-1">Nama Siswa</label>
+               <input
+               type="text"
+               value={currentTunggakan.nama_siswa}
+               disabled
+               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+               />
+          </div>
+
+          <div>
+               <label className="block text-sm font-medium mb-1">NISN</label>
+               <input
+               type="text"
+               value={currentTunggakan.nisn}
+               disabled
+               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+               />
+          </div>
+
+          <div>
+               <label className="block text-sm font-medium mb-1">Jenis Tagihan</label>
+               <input
+               type="text"
+               value={currentTunggakan.jenis_tagihan}
+               disabled
+               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+               />
+          </div>
+
+          <div>
+               <label className="block text-sm font-medium mb-1">Nama Tagihan</label>
+               <input
+               type="text"
+               value={currentTunggakan.nama_tagihan}
+               disabled
+               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+               />
+          </div>
+
+          <div>
+               <label className="block text-sm font-medium mb-1">Periode</label>
+               <input
+               type="text"
+               value={currentTunggakan.periode}
+               disabled
+               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+               />
+          </div>
+
+          <div>
+               <label className="block text-sm font-medium mb-1">Nominal</label>
+               <input
+               type="number"
+               value={formData.nominal}
+               onChange={(e) =>
+               setFormData({
+                    ...formData,
+                    nominal: parseInt(e.target.value) || 0,
+               })
+               }
+               className="w-full px-3 py-2 border border-gray-300 rounded-md"
+               required
+               />
+          </div>
+
+          <div>
+               <label className="block text-sm font-medium mb-1">Status</label>
+               <select
+               value={formData.status}
+               onChange={(e) =>
+               setFormData({
+                    ...formData,
+                    status: e.target.value,
+               })
+               }
+               className="w-full px-3 py-2 border border-gray-300 rounded-md"
+               >
+               <option value="Belum Lunas">Belum Lunas</option>
+               <option value="Lunas">Lunas</option>
+               </select>
+          </div>
+
+          <div className="md:col-span-2">
+               <label className="block text-sm font-medium mb-1">Catatan</label>
+               <textarea
+               value={formData.catatan}
+               onChange={(e) =>
+               setFormData({
+                    ...formData,
+                    catatan: e.target.value,
+               })
+               }
+               className="w-full px-3 py-2 border border-gray-300 rounded-md"
+               rows={3}
+               />
+          </div>
+
+          <div className="md:col-span-2 flex justify-end gap-2">
+               <button
+               type="button"
+               onClick={() => setIsModalOpen(false)}
+               className="px-4 py-2 text-gray-600 hover:text-gray-800"
+               disabled={isSubmitting}
+               >
+               Batal
+               </button>
+               <button
+               type="submit"
+               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+               disabled={isSubmitting}
+               >
+               {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
+               </button>
+          </div>
+          </form>
+     </div>
+     </div>
+     )}
+
 
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold">Monitoring Tunggakan Siswa</h2>

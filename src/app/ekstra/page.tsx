@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef, Suspense, useCallback } from 'react'
 import Link from 'next/link'
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table'
-import { Search, FileSignature, CreditCard, X } from 'lucide-react'
+import { Search, FileSignature, CreditCard, X, Pencil } from 'lucide-react'
 import axios from 'axios'
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -297,6 +297,34 @@ export default function Ekstra() {
                 })
               ) : (
                 <span className="text-gray-500 italic">-</span>
+              )}
+            </div>
+          )
+        }
+      },
+      {
+        accessorKey: 'edit',
+        header: 'Edit',
+        cell: ({ row }: any) => {
+          const router = useRouter()
+          const ekstraList = row.original.ekstra || []
+
+          return (
+            <div className="flex flex-col pl-2 justify-center">
+              {ekstraList.length > 0 ? (
+                ekstraList.map((e: any, index: number) => (
+                  <div key={index} className="border-b last:border-b-0 py-1">
+                    <button
+                      onClick={() => router.push(`/ekstra/edit/${e.id_ekstra_siswa}`)}
+                      className="text-blue-600 hover:text-blue-800"
+                      title={`Edit ${e.nama_ekstra}`}
+                    >
+                      <Pencil size={20}></Pencil>
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <span className="text-gray-400 italic">-</span>
               )}
             </div>
           )
