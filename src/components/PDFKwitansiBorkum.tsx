@@ -172,7 +172,6 @@ interface KwitansiBorkumData {
     total: number;
   };
   catatan?: string;
-  nomorUrut: number;
 }
 
 export default function PDFKwitansiBorkum({ data }: { data: KwitansiBorkumData }) {

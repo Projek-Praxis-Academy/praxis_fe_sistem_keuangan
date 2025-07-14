@@ -168,10 +168,8 @@ export default function PDFKwitansiEkstra({ data }: { data: KwitansiEkstraData }
           <View style={styles.headerTextContainer}>
             <Text style={styles.title}>KWITANSI PEMBAYARAN EKSTRAKURIKULER</Text>
             <Text style={styles.subtitle}>PRAXIS ACADEMY</Text>
-            <Text style={styles.subtitle}>
-              Jl. Contoh No. 123, Jakarta - Indonesia
-            </Text>
-            <Text style={styles.subtitle}>Telp: (021) 123-4567</Text>
+            <Text style={styles.subtitle}>Jl. Pakem - Kalasan No.9, Area Sawah, Bimomartani, Kec. Ngemplak, Kabupaten Sleman, Daerah Istimewa Yogyakarta 55584</Text>
+            <Text style={styles.subtitle}>Telp: (081) 1-938-932</Text>
           </View>
         </View>
 

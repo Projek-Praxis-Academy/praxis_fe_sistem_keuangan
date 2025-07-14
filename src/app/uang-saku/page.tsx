@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 
 interface SiswaUangSaku {
   no: number
-  id_siswa: number
+  id_siswa: string
   nama_siswa: string
   saldo: string // Perubahan: saldo disimpan sebagai string yang sudah diformat
   level: string
@@ -42,12 +42,12 @@ export default function MonitoringUangSaku() {
           headers: { Authorization: `Bearer ${token}` },
         })
 
-        const siswaList = response.data.data || []
+        const siswaList = response.data.data?.data || [];
 
         const formattedData = siswaList.map((item: any, index: number) => {
           return {
             no: index + 1,
-            id_siswa: item.id_siswa,
+            id_siswa: item.id_siswa.toString(),
             nama_siswa: item.nama_siswa,
             saldo: item.uang_saku?.saldo || "0",  // Menyimpan saldo sebagai string yang sudah diformat
             level: item.level
