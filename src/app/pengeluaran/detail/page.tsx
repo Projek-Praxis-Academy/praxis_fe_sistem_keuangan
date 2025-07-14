@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter,useSearchParams } from 'next/navigation'
 import { ExternalLink } from 'lucide-react'
 import axios from 'axios'
 import EditModal from '@/components/EditModal'
@@ -61,6 +61,7 @@ interface PengeluaranDetail {
 }
 
 function DetailPengeluaranInner() {
+  const router = useRouter()
   const [detail, setDetail] = useState<PengeluaranDetail | null>(null)
   const [jenisPengeluaran, setJenisPengeluaran] = useState<string>('-')
   const [loading, setLoading] = useState(true)
@@ -311,19 +312,17 @@ function DetailPengeluaranInner() {
       </div>
 
       {/* <h3 className="text-xl font-semibold mb-2">Sub Pengeluaran</h3> */}
-
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xl font-semibold">Sub Pengeluaran</h3>
-        <button
-          onClick={() => {
-            setSelectedRow(null)  // kosongkan selectedRow agar form kosong
-            setModalOpen(true)    // buka modal
-          }}
-          className="bg-green-600 text-white px-2 py-1.5 rounded hover:bg-green-700 transition"
-        >
-          + Add
-        </button>
-      </div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Daftar Sub Pengeluaran</h2>
+          <button
+            onClick={() => {
+              router.push(`/pengeluaran/detail/tambah-sub?id_pengeluaran=${detail.id_pengeluaran}`)
+            }}
+            className="bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 transition flex items-center"
+          >
+            Add Sub
+          </button>
+        </div>
 
       
       {/* Alert Delete Message */}
