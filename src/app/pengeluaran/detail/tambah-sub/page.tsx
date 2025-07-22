@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FilePlus2 } from 'lucide-react'
 import axios from 'axios'
@@ -10,7 +10,17 @@ interface Kategori {
   nama_kategori_pengeluaran: string;
 }
 
+// Komponen utama yang dibungkus Suspense
 export default function TambahSubPengeluaran() {
+  return (
+    <Suspense fallback={<div className="ml-64 flex-1 bg-white min-h-screen p-6 text-black">Memuat...</div>}>
+      <TambahSubPengeluaranContent />
+    </Suspense>
+  )
+}
+
+// Komponen konten yang menggunakan useSearchParams
+function TambahSubPengeluaranContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const idPengeluaran = searchParams.get('id_pengeluaran') || ''

@@ -1,40 +1,43 @@
-# ğŸ’° Finance Tracking System
+cat << 'EOF' > README.md
+# í²° Finance Tracking System
 
 Sistem manajemen keuangan untuk kebutuhan administrasi di **Yayasan Praxis Academy** dan **Techno Natura**. Dirancang untuk mencatat, mengelola, dan memantau semua transaksi pemasukan & pengeluaran dengan efisien dan transparan.
 
-## ğŸ§¾ Fitur Utama
+---
 
-### ğŸ“Œ Pendapatan
+## ï¿½ï¿½ Fitur Utama
+
+### í³Œ Pendapatan
 Finance Tracking memisahkan sumber pendapatan menjadi beberapa kategori:
-- ğŸ« Praxis Academy
-- ğŸ« Techno Natura
-- ğŸ¡ Boarding & Konsumsi
-- ğŸ’¸ Uang Saku
-- ğŸ¥‹ Ekstrakurikuler
+- í¿« Praxis Academy
+- í¿« Techno Natura
+- í¿¡ Boarding & Konsumsi
+- í²¸ Uang Saku
+- íµ‹ Ekstrakurikuler
 
 Setiap kategori menghasilkan **tagihan bulanan otomatis** kepada siswa, yang dapat dikelola melalui fitur:
 
 - âœï¸ **Buat Tagihan**  
-- ğŸ“ **Tunggakan**  
+- í³ **Tunggakan**  
   Jika ada siswa belum melunasi tagihan, data secara otomatis masuk ke menu ini agar bendahara dapat memantau dengan mudah.
 
-### ğŸ’¼ Pengeluaran
+### í²¼ Pengeluaran
 Sistem mencatat pengeluaran dalam dua jenis:
-- ğŸ“‚ **Proyek (Project-Based)**
-- ğŸ”§ **Operasional Rutin (Non-Project)**
+- í³‚ **Proyek (Project-Based)**
+- í´§ **Operasional Rutin (Non-Project)**
 
-> ğŸ” Sistem ini membantu proses pencatatan menjadi **lebih terstruktur, transparan, dan efisien** untuk seluruh proses administrasi keuangan.
+> í´ Sistem ini membantu proses pencatatan menjadi **lebih terstruktur, transparan, dan efisien** untuk seluruh proses administrasi keuangan.
 
 ---
 
-## ğŸš€ Cara Menjalankan
+## íº€ Cara Menjalankan (FE)
 
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/Projek-Praxis-Academy/praxis_fe_sistem_keuangan.git
 
 # Masuk ke folder
-cd nama-folder
+cd praxis_fe_sistem_keuangan
 
 # Buka di VS Code (opsional)
 code .
@@ -45,21 +48,41 @@ npm install
 # Jalankan proyek
 npm run dev
 
-ğŸŒ Akses Produksi
-Akses aplikasi secara langsung melalui:
-ğŸ‘‰ https://fe-fintrack.vercel.app
+í¼ Akses Produksi
+í±‰ https://fe-fintrack.vercel.app
 
-ğŸ” Login Demo
+í´ Login Demo
 Username : bendahara@example.com
 Password : password123
 
-ğŸ“Œ Teknologi yang Digunakan
-ğŸ§‘â€ğŸ’» Next.js
 
-ğŸ¨ Tailwind CSS
+âš™ï¸ Setup Backend (BE) â€“ Wajib karena Railway tidak premium
+Dikarenakan Railway sudah tidak premium, gunakan backend secara lokal dengan langkah berikut:
 
-ğŸ’¡ Zustand (State Management)
+bash
+Copy code
+# Clone repository backend
+git clone <url-repo-backend>
 
-ğŸ” Authentication & Session
+# Masuk ke folder backend
+cd nama-folder-backend
+
+# Install dependency PHP
+composer install
+
+# Jalankan migrasi dan seeding database
+php artisan migrate:fresh --seed
+
+# Jalankan server lokal
+php artisan serve
+í³Œ Teknologi yang Digunakan
+í·‘â€í²» Next.js
+
+í¾¨ Tailwind CSS
+
+í²¡ Zustand (State Management)
+
+í´ Authentication & Session
 
 âš™ï¸ RESTful API
+EOF
