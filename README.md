@@ -1,42 +1,43 @@
-cat << 'EOF' > README.md
-# í²° Finance Tracking System
+````markdown
+# ğŸ’° Finance Tracking System
 
-Sistem manajemen keuangan untuk kebutuhan administrasi di **Yayasan Praxis Academy** dan **Techno Natura**. Dirancang untuk mencatat, mengelola, dan memantau semua transaksi pemasukan & pengeluaran dengan efisien dan transparan.
+Sistem manajemen keuangan untuk kebutuhan administrasi di **Yayasan Praxis Academy** dan **Techno Natura**.  
+Dirancang untuk mencatat, mengelola, dan memantau semua transaksi pemasukan & pengeluaran secara **efisien, transparan, dan terstruktur**.
 
 ---
 
-## ï¿½ï¿½ Fitur Utama
+## ğŸ§¾ Fitur Utama
 
-### í³Œ Pendapatan
+### ğŸ“Œ Pendapatan
 Finance Tracking memisahkan sumber pendapatan menjadi beberapa kategori:
-- í¿« Praxis Academy
-- í¿« Techno Natura
-- í¿¡ Boarding & Konsumsi
-- í²¸ Uang Saku
-- íµ‹ Ekstrakurikuler
+- ğŸ« Praxis Academy  
+- ğŸ« Techno Natura  
+- ğŸ¡ Boarding & Konsumsi  
+- ğŸ’¸ Uang Saku  
+- ğŸ¥‹ Ekstrakurikuler  
 
-Setiap kategori menghasilkan **tagihan bulanan otomatis** kepada siswa, yang dapat dikelola melalui fitur:
-
-- âœï¸ **Buat Tagihan**  
-- í³ **Tunggakan**  
-  Jika ada siswa belum melunasi tagihan, data secara otomatis masuk ke menu ini agar bendahara dapat memantau dengan mudah.
-
-### í²¼ Pengeluaran
-Sistem mencatat pengeluaran dalam dua jenis:
-- í³‚ **Proyek (Project-Based)**
-- í´§ **Operasional Rutin (Non-Project)**
-
-> í´ Sistem ini membantu proses pencatatan menjadi **lebih terstruktur, transparan, dan efisien** untuk seluruh proses administrasi keuangan.
+Setiap kategori menghasilkan **tagihan bulanan otomatis** kepada siswa, dengan fitur:
+- âœï¸ **Buat Tagihan**
+- ğŸ“ **Tunggakan**: Menampilkan siswa yang belum melunasi tagihan secara otomatis untuk memudahkan monitoring.
 
 ---
 
-## íº€ Cara Menjalankan (FE)
+### ğŸ’¼ Pengeluaran
+Pengeluaran dicatat dalam dua jenis:
+- ğŸ“‚ **Proyek (Project-Based)**
+- ğŸ”§ **Operasional Rutin (Non-Project)**
+
+> ğŸ” Sistem ini mempermudah pencatatan keuangan dengan cara yang **terpusat dan akuntabel**, sehingga proses pelaporan dan audit menjadi lebih lancar.
+
+---
+
+## ğŸš€ Cara Menjalankan (Frontend)
 
 ```bash
-# Clone repository
+# Clone repository frontend
 git clone https://github.com/Projek-Praxis-Academy/praxis_fe_sistem_keuangan.git
 
-# Masuk ke folder
+# Masuk ke folder project
 cd praxis_fe_sistem_keuangan
 
 # Buka di VS Code (opsional)
@@ -47,20 +48,23 @@ npm install
 
 # Jalankan proyek
 npm run dev
+````
 
-í¼ Akses Produksi
-í±‰ https://fe-fintrack.vercel.app
+ğŸŒ **Akses Produksi**
+ğŸ‘‰ [https://fe-fintrack.vercel.app](https://fe-fintrack.vercel.app)
 
-í´ Login Demo
-Username : bendahara@example.com
-Password : password123
+ğŸ” **Login Demo**
 
+* Username : `bendahara@example.com`
+* Password : `password123`
 
-âš™ï¸ Setup Backend (BE) â€“ Wajib karena Railway tidak premium
-Dikarenakan Railway sudah tidak premium, gunakan backend secara lokal dengan langkah berikut:
+---
 
-bash
-Copy code
+## âš™ï¸ Setup Backend (BE) - Wajib (Karena Railway tidak premium)
+
+Karena layanan Railway sudah tidak premium, silakan jalankan backend secara lokal dengan langkah berikut:
+
+```bash
 # Clone repository backend
 git clone <url-repo-backend>
 
@@ -70,19 +74,39 @@ cd nama-folder-backend
 # Install dependency PHP
 composer install
 
-# Jalankan migrasi dan seeding database
+# Migrasi & seeding database
 php artisan migrate:fresh --seed
 
 # Jalankan server lokal
 php artisan serve
-í³Œ Teknologi yang Digunakan
-í·‘â€í²» Next.js
+```
 
-í¾¨ Tailwind CSS
+> âš ï¸ Pastikan juga environment dan database sudah disiapkan sesuai kebutuhan backend.
 
-í²¡ Zustand (State Management)
+---
 
-í´ Authentication & Session
+## ğŸ§© Teknologi yang Digunakan
 
-âš™ï¸ RESTful API
-EOF
+| Fitur              | Teknologi                                  |
+| ------------------ | ------------------------------------------ |
+| Framework Frontend | ğŸ§‘â€ğŸ’» [Next.js](https://nextjs.org)        |
+| Styling            | ğŸ¨ [Tailwind CSS](https://tailwindcss.com) |
+| State Management   | ğŸ’¡ Zustand                                 |
+| Autentikasi & Sesi | ğŸ” NextAuth / Middleware                   |
+| API                | âš™ï¸ RESTful API                             |
+
+---
+
+## ğŸ¤ Kontribusi
+
+Pull request terbuka!
+Silakan buat issue jika ada bug, feedback, atau saran pengembangan.
+
+---
+
+## ğŸ“„ Lisensi
+
+Proyek ini didistribusikan untuk kebutuhan internal yayasan.
+Hubungi pengelola jika ingin menggunakan sistem ini di institusi Anda.
+
+```
